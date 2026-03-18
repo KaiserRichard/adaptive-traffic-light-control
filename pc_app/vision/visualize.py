@@ -8,11 +8,12 @@ Purpose:
     - Draw a small status panel (FPS + counts)
 '''
 
-from collections import Counter
-from typing import List, Dict, Any
+import numpy as np
+from typing import List, Dict, Any, Tuple
 import cv2
+from pc_app.vision.roi import get_bbox_center
 
-def draw_detections(frame, detections: List[Dict[str, Any]]):
+def draw_detections(frame, detections: List[Dict[str, Any]], color=(0, 255, 0)):
     '''
     Draw bounding boxes and class labels on the frame.
 
@@ -38,7 +39,7 @@ def draw_detections(frame, detections: List[Dict[str, Any]]):
             img=frame,
             pt1=(x1,y1),
             pt2=(x2,y2),
-            color=(0, 255, 0),
+            color=color, # Green
             thickness=2
         )
 
@@ -52,64 +53,122 @@ def draw_detections(frame, detections: List[Dict[str, Any]]):
             org=(x1, max(20, y1-8)),
             fontFace=cv2.FONT_HERSHEY_SIMPLEX,
             fontScale=0.6,
-            color=(0, 255, 0),
+            color=color,
             thickness=2,
         )
 
     return frame
 
-def count_by_class(detections: List[Dict[str, Any]]) -> Dict[str, int]:
-    '''
-    Count how many detections belong to each class.
-    '''
-
-    counts = Counter()
-
+# Draw the center point of each bounding box for debugging ROI assignment
+def draw_bbox_centers(frame, detections: List[Dict[str, Any]], color=(0 ,0, 255)):
     for det in detections:
-        counts[det["class_name"]] += 1
-
-    # Convert Counter object to a normal dictionary
-    return dict(counts)
-
-def draw_counts_panel(frame, counts: Dict[str, int], fps: float):
-    '''
-    Draw FPS and class counts at the top-left corner.
+        cx, cy = get_bbox_center(det["bbox"])
+        cv2.circle(frame, (cx, cy), 4, color, -1)
     
-    Layout:
-        FPS: xx.xx
-        bus: 1
-        car: 4
-        motorbike: 12
-        truck: 1
+    return frame
 
-    y starts at 30 to leave some top margin
-    '''
-
-    # Draw FPS text
-    y= 30 # Location where we put FPS text
-    cv2.putText(
-        img=frame, 
-        text=f"FPS: {fps:.2f}",
-        org=(20,y),
-        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-        fontScale=0.7,
-        color=(0,255,255),
-        thickness=2,
+# Draw a closed polygon ROI and a text label.
+def draw_polygon(frame, polygon: List[Tuple[int, int]], label: str, color):
+    polygon_np = np.array(polygon, dtype=np.int32)
+    cv2.polylines(
+        img=frame,
+        pts=[polygon_np],
+        isClosed=True,
+        color=color,
+        thickness=2
     )
 
-    y += 30
+    # Draw the label (ROI A / ROI B)
+    label_x, label_y = polygon[0]
+    cv2.putText(
+        img=frame,
+        text= f"ROI {label}",
+        org=(label_x, max(20, label_y-10)),
+        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale=0.7,
+        color=color,
+        thickness=2
+    )
 
+    return frame
+
+# Draw one block of class counts
+def draw_counts_block(
+        frame,
+        title: str,
+        counts: Dict[str, int],
+        top_left: Tuple[int, int],
+        color=(255,255,255),
+):
+    x, y = top_left
+
+    cv2.putText(
+        img=frame,
+        text=title,
+        org=(x, y),
+        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale=0.75,
+        color=color,
+        thickness=2
+    )
+    y += 28
+
+    if not counts:
+        cv2.putText(
+        img=frame,
+        text="None",
+        org=(x, y),
+        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale=0.75,
+        color=color,
+        thickness=2
+        )
+        return frame
+    
     # Draw each class count
     for cls_name in sorted(counts.keys()):
         cv2.putText(
         img=frame, 
         text=f"{cls_name}: {counts[cls_name]}",
-        org=(20,y),
+        org=(x,y),
         fontFace=cv2.FONT_HERSHEY_SIMPLEX,
-        fontScale=0.7,
-        color=(0,255,255),
+        fontScale=0.65,
+        color=color,
         thickness=2,
         )
-        y += 30
+        y += 26
+    
+    return frame
+
+# Draw overall FPS, total detections, and per-direction count blocks.
+def draw_status_panel(
+        frame,
+        fps: float,
+        total_detections: int,
+        counts_a: Dict[str, int],
+        counts_b: Dict[str, int]
+):
+    cv2.putText(
+        img=frame,
+        text=f"FPS: {fps:.2f}",
+        org=(20, 30),
+        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale=0.75,
+        color=(0, 255, 255),
+        thickness=2
+    )
+
+    cv2.putText(
+        img=frame,
+        text=f"Total detections: {total_detections}",
+        org=(20, 60),
+        fontFace=cv2.FONT_HERSHEY_SIMPLEX,
+        fontScale=0.75,
+        color=(0, 255, 255),
+        thickness=2
+    )
+    
+    frame = draw_counts_block(frame, "Direction A", counts_a, (20, 100), color=(0, 255, 0))
+    frame = draw_counts_block(frame, "Direction B", counts_b, (20, 250), color=(255, 0, 0))
 
     return frame
