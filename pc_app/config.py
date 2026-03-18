@@ -77,3 +77,12 @@ SHOW_WINDOW = True
 # Save annotated output video
 SAVE_OUTPUT_VIDEO = True
 OUTPUT_VIDEO_PATH = str(OUTPUTS_DIR / "phase1_detector_output.mp4")
+CONFIGS_DIR = BASE_DIR / "pc_app" / "configs" # New Directory
+
+# PHASE 2: ROI CONFIGURATION FILE
+# This JSON stores ROI polygons for Direction A and B
+ROI_CONFIG_PATH = str(CONFIGS_DIR / "roi_example.json")
+
+# Direction display names
+DIRECTION_A_NAME = "A"
+DIRECTION_B_NAME = "B"
