@@ -86,3 +86,22 @@ ROI_CONFIG_PATH = str(CONFIGS_DIR / "roi_example.json")
 # Direction display names
 DIRECTION_A_NAME = "A"
 DIRECTION_B_NAME = "B"
+
+# PHASE 3 Density settings
+
+# Define whether to compute simple raw count or PCE-weight density
+ENABLE_RAW_DENSITY = True
+ENABLE_PCE_DENSITY = True
+
+# EMA smoothing factor
+# Higher alpha reacts faster, low alpha is more stable.
+DENSITY_SMOOTHING_ALPHA = float(os.getenv("DENSITY_SMOOTHING_ALPHA", "0.30"))
+
+# PCE-style weights for canonical classes
+PCE_WEIGHTS = {
+    "motorbike": 0.5,   
+    "car": 1.0,
+    "rickshaw": 1.2,
+    "bus": 2.5,
+    "truck": 2.5,
+}
