@@ -140,13 +140,57 @@ def draw_counts_block(
     
     return frame
 
+# Phase 3: Draw one density summary block.
+def draw_density_block(
+        frame, 
+        title: str,
+        raw_density: float,
+        pce_density: float,
+        smoothed_pce_density: float,
+        top_left: Tuple[int, int],
+        color=(255, 255, 255)
+):
+    x, y = top_left
+    cv2.putText(
+        frame,
+        title, 
+        (x, y), 
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.75,
+        color,
+        2,
+    )
+    y += 28
+
+    lines = [
+        f"raw density: {raw_density:.2f}",
+        f"pce density: {pce_density:.2f}",
+        f"smoothed pce: {smoothed_pce_density:.2f}",
+    ]
+
+    for line in lines:
+        cv2.putText(
+            frame,
+            line,
+            (x, y),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.62,
+            color,
+            2,
+        )
+        y += 24
+    
+    return frame
+
 # Draw overall FPS, total detections, and per-direction count blocks.
 def draw_status_panel(
         frame,
         fps: float,
         total_detections: int,
         counts_a: Dict[str, int],
-        counts_b: Dict[str, int]
+        counts_b: Dict[str, int],
+        density_a: Dict[str, float], # PHASE 3
+        density_b: Dict[str, float],
 ):
     cv2.putText(
         img=frame,
@@ -170,5 +214,25 @@ def draw_status_panel(
     
     frame = draw_counts_block(frame, "Direction A", counts_a, (20, 100), color=(0, 255, 0))
     frame = draw_counts_block(frame, "Direction B", counts_b, (20, 250), color=(255, 0, 0))
+
+    # PHASE 2: Draw density block
+    frame = draw_density_block(
+        frame,
+        "Direction A Density",
+        raw_density=density_a["raw_density"],
+        pce_density=density_a["pce_density"],
+        smoothed_pce_density=density_a["smoothed_pce_density"],
+        top_left=(800, 100),
+        color=(255, 255, 255),
+    )
+    frame = draw_density_block(
+        frame,
+        "Direction B Density",
+        raw_density=density_b["raw_density"],
+        pce_density=density_b["pce_density"],
+        smoothed_pce_density=density_b["smoothed_pce_density"],
+        top_left=(800, 220),
+        color=(255, 255, 255),
+    )
 
     return frame
