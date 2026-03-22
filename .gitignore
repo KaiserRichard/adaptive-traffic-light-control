@@ -222,3 +222,5 @@ datasets/roboflow_export/
 pc_app/models/roboflow/
 pc_app/models/local/*.pt
 pc_app/models/local/*.onnx
+datasets/sample_videos/
+docs/architecture.md
