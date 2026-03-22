@@ -76,7 +76,7 @@ SHOW_WINDOW = True
 
 # Save annotated output video
 SAVE_OUTPUT_VIDEO = True
-OUTPUT_VIDEO_PATH = str(OUTPUTS_DIR / "phase1_detector_output.mp4")
+OUTPUT_VIDEO_PATH = str(OUTPUTS_DIR / "phase4_signal_plan.mp4")
 CONFIGS_DIR = BASE_DIR / "pc_app" / "configs" # New Directory
 
 # PHASE 2: ROI CONFIGURATION FILE
@@ -105,3 +105,23 @@ PCE_WEIGHTS = {
     "bus": 2.5,
     "truck": 2.5,
 }
+
+# PHASE 4 timing settings 
+
+# Base green time used when traffic is balaced
+BASE_GREEN_TIME = int(os.getenv("BASE_GREEN_TIME", "20"))
+
+# Maximum allowed green time
+MAX_GREEN_TIME = int(os.getenv("MAX_GREEN_TIME", "45"))
+
+# Minimum allowed green time
+MIN_GREEN_TIME = int(os.getenv("MIN_GREEN_TIME", "10"))
+
+# Fixed yellow time
+YELLOW_TIME = int(os.getenv("YELLO_TIME", "3"))
+
+# Fixed all-red time
+ALL_RED_TIME = int(os.getenv("ALL_RED_TIME", "1"))
+
+# Small epsilon to avoid division instability
+DENSITY_EPSILON = float(os.getenv("DENSITY_EPSILON", "1e-6"))
