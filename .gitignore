@@ -224,3 +224,7 @@ pc_app/models/local/*.pt
 pc_app/models/local/*.onnx
 datasets/sample_videos/
 docs/architecture.md
+datasets/
+outputs/
+*.mp4
+*.avidatasets/
