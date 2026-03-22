@@ -1,7 +1,7 @@
 """
 main.py
 
-Phase 3 full pipeline:
+Phase 4 full pipeline:
 1. Open video
 2. Initialize detector
 3. Load ROI configuration
@@ -10,13 +10,15 @@ Phase 3 full pipeline:
 6. Count classes per direction
 7. Compute density per direction
 8. Smooth density over time (EMA)
-9. Draw ROI, detections, and density panels
-10. Show on screen
-11. Optionally save annotated output video
+9. Convert density into signal timing
+10. Draw ROI, detections, density, and timing panels
+11. Show on screen
+12. Optionally save annotated output video
 
-Key difference from Phase 2:
-- Phase 2 → direction-aware counting
-- Phase 3 → adds density estimation + smoothing
+Key difference from previous phases:
+- Phase 2 -> direction-aware counting
+- Phase 3 -> adds density estimation + smoothing
+- Phase 4 -> adds timing scheduler based on density
 """
 
 import time
@@ -31,6 +33,14 @@ from pc_app.config import (
     ROI_CONFIG_PATH,
     PCE_WEIGHTS,
     DENSITY_SMOOTHING_ALPHA,
+    # PHASE 4:
+    # Timing configuration used by the rule-based scheduler
+    BASE_GREEN_TIME,
+    MIN_GREEN_TIME,
+    MAX_GREEN_TIME,
+    YELLOW_TIME,
+    ALL_RED_TIME,
+    DENSITY_EPSILON,
 )
 
 from pc_app.vision.detector import RoboflowDetector
@@ -41,6 +51,11 @@ from pc_app.vision.density import (
     compute_pce_density,
     EMASmoother,
 )
+
+# PHASE 4:
+# Import scheduler that converts density into signal timing
+from pc_app.control.scheduler import build_signal_plan
+
 from pc_app.vision.visualize import (
     draw_detections,
     draw_bbox_centers,
@@ -51,7 +66,7 @@ from pc_app.vision.visualize import (
 
 def main():
     """
-    Main loop for Phase 3
+    Main loop for Phase 4
     """
 
     # -------------------------------------------------------------------------
@@ -79,7 +94,8 @@ def main():
     direction_b_name = roi_cfg["direction_b_name"]
 
     # -------------------------------------------------------------------------
-    # PHASE 3: Initialize EMA smoothers for each direction
+    # PHASE 3:
+    # Initialize EMA smoothers for direction-specific density
     # -------------------------------------------------------------------------
     smoother_a = EMASmoother(alpha=DENSITY_SMOOTHING_ALPHA)
     smoother_b = EMASmoother(alpha=DENSITY_SMOOTHING_ALPHA)
@@ -101,7 +117,6 @@ def main():
     # Main loop
     # -------------------------------------------------------------------------
     while True:
-
         # Read frame
         ret, frame = cap.read()
         if not ret:
@@ -126,7 +141,8 @@ def main():
         counts_b = count_by_class(detections_b)
 
         # ---------------------------------------------------------------------
-        # PHASE 3: Compute density
+        # PHASE 3:
+        # Compute raw density and PCE-weighted density
         # ---------------------------------------------------------------------
         raw_density_a = compute_raw_density(detections_a)
         raw_density_b = compute_raw_density(detections_b)
@@ -134,7 +150,10 @@ def main():
         pce_density_a = compute_pce_density(detections_a, PCE_WEIGHTS)
         pce_density_b = compute_pce_density(detections_b, PCE_WEIGHTS)
 
-        # PHASE 3: Apply EMA smoothing
+        # ---------------------------------------------------------------------
+        # PHASE 3:
+        # Apply EMA smoothing to reduce frame-to-frame noise
+        # ---------------------------------------------------------------------
         smoothed_pce_a = smoother_a.update(pce_density_a)
         smoothed_pce_b = smoother_b.update(pce_density_b)
 
@@ -148,7 +167,8 @@ def main():
         prev_time = current_time
 
         # ---------------------------------------------------------------------
-        # PHASE 3: Build density summary objects
+        # PHASE 3:
+        # Build structured density summary for visualization and logging
         # ---------------------------------------------------------------------
         density_a = {
             "raw_density": raw_density_a,
@@ -163,10 +183,25 @@ def main():
         }
 
         # ---------------------------------------------------------------------
+        # PHASE 4:
+        # Convert smoothed density into a signal timing plan
+        # ---------------------------------------------------------------------
+        signal_plan = build_signal_plan(
+            density_a=density_a["smoothed_pce_density"],
+            density_b=density_b["smoothed_pce_density"],
+            epsilon=DENSITY_EPSILON,
+            base_green_time=BASE_GREEN_TIME,
+            min_green_time=MIN_GREEN_TIME,
+            max_green_time=MAX_GREEN_TIME,
+            yellow_time=YELLOW_TIME,
+            all_red_time=ALL_RED_TIME,
+        )
+
+        # ---------------------------------------------------------------------
         # 5) Draw ROI polygons (Phase 2)
         # ---------------------------------------------------------------------
-        frame = draw_polygon(frame, roi_a, direction_a_name, (0, 255, 0))   # A → green
-        frame = draw_polygon(frame, roi_b, direction_b_name, (255, 0, 0))   # B → blue
+        frame = draw_polygon(frame, roi_a, direction_a_name, (0, 255, 0))   # A -> green
+        frame = draw_polygon(frame, roi_b, direction_b_name, (255, 0, 0))   # B -> blue
 
         # ---------------------------------------------------------------------
         # 6) Draw detections (Phase 2)
@@ -176,14 +211,16 @@ def main():
         frame = draw_detections(frame, detections_outside, color=(128, 128, 128))
 
         # ---------------------------------------------------------------------
-        # 7) Draw bbox centers (debugging ROI)
+        # 7) Draw bbox centers (debugging ROI assignment)
         # ---------------------------------------------------------------------
         frame = draw_bbox_centers(frame, detections_a, color=(0, 255, 0))
         frame = draw_bbox_centers(frame, detections_b, color=(255, 0, 0))
         frame = draw_bbox_centers(frame, detections_outside, color=(128, 128, 128))
 
         # ---------------------------------------------------------------------
-        # 8) Draw status panel (Phase 3 adds density display)
+        # 8) Draw status panel
+        # Phase 3 adds density display
+        # Phase 4 adds signal timing display
         # ---------------------------------------------------------------------
         frame = draw_status_panel(
             frame=frame,
@@ -191,8 +228,9 @@ def main():
             total_detections=len(detections),
             counts_a=counts_a,
             counts_b=counts_b,
-            density_a=density_a,   # PHASE 3
+            density_a=density_a,
             density_b=density_b,
+            signal_plan=signal_plan,
         )
 
         # ---------------------------------------------------------------------
@@ -218,7 +256,7 @@ def main():
         # 11) Show window
         # ---------------------------------------------------------------------
         if SHOW_WINDOW:
-            cv2.imshow("ATLC Phase 3 - Density Estimation", frame)
+            cv2.imshow("ATLC Phase 4 - Timing Scheduler", frame)
 
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q"):
@@ -233,6 +271,7 @@ def main():
             "direction_B_counts": counts_b,
             "direction_A_density": density_a,
             "direction_B_density": density_b,
+            "signal_plan": signal_plan,
             "outside_roi": len(detections_outside),
             "fps": round(fps, 2),
         })
