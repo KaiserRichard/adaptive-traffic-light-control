@@ -110,18 +110,31 @@ PCE_WEIGHTS = {
 
 # Base green time used when traffic is balaced
 BASE_GREEN_TIME = int(os.getenv("BASE_GREEN_TIME", "20"))
-
 # Maximum allowed green time
 MAX_GREEN_TIME = int(os.getenv("MAX_GREEN_TIME", "45"))
-
 # Minimum allowed green time
 MIN_GREEN_TIME = int(os.getenv("MIN_GREEN_TIME", "10"))
-
 # Fixed yellow time
 YELLOW_TIME = int(os.getenv("YELLO_TIME", "3"))
-
 # Fixed all-red time
 ALL_RED_TIME = int(os.getenv("ALL_RED_TIME", "1"))
-
 # Small epsilon to avoid division instability
 DENSITY_EPSILON = float(os.getenv("DENSITY_EPSILON", "1e-6"))
+
+# Phase 5: Add communication-related settings
+
+# MCU serial port
+MCU_SERIAL_PORT = os.getenv("MCU_SERIAL_PORT", "/dev/ttyUSB0")
+
+# Enable or disable sending time plans to MCU  (bool)
+ENABLE_MCU_COMM = (os.getenv("ENABLE_MCU_COMM", "false") == "true") 
+
+# UART baud rate (bits per second)
+MCU_BAUD_RATE = os.getenv("MCU_BAUD_RATE", 115200)
+
+# Serial read timeout in seconds
+MCU_SERIAL_TIMEOUT = float(os.getenv("MCU_SERIAL_TIMEOUT","1.0"))
+
+# Whether to wait for ACK from MCU
+# Waiting for an Acknowledge (ACK) ensuring that data was received correctly
+WAIT_FOR_MCU_ACK = (os.getenv("WAIT_FOR_MCU_ACK", "true").lower() == "true")
