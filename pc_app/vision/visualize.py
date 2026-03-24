@@ -12,6 +12,11 @@ Previous phase additions:
     - Phase 2 -> ROI polygons, direction-aware detections, bbox centers
     - Phase 3 -> density blocks
     - Phase 4 -> timing block
+    - Phase 5 -> communication status block
+
+Phase 5 additions:
+    - draw_comm_block()
+    - draw_status_panel() now includes MCU communication status
 """
 
 import numpy as np
@@ -236,6 +241,33 @@ def draw_timing_block(
 
     return frame
 
+# PHASE 5:
+# Draw communication status block.
+def draw_comm_block(
+        frame,
+        title: str,
+        comm_status: Dict[str, str],
+        top_left: Tuple[int, int],
+        color=(255, 255, 255),
+):
+    x, y = top_left
+
+    cv2.putText(frame, title, (x, y),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.75, color, 2)
+    y += 28
+
+    lines = [
+        f"comm enabled: {comm_status['enabled']}",   
+        f"last plan id: {comm_status['last_plan_id']}",  
+        f"last ack: {comm_status['last_ack']}",    
+    ]
+
+    for line in lines:
+        cv2.putText(frame, line, (x, y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.62, color, 2)  
+        y += 24
+
+    return frame
 
 def draw_status_panel(
     frame,
@@ -245,7 +277,8 @@ def draw_status_panel(
     counts_b: Dict[str, int],
     density_a: Dict[str, float],
     density_b: Dict[str, float],
-    signal_plan: Dict[str, float | int],   # PHASE 4
+    signal_plan: Dict[str, float | int],   
+    comm_status: Dict[str, str], # PHASE 5
 ):
     """
     Draw overall FPS, total detections, count summaries,
@@ -304,6 +337,16 @@ def draw_status_panel(
         signal_plan=signal_plan,
         top_left=(800, 360),
         color=(255, 255, 255)
+    )
+
+    # PHASE 5:
+    # Draw communication status after timing block
+    frame = draw_comm_block(
+        frame,
+        "MCU Comm",
+        comm_status=comm_status,
+        top_left=(800, 500),
+        color=(255, 255, 255),
     )
 
     return frame

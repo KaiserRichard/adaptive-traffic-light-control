@@ -1,7 +1,7 @@
 """
 main.py
 
-Phase 4 full pipeline:
+Phase 5 full pipeline:
 1. Open video
 2. Initialize detector
 3. Load ROI configuration
@@ -11,14 +11,16 @@ Phase 4 full pipeline:
 7. Compute density per direction
 8. Smooth density over time (EMA)
 9. Convert density into signal timing
-10. Draw ROI, detections, density, and timing panels
-11. Show on screen
-12. Optionally save annotated output video
+10. Send signal plan to MCU via UART
+11. Draw ROI, detections, density, timing, and communication status
+12. Show on screen
+13. Optionally save annotated output video
 
-Key difference from previous phases:
+Key differences from previous phases:
 - Phase 2 -> direction-aware counting
-- Phase 3 -> adds density estimation + smoothing
-- Phase 4 -> adds timing scheduler based on density
+- Phase 3 -> density estimation + smoothing
+- Phase 4 -> timing scheduler
+- Phase 5 -> host-to-MCU communication (UART + ACK tracking)
 """
 
 import time
@@ -33,14 +35,18 @@ from pc_app.config import (
     ROI_CONFIG_PATH,
     PCE_WEIGHTS,
     DENSITY_SMOOTHING_ALPHA,
-    # PHASE 4:
-    # Timing configuration used by the rule-based scheduler
     BASE_GREEN_TIME,
     MIN_GREEN_TIME,
     MAX_GREEN_TIME,
     YELLOW_TIME,
     ALL_RED_TIME,
     DENSITY_EPSILON,
+    # PHASE 5:
+    MCU_SERIAL_PORT,
+    ENABLE_MCU_COMM,
+    MCU_BAUD_RATE,
+    MCU_SERIAL_TIMEOUT,
+    WAIT_FOR_MCU_ACK,
 )
 
 from pc_app.vision.detector import RoboflowDetector
@@ -51,10 +57,10 @@ from pc_app.vision.density import (
     compute_pce_density,
     EMASmoother,
 )
-
-# PHASE 4:
-# Import scheduler that converts density into signal timing
 from pc_app.control.scheduler import build_signal_plan
+
+# PHASE 5:
+from pc_app.comm.uart_sender import UartPlanSender
 
 from pc_app.vision.visualize import (
     draw_detections,
@@ -66,7 +72,7 @@ from pc_app.vision.visualize import (
 
 def main():
     """
-    Main loop for Phase 4
+    Main loop for Phase 5
     """
 
     # -------------------------------------------------------------------------
@@ -94,15 +100,24 @@ def main():
     direction_b_name = roi_cfg["direction_b_name"]
 
     # -------------------------------------------------------------------------
-    # PHASE 3:
-    # Initialize EMA smoothers for direction-specific density
-    # -------------------------------------------------------------------------
     smoother_a = EMASmoother(alpha=DENSITY_SMOOTHING_ALPHA)
     smoother_b = EMASmoother(alpha=DENSITY_SMOOTHING_ALPHA)
 
     # -------------------------------------------------------------------------
-    # Video writer (same pattern as Phase 1)
+    # PHASE 5:
+    # Initialize UART sender (only if enabled)
     # -------------------------------------------------------------------------
+    sender = None
+    if ENABLE_MCU_COMM:
+        sender = UartPlanSender(
+            port=MCU_SERIAL_PORT,
+            baud_rate=MCU_BAUD_RATE,
+            timeout=MCU_SERIAL_TIMEOUT,
+        )
+
+    # Track plan IDs (used for ACK matching)
+    plan_id = 0
+
     writer = None
 
     if SAVE_OUTPUT_VIDEO:
@@ -113,11 +128,14 @@ def main():
     # -------------------------------------------------------------------------
     prev_time = time.time()
 
+    # PHASE 5: communication status tracking
+    last_ack = "none"
+    last_plan_id = "none"
+
     # -------------------------------------------------------------------------
     # Main loop
     # -------------------------------------------------------------------------
     while True:
-        # Read frame
         ret, frame = cap.read()
         if not ret:
             break
@@ -128,21 +146,20 @@ def main():
         detections = detector.detect(frame=frame)
 
         # ---------------------------------------------------------------------
-        # 2) Split detections by direction (Phase 2)
+        # 2) Split detections (Phase 2)
         # ---------------------------------------------------------------------
         detections_a, detections_b, detections_outside = split_detections_by_direction(
             detections, roi_a, roi_b
         )
 
         # ---------------------------------------------------------------------
-        # 3) Count objects per direction (Phase 2)
+        # 3) Count objects (Phase 2)
         # ---------------------------------------------------------------------
         counts_a = count_by_class(detections_a)
         counts_b = count_by_class(detections_b)
 
         # ---------------------------------------------------------------------
-        # PHASE 3:
-        # Compute raw density and PCE-weighted density
+        # PHASE 3: Density
         # ---------------------------------------------------------------------
         raw_density_a = compute_raw_density(detections_a)
         raw_density_b = compute_raw_density(detections_b)
@@ -150,25 +167,19 @@ def main():
         pce_density_a = compute_pce_density(detections_a, PCE_WEIGHTS)
         pce_density_b = compute_pce_density(detections_b, PCE_WEIGHTS)
 
-        # ---------------------------------------------------------------------
-        # PHASE 3:
-        # Apply EMA smoothing to reduce frame-to-frame noise
-        # ---------------------------------------------------------------------
         smoothed_pce_a = smoother_a.update(pce_density_a)
         smoothed_pce_b = smoother_b.update(pce_density_b)
 
         # ---------------------------------------------------------------------
-        # 4) Compute FPS
+        # 4) FPS
         # ---------------------------------------------------------------------
         current_time = time.time()
         dt = current_time - prev_time
-
         fps = 1.0 / dt if dt > 0 else 0.0
         prev_time = current_time
 
         # ---------------------------------------------------------------------
-        # PHASE 3:
-        # Build structured density summary for visualization and logging
+        # Density summary
         # ---------------------------------------------------------------------
         density_a = {
             "raw_density": raw_density_a,
@@ -183,45 +194,62 @@ def main():
         }
 
         # ---------------------------------------------------------------------
-        # PHASE 4:
-        # Convert smoothed density into a signal timing plan
+        # PHASE 4: Build signal plan
         # ---------------------------------------------------------------------
         signal_plan = build_signal_plan(
             density_a=density_a["smoothed_pce_density"],
             density_b=density_b["smoothed_pce_density"],
-            epsilon=DENSITY_EPSILON,
-            base_green_time=BASE_GREEN_TIME,
-            min_green_time=MIN_GREEN_TIME,
-            max_green_time=MAX_GREEN_TIME,
+            base_green=BASE_GREEN_TIME,
+            min_green=MIN_GREEN_TIME,
+            max_green=MAX_GREEN_TIME,
             yellow_time=YELLOW_TIME,
             all_red_time=ALL_RED_TIME,
+            epsilon=DENSITY_EPSILON,
         )
 
         # ---------------------------------------------------------------------
-        # 5) Draw ROI polygons (Phase 2)
+        # PHASE 5: Send plan to MCU
         # ---------------------------------------------------------------------
-        frame = draw_polygon(frame, roi_a, direction_a_name, (0, 255, 0))   # A -> green
-        frame = draw_polygon(frame, roi_b, direction_b_name, (255, 0, 0))   # B -> blue
+        if sender is not None:
+            plan_id += 1
+            last_plan_id = str(plan_id)
+
+            try:
+                ack = sender.send_plan(
+                    plan_id=plan_id,
+                    signal_plan=signal_plan,
+                    wait_for_ack=WAIT_FOR_MCU_ACK,
+                )
+
+                if ack is not None:
+                    last_ack = str(ack["plan_id"])
+                else:
+                    last_ack = "not_waited"
+
+            except Exception:
+                last_ack = "error"
+
+        # Communication status for UI
+        comm_status = {
+            "enabled": "yes" if ENABLE_MCU_COMM else "no",
+            "last_plan_id": last_plan_id,
+            "last_ack": last_ack,
+        }
 
         # ---------------------------------------------------------------------
-        # 6) Draw detections (Phase 2)
+        # Visualization
         # ---------------------------------------------------------------------
+        frame = draw_polygon(frame, roi_a, direction_a_name, (0, 255, 0))
+        frame = draw_polygon(frame, roi_b, direction_b_name, (255, 0, 0))
+
         frame = draw_detections(frame, detections_a, color=(0, 255, 0))
         frame = draw_detections(frame, detections_b, color=(255, 0, 0))
         frame = draw_detections(frame, detections_outside, color=(128, 128, 128))
 
-        # ---------------------------------------------------------------------
-        # 7) Draw bbox centers (debugging ROI assignment)
-        # ---------------------------------------------------------------------
         frame = draw_bbox_centers(frame, detections_a, color=(0, 255, 0))
         frame = draw_bbox_centers(frame, detections_b, color=(255, 0, 0))
         frame = draw_bbox_centers(frame, detections_outside, color=(128, 128, 128))
 
-        # ---------------------------------------------------------------------
-        # 8) Draw status panel
-        # Phase 3 adds density display
-        # Phase 4 adds signal timing display
-        # ---------------------------------------------------------------------
         frame = draw_status_panel(
             frame=frame,
             fps=fps,
@@ -231,39 +259,31 @@ def main():
             density_a=density_a,
             density_b=density_b,
             signal_plan=signal_plan,
+            comm_status=comm_status,
         )
 
         # ---------------------------------------------------------------------
-        # 9) Initialize writer (first frame)
+        # Writer
         # ---------------------------------------------------------------------
         if SAVE_OUTPUT_VIDEO and writer is None:
             h, w = frame.shape[:2]
             fourcc = cv2.VideoWriter_fourcc(*"mp4v")
-            writer = cv2.VideoWriter(
-                filename=OUTPUT_VIDEO_PATH,
-                fourcc=fourcc,
-                fps=20,
-                frameSize=(w, h)
-            )
+            writer = cv2.VideoWriter(OUTPUT_VIDEO_PATH, fourcc, 20, (w, h))
 
-        # ---------------------------------------------------------------------
-        # 10) Save frame
-        # ---------------------------------------------------------------------
         if writer is not None:
             writer.write(frame)
 
         # ---------------------------------------------------------------------
-        # 11) Show window
+        # Display
         # ---------------------------------------------------------------------
         if SHOW_WINDOW:
-            cv2.imshow("ATLC Phase 4 - Timing Scheduler", frame)
-
+            cv2.imshow("ATLC Phase 5 - MCU Communication", frame)
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q"):
                 break
 
         # ---------------------------------------------------------------------
-        # 12) Console output
+        # Console log
         # ---------------------------------------------------------------------
         print({
             "total_detections": len(detections),
@@ -272,6 +292,7 @@ def main():
             "direction_A_density": density_a,
             "direction_B_density": density_b,
             "signal_plan": signal_plan,
+            "comm_status": comm_status,
             "outside_roi": len(detections_outside),
             "fps": round(fps, 2),
         })
@@ -283,6 +304,9 @@ def main():
 
     if writer is not None:
         writer.release()
+
+    if sender is not None:
+        sender.close()
 
     cv2.destroyAllWindows()
 
