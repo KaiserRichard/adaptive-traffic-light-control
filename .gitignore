@@ -215,16 +215,22 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-outputs/*.mp4
-outputs/*.jpg
-outputs/*.png
+# Local datasets and generated media
+datasets/sample_videos/
+datasets/benchmark_videos/*.mp4
+datasets/benchmark_videos/*.mov
+datasets/benchmark_videos/*.avi
 datasets/roboflow_export/
+
+# Generated outputs
+outputs/**/*.mp4
+outputs/**/*.mov
+outputs/**/*.avi
+outputs/**/*.jpg
+outputs/**/*.png
+
+# Local model artifacts
 pc_app/models/roboflow/
 pc_app/models/local/*.pt
 pc_app/models/local/*.onnx
-datasets/sample_videos/
-docs/architecture.md
-datasets/
-outputs/
-*.mp4
-*.avidatasets/
+pc_app/models/local/*.ncnn
