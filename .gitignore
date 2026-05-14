@@ -234,3 +234,12 @@ pc_app/models/roboflow/
 pc_app/models/local/*.pt
 pc_app/models/local/*.onnx
 pc_app/models/local/*.ncnn
+pc_app/models/local/*_ncnn_model/
+
+# Benchmark outputs
+outputs/benchmarks/**/*.mp4
+outputs/benchmarks/**/*.mov
+outputs/benchmarks/**/*.avi
+outputs/benchmarks/**/*.jpg
+outputs/benchmarks/**/*.png
+outputs/benchmarks/**/*.json
