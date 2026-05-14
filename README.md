@@ -660,6 +660,20 @@ Choose the model first. Then benchmark deployment formats.
 
 ---
 
+## Detector Tuning Notes
+
+Current testing shows that pretrained YOLO detects cars, buses, and trucks better than motorbikes in high-angle dense traffic scenes.
+
+Increasing `YOLO_IMGSZ` from 640 to 960 improves small-object detection to some extent, but reduces FPS noticeably. Lowering `CONFIDENCE_THRESHOLD` from 0.3 to 0.2 has limited impact because detected motorbikes usually already have confidence above 0.3.
+
+This suggests that the main issue is domain mismatch rather than only threshold tuning.
+
+Detailed notes are stored in:
+
+```text
+docs/benchmarks/yolo_hyperparameter_tuning.md
+
+
 ## 15. Common Issues
 
 ### 15.1 NumPy conflict
