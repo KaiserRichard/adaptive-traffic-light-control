@@ -9,7 +9,7 @@ from pc_app.config import (
     BASE_GREEN_TIME,
     MAX_GREEN_TIME,
     MIN_GREEN_TIME,
-    YELLO_TIME,
+    YELLOW_TIME,
     ALL_RED_TIME,
     DENSITY_EPSILON,
 )
@@ -26,7 +26,7 @@ def main():
     ratio = compute_density_ratio(density_a, density_b, epsilon=DENSITY_EPSILON)
     print("Ratio: ", ratio )
 
-    signal_plan = build_signal_plan(density_a, density_b, DENSITY_EPSILON, BASE_GREEN_TIME, MIN_GREEN_TIME, MAX_GREEN_TIME,YELLO_TIME, ALL_RED_TIME)
+    signal_plan = build_signal_plan(density_a, density_b, DENSITY_EPSILON, BASE_GREEN_TIME, MIN_GREEN_TIME, MAX_GREEN_TIME,YELLOW_TIME, ALL_RED_TIME)
     print("Signal: ", signal_plan)
 
 

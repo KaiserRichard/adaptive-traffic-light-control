@@ -1,0 +1,17 @@
+{
+  "benchmark_id": "yolo26n_pt_pc",
+  "benchmark_max_frames": 300,
+  "detector_backend": "yolo",
+  "video_source": "./datasets/sample_videos/test.mov",
+  "yolo_model_path": "./pc_app/models/local/yolo26n.pt",
+  "device": "pc",
+  "model_name": "yolo26n",
+  "model_format": "pt",
+  "frame_count": 300,
+  "total_detections": 2783,
+  "avg_detections_per_frame": 9.276666666666667,
+  "avg_inference_ms": 89.90669303806499,
+  "avg_fps": 11.122642444168386,
+  "min_inference_ms": 69.53562900889665,
+  "max_inference_ms": 278.9915259927511
+}
