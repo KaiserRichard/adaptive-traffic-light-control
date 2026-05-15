@@ -106,3 +106,35 @@ YOLO_IMGSZ = int(os.getenv("YOLO_IMGSZ", "640"))
 YOLO_VERBOSE = os.getenv("YOLO_VERBOSE", "false").lower() == "true"
 
 BENCHMARK_MAX_FRAMES = int(os.getenv("BENCHMARK_MAX_FRAMES", "300"))
+
+# ---------------------------------------------------------------------
+# Phase 8: UART / MCU communication
+# ---------------------------------------------------------------------
+
+# Enable or disable sending signal plans to MCU.
+# Keep this false by default so users can run the vision pipeline
+# without physical hardware.
+ENABLE_UART = os.getenv("ENABLE_UART", "false").lower() == "true"
+
+# Serial port for the MCU.
+# Examples:
+# - Arduino Uno on macOS: /dev/cu.usbmodem141011
+# - ESP32 on macOS: /dev/cu.usbserial-XXXX
+# - Linux/Raspberry Pi: /dev/ttyUSB0 or /dev/ttyACM0
+UART_PORT = os.getenv("UART_PORT", "")
+
+# Serial baud rate. Must match MCU firmware Serial.begin(...).
+UART_BAUD = int(os.getenv("UART_BAUD", "115200"))
+
+# Send one UART plan every N processed frames.
+# This prevents sending a new plan every video frame.
+UART_SEND_INTERVAL_FRAMES = int(os.getenv("UART_SEND_INTERVAL_FRAMES", "30"))
+
+# Timeout in seconds while waiting for ACK from MCU.
+UART_ACK_TIMEOUT = float(os.getenv("UART_ACK_TIMEOUT", "2.0"))
+
+# Minimum difference in green time before sending a new plan.
+# Example:
+# If previous green_a=34 and new green_a=34, do not resend.
+# If previous green_a=34 and new green_a=36, resend.
+UART_MIN_GREEN_CHANGE = int(os.getenv("UART_MIN_GREEN_CHANGE", "1"))
