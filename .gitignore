@@ -243,3 +243,12 @@ outputs/benchmarks/**/*.avi
 outputs/benchmarks/**/*.jpg
 outputs/benchmarks/**/*.png
 outputs/benchmarks/**/*.json
+
+# PlatformIO
+.pio/
+firmware/**/.pio/
+
+# Firmware build artifacts
+firmware/**/*.bin
+firmware/**/*.elf
+firmware/**/*.hex
