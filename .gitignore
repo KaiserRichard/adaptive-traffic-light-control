@@ -251,4 +251,7 @@ firmware/**/.pio/
 # Firmware build artifacts
 firmware/**/*.bin
 firmware/**/*.elf
-firmware/**/*.hex
+firmware/**/*.hex.vscode/
+**/.vscode/
+.pio/
+**/.pio/
