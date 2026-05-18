@@ -37,16 +37,16 @@ Important Phase 8 change:
 
     This prevents the traffic light plan from jumping randomly every frame.
 
-MCU design note:
+Phase 10 change:
 
-    The MCU target is device-agnostic.
+    DETECT_EVERY_N_FRAMES is added to reduce YOLO inference load.
 
-    Current validated MCU testbed:
-        Arduino Uno
+    Example:
+        1 -> run YOLO every frame
+        2 -> run YOLO every 2 frames
+        3 -> run YOLO every 3 frames
 
-    Future candidates:
-        ESP32
-        STM32
+    When YOLO is skipped, the system reuses the latest detections.
 """
 
 import time
@@ -74,6 +74,10 @@ from pc_app.config import (
     UART_SEND_INTERVAL_FRAMES,
     UART_ACK_TIMEOUT,
     UART_MIN_GREEN_CHANGE,
+    DETECT_EVERY_N_FRAMES,
+    CAMERA_WIDTH,
+    CAMERA_HEIGHT,
+    CAMERA_FPS,
 )
 
 from pc_app.vision.detector_factory import create_detector
@@ -98,8 +102,14 @@ from pc_app.vision.visualize import (
 )
 
 
-LOG_EVERY_N_FRAMES = 30
-PROFILE_EVERY_N_FRAMES = 30
+# Phase 10 debug settings.
+# Use 31 instead of 30 so logs do not always fall on frames divisible by 2 or 3.
+LOG_EVERY_N_FRAMES = 31
+PROFILE_EVERY_N_FRAMES = 31
+
+# Print detailed detection-skip behavior for the first N frames.
+DEBUG_FIRST_N_FRAMES = 40
+
 DRAW_BBOX_CENTERS = True
 
 
@@ -124,6 +134,25 @@ def main() -> None:
     detector = create_detector()
 
     cap = cv2.VideoCapture(VIDEO_SOURCE)
+
+    # Phase 10:
+    # Request camera properties when VIDEO_SOURCE is a camera index.
+    # If VIDEO_SOURCE is a video file, these settings are usually ignored.
+    if isinstance(VIDEO_SOURCE, int):
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, CAMERA_WIDTH)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, CAMERA_HEIGHT)
+        cap.set(cv2.CAP_PROP_FPS, CAMERA_FPS)
+
+        print(
+            {
+                "camera_requested_width": CAMERA_WIDTH,
+                "camera_requested_height": CAMERA_HEIGHT,
+                "camera_requested_fps": CAMERA_FPS,
+                "camera_actual_width": cap.get(cv2.CAP_PROP_FRAME_WIDTH),
+                "camera_actual_height": cap.get(cv2.CAP_PROP_FRAME_HEIGHT),
+                "camera_actual_fps": cap.get(cv2.CAP_PROP_FPS),
+            }
+        )
 
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video source: {VIDEO_SOURCE}")
@@ -158,6 +187,7 @@ def main() -> None:
     print("Save output video:", SAVE_OUTPUT_VIDEO)
     print("Output video path:", OUTPUT_VIDEO_PATH)
     print("Show window:", SHOW_WINDOW)
+    print("Detect every N frames:", DETECT_EVERY_N_FRAMES)
 
     # ---------------------------------------------------------------------
     # Stable runtime controller
@@ -191,12 +221,9 @@ def main() -> None:
             print("UART baud:", UART_BAUD)
             print("UART send interval frames:", UART_SEND_INTERVAL_FRAMES)
 
-            # -------------------------------------------------------------
-            # Phase 8 startup synchronization
-            # -------------------------------------------------------------
-            # When main.py starts, the MCU may already be running an old FSM cycle.
-            # Therefore, immediately send the current active_plan to reset/sync
-            # the MCU countdown with the host-side overlay countdown.
+            # Startup synchronization:
+            # Send the initial active plan once so the MCU and host overlay
+            # start from the same timing plan.
             startup_snapshot = runtime_controller.get_snapshot()
             startup_plan = startup_snapshot.active_plan
 
@@ -251,6 +278,8 @@ def main() -> None:
     last_loop_end_time = time.perf_counter()
 
     try:
+        last_detections = []
+
         while True:
             loop_start_time = time.perf_counter()
 
@@ -282,7 +311,20 @@ def main() -> None:
             # -------------------------------------------------------------
             detect_start_time = time.perf_counter()
 
-            detections = detector.detect(frame=frame)
+            # Phase 10:
+            # Run YOLO only every N frames.
+            # On skipped frames, reuse the previous detection result.
+            should_run_detection = (
+                frame_index == 1
+                or DETECT_EVERY_N_FRAMES <= 1
+                or frame_index % DETECT_EVERY_N_FRAMES == 0
+            )
+
+            if should_run_detection:
+                detections = detector.detect(frame=frame)
+                last_detections = detections
+            else:
+                detections = last_detections
 
             detect_end_time = time.perf_counter()
 
@@ -342,10 +384,8 @@ def main() -> None:
             # -------------------------------------------------------------
             # UART sending
             # -------------------------------------------------------------
-            # Strategy:
-            # - Send active_plan, not raw_signal_plan.
-            # - This keeps MCU aligned with what the overlay shows.
-            # - Try sending periodically or when a new cycle starts.
+            # Send active_plan, not raw_signal_plan.
+            # This keeps MCU behavior aligned with the runtime overlay.
             uart_start_time = time.perf_counter()
 
             if uart_sender is not None:
@@ -427,8 +467,7 @@ def main() -> None:
                     color=(128, 128, 128),
                 )
 
-            # Existing status panel still shows raw scheduler output.
-            # This is useful for debugging recommendations.
+            # Existing status panel shows raw scheduler output.
             frame = draw_status_panel(
                 frame=frame,
                 fps=fps,
@@ -440,8 +479,7 @@ def main() -> None:
                 signal_plan=raw_signal_plan,
             )
 
-            # New Phase 8 runtime panel shows active execution state.
-            # This is the important panel for comparing with MCU LEDs.
+            # Runtime panel shows the stable active execution state.
             frame = draw_signal_runtime_panel(
                 frame=frame,
                 runtime_snapshot=runtime_snapshot,
@@ -499,11 +537,31 @@ def main() -> None:
             display_ms = (display_end_time - display_start_time) * 1000
             total_ms = (loop_end_time - loop_start_time) * 1000
 
+            # -------------------------------------------------------------
+            # Phase 10 debug:
+            # This block verifies whether YOLO runs or detections are reused.
+            # It is intentionally printed only for the first frames.
+            # -------------------------------------------------------------
+            if frame_index <= DEBUG_FIRST_N_FRAMES:
+                print(
+                    {
+                        "debug_frame": frame_index,
+                        "ran_detection": should_run_detection,
+                        "detect_every_n_frames": DETECT_EVERY_N_FRAMES,
+                        "num_detections": len(detections),
+                        "detect_ms": round(detect_ms, 2),
+                        "total_ms": round(total_ms, 2),
+                        "fps": round(fps, 2),
+                    }
+                )
+
             if frame_index % LOG_EVERY_N_FRAMES == 0:
                 print(
                     {
                         "frame": frame_index,
                         "total_detections": len(detections),
+                        "ran_detection": should_run_detection,
+                        "detect_every_n_frames": DETECT_EVERY_N_FRAMES,
                         "direction_A_counts": counts_a,
                         "direction_B_counts": counts_b,
                         "raw_signal_plan": raw_signal_plan,
