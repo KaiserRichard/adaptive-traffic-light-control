@@ -13,16 +13,46 @@ from dotenv import load_dotenv
 
 load_dotenv(override=True)
 
+def parse_video_source(value: str):
+    """
+    Parse VIDEO_SOURCE from environment.
+
+    Why this exists:
+    - .env values are always strings.
+    - OpenCV expects camera index as an integer, not string "0".
+    - Without this helper, VIDEO_SOURCE=0 may be treated as a file path "0".
+
+    Examples:
+        "0" -> 0
+        "1" -> 1
+        "./datasets/sample_videos/test.mov" -> "./datasets/sample_videos/test.mov"
+        "/dev/video0" -> "/dev/video0"
+    """
+
+    if value is None:
+        return 0
+
+    value = value.strip()
+
+    if value.isdigit():
+        return int(value)
+
+    return value
+
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 DATASETS_DIR = BASE_DIR / "datasets"
 OUTPUTS_DIR = BASE_DIR / "outputs"
 CONFIGS_DIR = BASE_DIR / "pc_app" / "configs"
 
-VIDEO_SOURCE = os.getenv(
+# For Phase 10: This allows VIDEO_SOURCE=0 to work correctly with OpenCV
+VIDEO_SOURCE_RAW = os.getenv(
     "VIDEO_SOURCE",
     str(DATASETS_DIR / "sample_videos" / "test.mp4"),
 )
+
+VIDEO_SOURCE = parse_video_source(VIDEO_SOURCE_RAW)
 
 ROBOFLOW_API_KEY = os.getenv("ROBOFLOW_API_KEY", "")
 ROBOFLOW_MODEL_ID = os.getenv("ROBOFLOW_MODEL_ID", "")
@@ -138,3 +168,30 @@ UART_ACK_TIMEOUT = float(os.getenv("UART_ACK_TIMEOUT", "2.0"))
 # If previous green_a=34 and new green_a=34, do not resend.
 # If previous green_a=34 and new green_a=36, resend.
 UART_MIN_GREEN_CHANGE = int(os.getenv("UART_MIN_GREEN_CHANGE", "1"))
+
+# ---------------------------------------------------------------------
+# Phase 10: Camera input configuration
+# ---------------------------------------------------------------------
+
+# Camera width requested from OpenCV.
+# The camera may not always accept the exact requested value.
+CAMERA_WIDTH = int(os.getenv("CAMERA_WIDTH", "1280"))
+
+# Camera height requested from OpenCV.
+CAMERA_HEIGHT = int(os.getenv("CAMERA_HEIGHT", "720"))
+
+# Camera FPS requested from OpenCV.
+# Actual camera FPS should be measured using experiments/benchmark_camera_fps.py.
+CAMERA_FPS = int(os.getenv("CAMERA_FPS", "30"))
+
+# Run YOLO once every N frames.
+# 1 = detect every frame.
+# 2 = detect every 2 frames.
+# 3 = detect every 3 frames.
+#
+# This reduces YOLO inference load while still allowing the camera stream
+# to be read continuously.
+DETECT_EVERY_N_FRAMES = int(os.getenv("DETECT_EVERY_N_FRAMES", "1"))
+
+if DETECT_EVERY_N_FRAMES < 1:
+    raise ValueError("DETECT_EVERY_N_FRAMES must be >= 1.")
