@@ -14,16 +14,30 @@ def clamp(value: float, min_value: int, max_value: int):
 
 # Compute normalized density ratios for Direction A and B
 def compute_density_ratio(
-        density_a: float,
-        density_b: float,
-        epsilon: float
+    density_a: float,
+    density_b: float,
+    epsilon: float,
 ) -> Dict[str, float]:
-    total = density_a + density_b + epsilon
-    return{
-        "ratio_a": density_a / total,
-        "ratio_b": density_b / total,
-    }
 
+    density_a = max(density_a, 0.0)
+    density_b = max(density_b, 0.0)
+
+    total = density_a + density_b + epsilon
+
+    ratio_a = density_a / total
+    ratio_b = density_b / total
+
+    # Avoid ugly scientific-noise values
+    if ratio_a < 1e-4:
+        ratio_a = 0.0
+
+    if ratio_b < 1e-4:
+        ratio_b = 0.0
+
+    return {
+        "ratio_a": ratio_a,
+        "ratio_b": ratio_b,
+    }
 '''
 Allocate green times using direction density and then build a full signal plan
 
@@ -58,9 +72,9 @@ def build_signal_plan(
     ratio_a = ratios["ratio_a"]
     ratio_b = ratios["ratio_b"]
 
-    total_gren_budget = 2 * base_green_time
-    green_a = clamp(total_gren_budget * ratio_a, min_green_time, max_green_time)
-    green_b = clamp(total_gren_budget * ratio_b, min_green_time, max_green_time)
+    total_green_budget = 2 * base_green_time
+    green_a = clamp(total_green_budget * ratio_a, min_green_time, max_green_time)
+    green_b = clamp(total_green_budget * ratio_b, min_green_time, max_green_time)
 
     return{
         "green_a": green_a,
@@ -70,3 +84,27 @@ def build_signal_plan(
         "ratio_a": ratio_a,
         "ratio_b": ratio_b,
     }
+
+# Phase 12: Density-based timing adjustment logic will consume the density summary and smoothed density values to make decisions.
+# Optional level-based timing helpers.
+
+def clamp_green_time(green_time: int, min_green: int = 10, max_green: int = 45) -> int:
+    """
+    Clamp a green-light duration into the configured safety range.
+    """
+    return max(min_green, min(int(green_time), max_green))
+
+
+def green_time_from_level(level: str, min_green: int = 10, max_green: int = 45) -> int:
+    """
+    Convert LOW / MEDIUM / HIGH traffic level into a prototype green duration.
+    """
+    normalized_level = level.upper()
+
+    if normalized_level == "HIGH":
+        return max_green
+
+    if normalized_level == "MEDIUM":
+        return int(round((min_green + max_green) / 2))
+
+    return min_green

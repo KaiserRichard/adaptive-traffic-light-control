@@ -98,3 +98,21 @@ def split_detections_by_direction(
             detections_outside.append(det)
 
     return detections_a, detections_b, detections_outside
+
+def validate_roi_bounds(
+    polygon: Polygon,
+    frame_width: int,
+    frame_height: int,
+) -> bool:
+    """
+    Check whether all ROI points are inside frame boundaries.
+    """
+
+    for x, y in polygon:
+        if x < 0 or x >= frame_width:
+            return False
+
+        if y < 0 or y >= frame_height:
+            return False
+
+    return True

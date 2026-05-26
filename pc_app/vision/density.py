@@ -7,7 +7,7 @@ Purpose:
     - Smooth density values over time using EMA. 
 '''
 
-from typing import List, Dict, Tuple, Any, Optional
+from typing import List, Dict, Tuple, Any, Optional, Sequence
 
 # Raw density baseline: Simple the number of detctions in the direction.
 def compute_raw_density(detections: List[Dict[str, Any]]) -> float :
@@ -92,3 +92,76 @@ def build_density_summary(
             "pce_density": compute_pce_density(detections_b, pce_weights),
         },
     }
+
+# Phase 12: Density-based timing adjustment logic will consume the density summary and smoothed density values to make decisions.
+
+# Optional occupancy and traffic-level helpers.
+
+def calculate_occupancy_from_boxes(
+    boxes: List[Sequence[float]],
+    roi_area: float,
+) -> float:
+    """
+    Estimate ROI occupancy Oi from bounding boxes that have already been
+    filtered by ROI.
+
+    Oi = total bounding-box area / ROI area
+
+    Note:
+        This is an approximation. It does not compute exact polygon
+        intersection between each bounding box and the ROI polygon.
+    """
+    if roi_area <= 0:
+        return 0.0
+
+    total_box_area = 0.0
+
+    for box in boxes:
+        x1, y1, x2, y2 = box
+
+        width = max(0.0, float(x2) - float(x1))
+        height = max(0.0, float(y2) - float(y1))
+
+        total_box_area += width * height
+
+    occupancy = total_box_area / roi_area
+    return max(0.0, min(occupancy, 1.0))
+
+
+def calculate_occupancy_from_count(
+    count: int,
+    saturation_count: int = 20,
+) -> float:
+    """
+    Estimate a normalized occupancy proxy from vehicle count.
+
+    This is not geometric ROI occupancy. It is a fallback signal used when
+    box-level ROI area is not available in the current runtime pipeline.
+
+    occupancy_proxy = count / saturation_count
+    """
+    if saturation_count <= 0:
+        return 0.0
+
+    occupancy = float(count) / float(saturation_count)
+    return max(0.0, min(occupancy, 1.0))
+
+
+def classify_traffic_level(
+    occupancy: float,
+    low_threshold: float = 0.20,
+    high_threshold: float = 0.50,
+    queue_increasing: bool = False,
+) -> str:
+    """
+    Convert occupancy or occupancy proxy into LOW / MEDIUM / HIGH.
+    """
+    occupancy = max(0.0, min(float(occupancy), 1.0))
+
+    if occupancy >= high_threshold or queue_increasing:
+        return "HIGH"
+
+    if occupancy >= low_threshold:
+        return "MEDIUM"
+
+    return "LOW"

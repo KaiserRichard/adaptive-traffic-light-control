@@ -81,13 +81,17 @@ from pc_app.config import (
 )
 
 from pc_app.vision.detector_factory import create_detector
-from pc_app.vision.roi import load_roi_config, split_detections_by_direction
+from pc_app.vision.roi import load_roi_config, split_detections_by_direction, validate_roi_bounds
 from pc_app.vision.counter import count_by_class
 from pc_app.vision.density import (
     compute_raw_density,
     compute_pce_density,
     EMASmoother,
+    calculate_occupancy_from_count,
+    classify_traffic_level,
 )
+
+from pc_app.control.system_logger import SystemLogger
 
 from pc_app.control.scheduler import build_signal_plan
 from pc_app.control.uart_sender import UartPlanSender, should_send_plan
@@ -198,6 +202,7 @@ def main() -> None:
     runtime_controller = SignalRuntimeController(
         initial_plan=make_default_signal_plan()
     )
+    system_logger = SystemLogger()
 
     # ---------------------------------------------------------------------
     # UART sender
@@ -306,6 +311,36 @@ def main() -> None:
 
             frame_index += 1
 
+            if frame_index == 1:
+                frame_h, frame_w = frame.shape[:2]
+
+                roi_a_valid = validate_roi_bounds(
+                    roi_a,
+                    frame_width=frame_w,
+                    frame_height=frame_h,
+                )
+
+                roi_b_valid = validate_roi_bounds(
+                    roi_b,
+                    frame_width=frame_w,
+                    frame_height=frame_h,
+                )
+
+                print(
+                    {
+                        "frame_width": frame_w,
+                        "frame_height": frame_h,
+                        "roi_a_valid": roi_a_valid,
+                        "roi_b_valid": roi_b_valid,
+                    }
+                )
+
+                if not roi_a_valid or not roi_b_valid:
+                    print(
+                        "[WARN] ROI coordinates exceed current frame resolution. "
+                        "This usually means the ROI was created for a different camera or resolution."
+                    )
+
             # -------------------------------------------------------------
             # Detection
             # -------------------------------------------------------------
@@ -339,6 +374,9 @@ def main() -> None:
 
             counts_a = count_by_class(detections_a)
             counts_b = count_by_class(detections_b)
+
+            total_count_a = sum(counts_a.values())
+            total_count_b = sum(counts_b.values())
 
             raw_density_a = compute_raw_density(detections_a)
             raw_density_b = compute_raw_density(detections_b)
@@ -446,6 +484,79 @@ def main() -> None:
             fps = 1.0 / full_loop_dt if full_loop_dt > 0 else 0.0
             last_loop_end_time = now
 
+            occupancy_proxy_a = calculate_occupancy_from_count(
+                count=total_count_a,
+                saturation_count=20,
+            )
+
+            occupancy_proxy_b = calculate_occupancy_from_count(
+                count=total_count_b,
+                saturation_count=20,
+            )
+
+            traffic_level_a = classify_traffic_level(occupancy_proxy_a)
+            traffic_level_b = classify_traffic_level(occupancy_proxy_b)
+
+            if runtime_snapshot.state.startswith("A_"):
+                active_direction = direction_a_name
+                active_green_time = active_plan["green_a"]
+            elif runtime_snapshot.state.startswith("B_"):
+                active_direction = direction_b_name
+                active_green_time = active_plan["green_b"]
+            else:
+                active_direction = "ALL_RED"
+                active_green_time = 0
+
+            runtime_log_state = {
+                "frame_index": frame_index,
+                "mode": "AUTO",
+                "active_direction": active_direction,
+                "phase": runtime_snapshot.state,
+                "green_time": active_green_time,
+                "alert": "OK",
+
+                "runtime_state": runtime_snapshot.state,
+                "remaining_seconds": runtime_snapshot.remaining_seconds,
+                "cycle_count": runtime_snapshot.cycle_count,
+
+                "green_a": active_plan["green_a"],
+                "green_b": active_plan["green_b"],
+                "yellow": active_plan["yellow"],
+                "all_red": active_plan["all_red"],
+
+                "counts": {
+                    "direction_a": total_count_a,
+                    "direction_b": total_count_b,
+                },
+
+                "class_counts": {
+                    "direction_a": counts_a,
+                    "direction_b": counts_b,
+                },
+
+                "density": {
+                    "direction_a": density_a,
+                    "direction_b": density_b,
+                },
+
+                "occupancies": {
+                    "direction_a": occupancy_proxy_a,
+                    "direction_b": occupancy_proxy_b,
+                },
+
+                "levels": {
+                    "direction_a": traffic_level_a,
+                    "direction_b": traffic_level_b,
+                },
+
+                "processing_fps": fps,
+                "total_detections": len(detections),
+                "outside_roi": len(detections_outside),
+                "uart_status": latest_uart_status,
+            }
+
+            if frame_index % LOG_EVERY_N_FRAMES == 0:
+                system_logger.write(runtime_log_state)
             # -------------------------------------------------------------
             # Visualization
             # -------------------------------------------------------------
