@@ -256,3 +256,49 @@ firmware/**/*.hex.vscode/
 .pio/
 **/.pio/
 outputs/
+
+# ---------------------------------------------------------------------
+# Phase 11: YOLO research datasets and heavy artifacts
+# ---------------------------------------------------------------------
+
+# Real training datasets should not be committed
+yolo_research/datasets/images/
+yolo_research/datasets/labels/
+yolo_research/datasets/*/
+
+# Ultralytics training runs can be large
+yolo_research/outputs/runs/*
+!yolo_research/outputs/runs/.gitkeep
+
+# Prediction folders can be large
+yolo_research/outputs/predictions/*
+!yolo_research/outputs/predictions/.gitkeep
+
+# Evaluation outputs can be regenerated
+yolo_research/outputs/evaluation/*
+!yolo_research/outputs/evaluation/.gitkeep
+
+# Logs can be regenerated
+yolo_research/outputs/logs/*
+!yolo_research/outputs/logs/.gitkeep
+
+# Reports: ignore generated PDFs/HTML, keep markdown if needed
+yolo_research/outputs/reports/*.pdf
+yolo_research/outputs/reports/*.html
+!yolo_research/outputs/reports/.gitkeep
+
+# Keep selected small PNG figures for report if desired
+!yolo_research/outputs/figures/.gitkeep
+# Optional: uncomment later if you want GitHub to keep selected PNG evidence
+# !yolo_research/outputs/figures/*.png
+
+# YOLO model artifacts
+*.pt
+*.onnx
+*.engine
+*.ncnn
+*_ncnn_model/
+
+# Cache
+*.cache
+.cache/

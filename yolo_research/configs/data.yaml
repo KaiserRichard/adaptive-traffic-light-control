@@ -1,0 +1,9 @@
+path: /content/atlc_2000
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: car
+  1: motorbike
+  2: truck
+  3: bus

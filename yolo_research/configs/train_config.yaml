@@ -1,0 +1,26 @@
+project_name: atlc_custom_yolo
+experiment_name: atlc_yolo26n_custom
+
+data: yolo_research/configs/data.yaml
+
+model: yolo26n.pt
+
+epochs: 50
+imgsz: 640
+batch: 16
+device: 0
+
+conf: 0.25
+
+project: yolo_research/outputs/runs
+name: atlc_yolo26n_custom
+
+classes:
+  - car
+  - motorbike
+  - truck
+  - bus
+
+notes: >
+  YOLO26n baseline for ATLC custom vehicle detection.
+  Target deployment: Raspberry Pi camera pipeline.
