@@ -302,3 +302,8 @@ yolo_research/outputs/reports/*.html
 # Cache
 *.cache
 .cache/
+
+outputs/runtime_logs/
+*.pyc
+__pycache__/
+.DS_Store
