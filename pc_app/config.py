@@ -195,3 +195,9 @@ DETECT_EVERY_N_FRAMES = int(os.getenv("DETECT_EVERY_N_FRAMES", "1"))
 
 if DETECT_EVERY_N_FRAMES < 1:
     raise ValueError("DETECT_EVERY_N_FRAMES must be >= 1.")
+
+# Runtime log directory 
+RUNTIME_LOG_DIR = os.getenv(
+    "RUNTIME_LOG_DIR",
+    "./outputs/runtime_logs"
+)

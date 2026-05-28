@@ -55,30 +55,49 @@ class SystemLogger:
     Runtime telemetry logger for ATLC.
     """
 
+import csv
+import json
+import os
+
+from datetime import datetime
+from typing import Dict, Any
+
+from pc_app.config import RUNTIME_LOG_DIR
+
+
+class SystemLogger:
+    """
+    Runtime telemetry logger for ATLC.
+    """
+
     def __init__(
         self,
-        log_dir: str = (
-            "outputs/pipeline_runs/"
-            "yolo26n_runtime_baseline/logs"
-        ),
+        log_dir: str | None = None,
     ):
-        self.log_dir = log_dir
+        self.log_dir = (
+            log_dir
+            or RUNTIME_LOG_DIR
+            or "./outputs/runtime_logs"
+        )
 
-        os.makedirs(self.log_dir, exist_ok=True)
+        os.makedirs(
+            self.log_dir,
+            exist_ok=True,
+        )
 
         self.csv_path = os.path.join(
             self.log_dir,
-            "traffic_runtime_log.csv"
+            "traffic_runtime_log.csv",
         )
 
         self.jsonl_path = os.path.join(
             self.log_dir,
-            "traffic_runtime_log.jsonl"
+            "traffic_runtime_log.jsonl",
         )
 
         self._initialize_csv()
 
-    def _initialize_csv(self) -> None:
+    def _initialize_csv(self) -> None:  
         """
         Create CSV header only once.
         """
