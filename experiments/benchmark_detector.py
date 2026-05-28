@@ -72,7 +72,7 @@ def get_model_name(model_path: str) -> str:
     Extract model name from model path.
 
     Example:
-    ./pc_app/models/local/yolov8n.pt -> yolov8n
+    ./pc_app/models/local/yolo26n.pt -> yolo26n
     ./pc_app/models/local/yolo26n.pt -> yolo26n
     """
 
@@ -101,7 +101,7 @@ def get_benchmark_id() -> str:
         model_format_device
 
     Example:
-        yolov8n_pt_pc
+        yolo26n_pt_pc
         yolo26n_pt_pc
     """
 

@@ -164,7 +164,7 @@ pc_app/models/local/
 Expected examples:
 
 ```text
-pc_app/models/local/yolov8n.pt
+pc_app/models/local/yolo26n.pt
 pc_app/models/local/yolo26n.pt
 ```
 
@@ -177,8 +177,8 @@ mkdir -p pc_app/models/local
 ### 4.2 Download YOLOv8n
 
 ```bash
-python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
-mv yolov8n.pt pc_app/models/local/yolov8n.pt
+python -c "from ultralytics import YOLO; YOLO('yolo26n.pt')"
+mv yolo26n.pt pc_app/models/local/yolo26n.pt
 ```
 
 ### 4.3 Download YOLO26n
@@ -198,7 +198,7 @@ Expected:
 
 ```text
 README.md
-yolov8n.pt
+yolo26n.pt
 yolo26n.pt
 ```
 
@@ -283,7 +283,7 @@ BENCHMARK_MAX_FRAMES=300
 To test YOLOv8n instead:
 
 ```env
-YOLO_MODEL_PATH=./pc_app/models/local/yolov8n.pt
+YOLO_MODEL_PATH=./pc_app/models/local/yolo26n.pt
 ```
 
 To test YOLO26n:
@@ -389,7 +389,7 @@ outputs/benchmarks/yolo26n_pt_pc/
 Example for YOLOv8n on PC:
 
 ```text
-outputs/benchmarks/yolov8n_pt_pc/
+outputs/benchmarks/yolo26n_pt_pc/
 ├── metrics.json
 └── run_notes.md
 ```
@@ -541,7 +541,7 @@ scp pc_app/models/local/yolo26n.pt pi@<RASPI_IP>:~/adaptive-traffic-light-contro
 Optional YOLOv8n:
 
 ```bash
-scp pc_app/models/local/yolov8n.pt pi@<RASPI_IP>:~/adaptive-traffic-light-control/pc_app/models/local/
+scp pc_app/models/local/yolo26n.pt pi@<RASPI_IP>:~/adaptive-traffic-light-control/pc_app/models/local/
 ```
 
 ### 12.5 Copy test video to Raspberry Pi

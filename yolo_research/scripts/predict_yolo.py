@@ -19,7 +19,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--iou", type=float, default=0.7, help="IoU threshold for NMS.")
     parser.add_argument("--device", default="0", help="Device: 0 for GPU, cpu for CPU.")
     parser.add_argument("--project", default="yolo_research/outputs/predictions", help="Prediction output root.")
-    parser.add_argument("--name", default="atlc_yolov8n_custom_predictions", help="Prediction run name.")
+    parser.add_argument("--name", default="atlc_yolo26n_custom_predictions", help="Prediction run name.")
     parser.add_argument("--max-det", type=int, default=100, help="Maximum detections per image.")
     parser.add_argument("--save-txt", action="store_true", help="Save prediction labels as txt.")
     parser.add_argument("--save-conf", action="store_true", help="Save confidence values in txt labels.")

@@ -20,7 +20,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch", type=int, default=16, help="Validation batch size.")
     parser.add_argument("--device", default="0", help="Device: 0 for GPU, cpu for CPU.")
     parser.add_argument("--project", default="yolo_research/outputs/evaluation", help="Output project directory for validation results.")
-    parser.add_argument("--name", default="atlc_yolov8n_custom_val", help="Validation run name.")
+    parser.add_argument("--name", default="atlc_yolo26n_custom_val", help="Validation run name.")
     parser.add_argument("--conf", type=float, default=None, help="Optional confidence threshold for validation.")
     parser.add_argument("--iou", type=float, default=0.7, help="IoU threshold for NMS during validation.")
     parser.add_argument("--exist-ok", action="store_true", help="Allow writing into existing validation output directory.")

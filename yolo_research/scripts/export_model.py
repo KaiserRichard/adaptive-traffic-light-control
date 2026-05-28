@@ -13,8 +13,8 @@ from pathlib import Path
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Export custom YOLO weights into pc_app/models/local.")
-    parser.add_argument("--weights", default="yolo_research/outputs/runs/atlc_yolov8n_custom/weights/best.pt", help="Source weights path.")
-    parser.add_argument("--out", default="pc_app/models/local/atlc_yolov8n_custom.pt", help="Destination runtime model path.")
+    parser.add_argument("--weights", default="yolo_research/outputs/runs/atlc_yolo26n_custom/weights/best.pt", help="Source weights path.")
+    parser.add_argument("--out", default="pc_app/models/local/atlc_yolo26n_custom.pt", help="Destination runtime model path.")
     parser.add_argument("--overwrite", action="store_true", help="Overwrite destination if it exists.")
     return parser.parse_args()
 

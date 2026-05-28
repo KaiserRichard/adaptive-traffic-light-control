@@ -4,13 +4,13 @@ Reproducible YOLO training script for ATLC custom dataset.
 Example:
     python -m yolo_research.scripts.train_yolo \
       --data yolo_research/configs/data.yaml \
-      --model yolov8n.pt \
+      --model yolo26n.pt \
       --epochs 50 \
       --imgsz 640 \
       --batch 16 \
       --device 0 \
       --project yolo_research/outputs/runs \
-      --name atlc_yolov8n_custom \
+      --name atlc_yolo26n_custom \
       --exist-ok
 """
 
@@ -25,13 +25,13 @@ from ultralytics import YOLO
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Train YOLO model for ATLC custom vehicle dataset.")
     parser.add_argument("--data", default="yolo_research/configs/data.yaml", help="Path to YOLO data.yaml.")
-    parser.add_argument("--model", default="yolov8n.pt", help="Base model path/name.")
+    parser.add_argument("--model", default="yolo26n.pt", help="Base model path/name.")
     parser.add_argument("--epochs", type=int, default=50, help="Number of training epochs.")
     parser.add_argument("--imgsz", type=int, default=640, help="Training image size.")
     parser.add_argument("--batch", default="16", help="Batch size. Use integer like 16 or 'auto'.")
     parser.add_argument("--device", default="0", help="Training device. Use 0 for first GPU or cpu for CPU.")
     parser.add_argument("--project", default="yolo_research/outputs/runs", help="Output project directory.")
-    parser.add_argument("--name", default="atlc_yolov8n_custom", help="Experiment/run name.")
+    parser.add_argument("--name", default="atlc_yolo26n_custom", help="Experiment/run name.")
     parser.add_argument("--patience", type=int, default=20, help="Early stopping patience.")
     parser.add_argument("--workers", type=int, default=2, help="Number of dataloader workers.")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility.")

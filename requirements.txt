@@ -9,3 +9,4 @@ ultralytics==8.4.22
 torch==2.2.2
 torchvision==0.17.2
 networkx==3.4.2
+cryptography>=42.0.0

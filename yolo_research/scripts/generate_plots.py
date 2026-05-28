@@ -29,8 +29,8 @@ from yolo_research.src.yolo_utils.plotting import (
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Generate report-ready PNG plots for ATLC YOLO research.")
     parser.add_argument("--data", default="yolo_research/configs/data.yaml", help="Path to YOLO data.yaml.")
-    parser.add_argument("--run-dir", default="yolo_research/outputs/runs/atlc_yolov8n_custom", help="Ultralytics training run directory.")
-    parser.add_argument("--predictions-dir", default="yolo_research/outputs/predictions/atlc_yolov8n_custom_predictions", help="Prediction output directory containing predicted images.")
+    parser.add_argument("--run-dir", default="yolo_research/outputs/runs/atlc_yolo26n_custom", help="Ultralytics training run directory.")
+    parser.add_argument("--predictions-dir", default="yolo_research/outputs/predictions/atlc_yolo26n_custom_predictions", help="Prediction output directory containing predicted images.")
     parser.add_argument("--outdir", default="yolo_research/outputs/figures", help="Output directory for PNG figures.")
     parser.add_argument("--pipeline-log", default="outputs/logs/pipeline_log.csv", help="Optional ATLC pipeline log CSV.")
     parser.add_argument("--profile-log", default="outputs/logs/profile_log.csv", help="Optional ATLC profiling log CSV.")

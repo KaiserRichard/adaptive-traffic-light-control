@@ -6,7 +6,7 @@ Model files are not committed to GitHub because they can be large.
 
 Expected examples:
 
-- yolov8n.pt
+- yolo26n.pt
 - yolo26n.pt
 - yolo26s.pt
 - yolo26x.pt
