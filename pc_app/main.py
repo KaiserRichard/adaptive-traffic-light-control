@@ -509,6 +509,13 @@ def main() -> None:
 
             runtime_log_state = {
                 "frame_index": frame_index,
+
+                "raw_green_a": raw_signal_plan["green_a"],
+                "raw_green_b": raw_signal_plan["green_b"],
+
+                "active_green_a": active_plan["green_a"],
+                "active_green_b": active_plan["green_b"],
+                
                 "mode": "AUTO",
                 "active_direction": active_direction,
                 "phase": runtime_snapshot.state,

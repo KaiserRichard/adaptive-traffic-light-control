@@ -55,7 +55,13 @@ class SystemLogger:
     Runtime telemetry logger for ATLC.
     """
 
-    def __init__(self, log_dir: str = "outputs/runtime_logs"):
+    def __init__(
+        self,
+        log_dir: str = (
+            "outputs/pipeline_runs/"
+            "yolo26n_runtime_baseline/logs"
+        ),
+    ):
         self.log_dir = log_dir
 
         os.makedirs(self.log_dir, exist_ok=True)
@@ -92,10 +98,22 @@ class SystemLogger:
             writer.writerow([
                 "timestamp",
 
+                "frame_index",
+
                 "mode",
                 "active_direction",
                 "phase",
                 "green_time",
+
+                "green_a",
+                "green_b",
+
+                "raw_green_a",
+                "raw_green_b",
+
+                "active_green_a",
+                "active_green_b",
+
                 "alert",
 
                 "direction_a_count",
@@ -126,10 +144,22 @@ class SystemLogger:
         csv_row = [
             timestamp,
 
+            state.get("frame_index", 0),
+
             state.get("mode", "AUTO"),
             state.get("active_direction", "NONE"),
             state.get("phase", "UNKNOWN"),
             state.get("green_time", 0),
+
+            state.get("green_a", 0),
+            state.get("green_b", 0),
+
+            state.get("raw_green_a", 0),
+            state.get("raw_green_b", 0),
+
+            state.get("active_green_a", 0),
+            state.get("active_green_b", 0),
+
             state.get("alert", "OK"),
 
             counts.get("direction_a", 0),
