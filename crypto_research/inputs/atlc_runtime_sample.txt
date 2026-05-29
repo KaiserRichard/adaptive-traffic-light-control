@@ -1,0 +1,22 @@
+ATLC Runtime Security Test Data
+
+This file simulates sensitive runtime data from the Adaptive Traffic Light Control system.
+
+Example runtime state:
+
+timestamp: 2026-05-28T15:40:00
+mode: AUTO
+active_direction: A
+phase: A_GREEN
+green_a: 40
+green_b: 10
+yellow: 3
+all_red: 1
+direction_a_count: 7
+direction_b_count: 3
+direction_a_level: MEDIUM
+direction_b_level: LOW
+processing_fps: 24.8
+
+Security goal:
+This file should be encrypted before storage or transmission because it may reveal traffic behavior, system state, and signal-control decisions.
