@@ -48,6 +48,7 @@ import json
 import os
 from datetime import datetime
 from typing import Dict, Any
+from pc_app.config import RUNTIME_LOG_DIR
 
 
 class SystemLogger:
@@ -57,12 +58,13 @@ class SystemLogger:
 
     def __init__(
         self,
-        log_dir: str = (
-            "outputs/pipeline_runs/"
-            "yolo26n_runtime_baseline/logs"
-        ),
+        log_dir: str | None = None,
     ):
-        self.log_dir = log_dir
+        self.log_dir = (
+            log_dir
+            or RUNTIME_LOG_DIR
+            or "outputs/runtime_logs"
+        )
 
         os.makedirs(self.log_dir, exist_ok=True)
 
@@ -75,6 +77,9 @@ class SystemLogger:
             self.log_dir,
             "traffic_runtime_log.jsonl"
         )
+
+        print("LOGGER CSV PATH:", self.csv_path)
+        print("LOGGER JSONL PATH:", self.jsonl_path)
 
         self._initialize_csv()
 

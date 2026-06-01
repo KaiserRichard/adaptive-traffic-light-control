@@ -94,6 +94,11 @@ OUTPUT_VIDEO_PATH = os.getenv(
     str(OUTPUTS_DIR / "benchmarks" / "local_yolo_pt_pc" / "annotated_full_pipeline.mp4"),
 )
 
+RUNTIME_LOG_DIR = os.getenv(
+    "RUNTIME_LOG_DIR",
+    str(OUTPUTS_DIR / "runtime_logs"),
+)
+
 ROI_CONFIG_PATH = os.getenv(
     "ROI_CONFIG_PATH",
     str(CONFIGS_DIR / "roi_example.json"),

@@ -203,6 +203,7 @@ def main() -> None:
         initial_plan=make_default_signal_plan()
     )
     system_logger = SystemLogger()
+    print("LOGGER PATH: ", system_logger.jsonl_path)
 
     # ---------------------------------------------------------------------
     # UART sender
