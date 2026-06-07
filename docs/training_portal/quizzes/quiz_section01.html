@@ -1,78 +1,886 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz Section 1 — Foundation</title>
-  <link rel="stylesheet" href="../assets/style.css" />
-</head>
-<body>
-  <header class="section-hero"><div class="inner"><h1>Quiz Section 1 — Foundation</h1><p>Quiz kiểm tra nhanh sau bài học.</p><nav class="top-nav"><a href="../index.html">Trang chủ</a></nav></div></header>
-  <main>
-    <section class="card"><h2>Hướng dẫn</h2><p>Chọn một đáp án đúng nhất. Bấm nộp bài để xem điểm, sau đó xem giải thích.</p></section>
+  <head>
+    <meta charset="UTF-8" />
+    <title>ATLC Quiz - Nền tảng và Tổng quan Hệ thống</title>
+    <style>
+      :root {
+        --blue: #16324f;
+        --blue2: #24537d;
+        --light: #f3f7fb;
+        --green: #0b7a28;
+        --red: #b00020;
+        --gray: #666;
+        --border: #ddd;
+        --yellow-bg: #fff8e6;
+        --yellow-border: #d69b00;
+      }
+
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+        max-width: 1040px;
+        margin: 32px auto;
+        padding: 0 18px;
+        color: #222;
+        line-height: 1.6;
+        background: #ffffff;
+      }
+
+      h1,
+      h2,
+      h3 {
+        color: var(--blue);
+      }
+
+      code {
+        background: #f1f1f1;
+        padding: 2px 5px;
+        border-radius: 4px;
+      }
+
+      .subtitle {
+        color: var(--gray);
+        margin-top: -8px;
+      }
+
+      .summary {
+        background: var(--light);
+        border-left: 5px solid var(--blue2);
+        padding: 18px 22px;
+        margin: 24px 0;
+        border-radius: 8px;
+      }
+
+      .summary ul {
+        margin-top: 8px;
+      }
+
+      .quiz-info {
+        background: #f8f8f8;
+        border: 1px solid var(--border);
+        padding: 14px 18px;
+        border-radius: 8px;
+        margin: 18px 0 26px;
+      }
+
+      .question {
+        border: 1px solid var(--border);
+        padding: 18px;
+        border-radius: 10px;
+        margin-bottom: 18px;
+        background: #fff;
+      }
+
+      .question h3 {
+        margin-top: 0;
+        font-size: 18px;
+      }
+
+      label {
+        display: block;
+        margin: 8px 0;
+        cursor: pointer;
+        padding: 6px 8px;
+        border-radius: 6px;
+      }
+
+      label:hover {
+        background: #f5f8fb;
+      }
+
+      input[type="radio"] {
+        margin-right: 8px;
+      }
+
+      button {
+        background: var(--blue);
+        color: white;
+        border: none;
+        padding: 12px 18px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        margin: 8px 8px 8px 0;
+      }
+
+      button:hover {
+        background: var(--blue2);
+      }
+
+      .result {
+        font-weight: bold;
+        margin: 24px 0;
+        font-size: 20px;
+        color: var(--blue);
+      }
+
+      .explanation {
+        display: none;
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 8px;
+        background: #f7f7f7;
+        border-left: 4px solid #aaa;
+      }
+
+      .correct {
+        color: var(--green);
+        font-weight: bold;
+      }
+
+      .wrong {
+        color: var(--red);
+        font-weight: bold;
+      }
+
+      .optional {
+        background: var(--yellow-bg);
+        border-left: 5px solid var(--yellow-border);
+        padding: 18px 22px;
+        margin-top: 30px;
+        border-radius: 8px;
+      }
+
+      .footer-note {
+        color: var(--gray);
+        font-size: 14px;
+        margin-top: 28px;
+        border-top: 1px solid var(--border);
+        padding-top: 14px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>ATLC: Nền tảng và Tổng quan Hệ thống</h1>
+    <p class="subtitle">Quiz nội bộ dành cho ATLC Project Team</p>
+
+    <div class="summary">
+      <h2>Tóm tắt lý thuyết</h2>
+
+      <p>
+        ATLC là hệ thống hỗ trợ giám sát và điều phối giao thông bằng thị giác
+        máy tính. Hệ thống nhận dữ liệu từ camera hoặc video, phát hiện phương
+        tiện, tách xe theo vùng ROI, đếm xe theo từng hướng, ước lượng mật độ
+        giao thông và đề xuất thời gian đèn phù hợp hơn so với chu kỳ cố định.
+      </p>
+
+      <p>
+        Điểm quan trọng nhất khi trình bày là không định vị ATLC như một hệ
+        thống AI thay thế hoàn toàn con người. ATLC nên được hiểu là một hệ
+        thống hỗ trợ ra quyết định cho người vận hành hoặc cảnh sát giao thông.
+        Hệ thống cung cấp dữ liệu, khuyến nghị, log và bằng chứng; con người vẫn
+        giữ vai trò giám sát và quyết định cuối cùng.
+      </p>
+
+      <p>Luồng xử lý chính:</p>
+
+      <ul>
+        <li>Camera/video cung cấp dữ liệu giao thông.</li>
+        <li>Mô hình thị giác máy tính phát hiện phương tiện.</li>
+        <li>ROI tách phương tiện theo từng hướng đường.</li>
+        <li>Counter đếm số lượng phương tiện.</li>
+        <li>Density module ước lượng mật độ giao thông.</li>
+        <li>Scheduler đề xuất thời gian đèn.</li>
+        <li>Runtime controller ổn định kế hoạch đang thực thi.</li>
+        <li>
+          Dashboard, log, video output hoặc MCU demo giúp giám sát và đánh giá
+          hệ thống.
+        </li>
+      </ul>
+
+      <p>
+        Các khái niệm cần nắm: đèn cố định, điều khiển thích ứng,
+        decision-support system, YOLO, bounding box, confidence, ROI, density,
+        scheduler, raw plan, pending plan, active plan, runtime controller,
+        Raspberry Pi, MCU, UART, PLAN message, ACK, FSM, evidence, benchmark và
+        giới hạn triển khai.
+      </p>
+    </div>
+
+    <div class="quiz-info">
+      <strong>Hướng dẫn:</strong>
+      Chọn một đáp án đúng nhất cho mỗi câu. Sau khi làm xong, bấm
+      <strong>Nộp bài</strong> để xem điểm. Bấm
+      <strong>Xem giải thích</strong> để vào chế độ review.
+    </div>
+
     <div id="quiz"></div>
-    <button class="btn primary" onclick="submitQuiz()">Nộp bài</button>
-    <button class="btn" onclick="showReview()">Xem giải thích</button>
-    <button class="btn" onclick="resetQuiz()">Làm lại</button>
+
+    <button onclick="submitQuiz()">Nộp bài</button>
+    <button onclick="showReview()">Xem giải thích</button>
+    <button onclick="resetQuiz()">Làm lại</button>
+
     <div id="result" class="result"></div>
-  </main>
-  <script src="../assets/app.js"></script>
-  <script>initQuiz([
-  {
-    "q": "ATLC nên được định vị là gì?",
-    "options": [
-      "Hệ thống hỗ trợ giám sát và ra quyết định",
-      "Hệ thống thay thế hoàn toàn cảnh sát giao thông",
-      "Phần mềm chỉ lưu video",
-      "Mạch LED độc lập"
-    ],
-    "answer": 0,
-    "explanation": "ATLC là decision-support system, hỗ trợ người vận hành bằng dữ liệu và khuyến nghị."
-  },
-  {
-    "q": "Điểm yếu của fixed-time traffic light là gì?",
-    "options": [
-      "Không phản ứng theo mật độ xe thay đổi",
-      "Không thể bật đèn vàng",
-      "Không dùng được ở giao lộ",
-      "Không thể có chu kỳ"
-    ],
-    "answer": 0,
-    "explanation": "Chu kỳ cố định đơn giản nhưng không linh hoạt khi mật độ xe biến động."
-  },
-  {
-    "q": "Luồng ATLC đúng nhất là gì?",
-    "options": [
-      "Video → detection → ROI → counting → density → scheduler → runtime",
-      "MCU → YOLO → camera → slide",
-      "Quiz → firmware → camera",
-      "PDF → LED → dataset"
-    ],
-    "answer": 0,
-    "explanation": "Đây là pipeline tổng thể cần nhớ khi bảo vệ."
-  },
-  {
-    "q": "Câu nào nên tránh?",
-    "options": [
-      "AI tự động điều khiển giao thông thực tế không cần con người",
-      "ATLC hỗ trợ phân tích video và đề xuất thời gian đèn",
-      "ATLC ghi log để kiểm tra",
-      "ATLC có dashboard/evidence"
-    ],
-    "answer": 0,
-    "explanation": "Không overclaim hệ thống thay thế con người hoặc đã production-ready."
-  },
-  {
-    "q": "Evidence giúp gì?",
-    "options": [
-      "Chứng minh hệ thống hoạt động có dữ liệu kiểm tra",
-      "Thay thế toàn bộ code",
-      "Xóa lỗi AI",
-      "Bỏ qua demo"
-    ],
-    "answer": 0,
-    "explanation": "Evidence gồm video output, log, plots, summary."
-  }
-]);</script>
-</body>
+
+    <div class="optional">
+      <h2>Optional - Mở rộng sau bài học</h2>
+      <p>
+        Khi bảo vệ dự án, nhóm nên phân biệt rõ bốn mức độ:
+        <strong>implemented</strong>, <strong>simulated</strong>,
+        <strong>planned</strong> và <strong>future work</strong>. Ví dụ, nếu hệ
+        thống mới chạy trên PC với video mẫu, không nên nói rằng hệ thống đã
+        triển khai ngoài giao lộ thật. Nếu MCU chỉ nhận PLAN qua UART, không nên
+        nói MCU tự xác thực HMAC nếu firmware chưa làm phần đó.
+      </p>
+      <p>
+        Một cách trình bày chuyên nghiệp là: ATLC chứng minh pipeline từ video
+        giao thông đến khuyến nghị điều phối, có log và evidence để kiểm tra.
+        Đây là nền tảng để phát triển thành hệ thống hỗ trợ quyết định cho người
+        vận hành, chứ không phải một hệ thống tự động thay thế hoàn toàn cảnh
+        sát giao thông.
+      </p>
+    </div>
+
+    <p class="footer-note">
+      ATLC Internal Training Quiz - Foundation and System Overview.
+    </p>
+
+    <script>
+      const questions = [
+        {
+          q: "1. ATLC nên được định vị chính xác nhất là gì?",
+          options: [
+            "Một hệ thống AI tự động thay thế hoàn toàn cảnh sát giao thông",
+            "Một hệ thống hỗ trợ giám sát và ra quyết định trong điều phối giao thông",
+            "Một phần mềm chỉ dùng để lưu video giao thông",
+            "Một mạch LED giao thông không liên quan đến xử lý hình ảnh",
+          ],
+          answer: 1,
+          explanation:
+            "ATLC nên được trình bày là hệ thống hỗ trợ giám sát và ra quyết định. Hệ thống phân tích video, ước lượng mật độ và đề xuất thời gian đèn, nhưng con người vẫn giám sát và quyết định cuối cùng.",
+        },
+        {
+          q: "2. Hạn chế chính của đèn giao thông theo chu kỳ cố định là gì?",
+          options: [
+            "Không thể bật đèn đỏ",
+            "Không phản ứng trực tiếp với mật độ xe thay đổi theo thời gian",
+            "Không thể dùng ở giao lộ có hai hướng",
+            "Không thể hoạt động nếu không có YOLO",
+          ],
+          answer: 1,
+          explanation:
+            "Đèn cố định dùng thời gian được cấu hình trước. Khi mật độ xe giữa các hướng thay đổi, chu kỳ cố định có thể phân bổ thời gian xanh chưa hợp lý.",
+        },
+        {
+          q: "3. Trong bài học này, tư duy điều khiển thích ứng được hiểu đúng là gì?",
+          options: [
+            "Thay đổi đèn liên tục theo từng frame video",
+            "Dùng dữ liệu giao thông để hỗ trợ đề xuất thời gian đèn phù hợp hơn",
+            "Bỏ hoàn toàn vai trò người vận hành",
+            "Luôn cho hướng đông xe nhất đèn xanh vô hạn",
+          ],
+          answer: 1,
+          explanation:
+            "Điều khiển thích ứng nghĩa là quan sát tình trạng giao thông, ước lượng mật độ và đề xuất thời gian đèn phù hợp hơn. Nó không có nghĩa là đổi đèn tùy tiện theo từng frame.",
+        },
+        {
+          q: "4. Luồng xử lý mức cao của ATLC bắt đầu từ đâu?",
+          options: [
+            "Từ PLAN message",
+            "Từ camera hoặc video giao thông",
+            "Từ MCU",
+            "Từ file báo cáo PDF",
+          ],
+          answer: 1,
+          explanation:
+            "ATLC bắt đầu từ dữ liệu giao thông đầu vào, thường là camera hoặc video. Các bước sau mới phát hiện xe, đếm xe, ước lượng mật độ và đề xuất thời gian đèn.",
+        },
+        {
+          q: "5. Kết quả cuối cùng của hệ thống ATLC ở mức tổng quan là gì?",
+          options: [
+            "Chỉ một danh sách pixel ảnh",
+            "Dữ liệu giám sát, khuyến nghị thời gian đèn, log/evidence hoặc mô hình phần cứng demo",
+            "Một mô hình YOLO không có đầu ra",
+            "Một file ảnh không có thông tin giao thông",
+          ],
+          answer: 1,
+          explanation:
+            "ATLC không chỉ phát hiện phương tiện. Hệ thống hướng đến dữ liệu giám sát, khuyến nghị thời gian đèn, log, video output và có thể minh họa bằng MCU/LED.",
+        },
+        {
+          q: "6. Tại sao không nên nói ATLC thay thế hoàn toàn con người?",
+          options: [
+            "Vì ATLC không dùng dữ liệu",
+            "Vì điều phối giao thông thực tế còn liên quan đến an toàn, luật vận hành, xe ưu tiên và tình huống bất thường",
+            "Vì mọi mô hình AI luôn đúng tuyệt đối",
+            "Vì dashboard không thể hiển thị dữ liệu",
+          ],
+          answer: 1,
+          explanation:
+            "Giao thông thực tế cần xét nhiều yếu tố ngoài số lượng xe. AI có thể sai hoặc bị ảnh hưởng bởi camera, ánh sáng, vật cản. Vì vậy ATLC nên là decision-support system.",
+        },
+        {
+          q: "7. Câu nào là cách diễn đạt phù hợp khi bảo vệ?",
+          options: [
+            "ATLC đã triển khai ngoài giao lộ thật và tự điều khiển giao thông",
+            "ATLC hỗ trợ phân tích video, ước lượng mật độ và đề xuất thời gian đèn cho người vận hành",
+            "ATLC không cần camera và không cần dữ liệu",
+            "ATLC chỉ là một slide lý thuyết, không có pipeline kỹ thuật",
+          ],
+          answer: 1,
+          explanation:
+            "Cách diễn đạt đúng là ATLC hỗ trợ phân tích và khuyến nghị. Không nên overclaim rằng hệ thống đã tự điều khiển giao thông ngoài thực tế nếu chưa triển khai thật.",
+        },
+        {
+          q: "8. Kiến trúc phân tầng của ATLC giúp ích gì?",
+          options: [
+            "Làm hệ thống khó giải thích hơn",
+            "Tách nhiệm vụ rõ ràng, giúp dễ kiểm thử, debug và bảo vệ",
+            "Loại bỏ hoàn toàn nhu cầu log",
+            "Làm cho YOLO chạy trên MCU",
+          ],
+          answer: 1,
+          explanation:
+            "Kiến trúc phân tầng chia hệ thống thành nhận dữ liệu, thị giác máy tính, ra quyết định, giám sát/thực thi. Điều này giúp hệ thống rõ ràng và dễ bảo vệ.",
+        },
+        {
+          q: "9. Tầng nhận dữ liệu trong ATLC bao gồm gì?",
+          options: [
+            "Camera hoặc video giao thông",
+            "Chỉ MCU",
+            "Chỉ file CSV",
+            "Chỉ dashboard",
+          ],
+          answer: 0,
+          explanation:
+            "Tầng nhận dữ liệu cung cấp đầu vào cho pipeline, thường là camera hoặc video giao thông.",
+        },
+        {
+          q: "10. Yếu tố nào ảnh hưởng đến chất lượng tầng nhận dữ liệu?",
+          options: [
+            "Độ phân giải, góc nhìn, ánh sáng, vật cản và độ ổn định camera",
+            "Tên file HTML quiz",
+            "Số câu hỏi trong bài kiểm tra",
+            "Màu của slide",
+          ],
+          answer: 0,
+          explanation:
+            "Video đầu vào càng rõ, góc nhìn càng tốt thì mô hình phát hiện càng có cơ hội hoạt động ổn định hơn.",
+        },
+        {
+          q: "11. Tầng thị giác máy tính trong ATLC có nhiệm vụ chính là gì?",
+          options: [
+            "Biến video thành dữ liệu phương tiện có cấu trúc",
+            "Gửi ACK từ MCU về host",
+            "Viết báo cáo LaTeX",
+            "Cấp nguồn cho LED",
+          ],
+          answer: 0,
+          explanation:
+            "Tầng thị giác máy tính phát hiện phương tiện, xác định vị trí, nhãn lớp, ROI và hỗ trợ đếm xe theo hướng.",
+        },
+        {
+          q: "12. YOLO trong ATLC được dùng để làm gì?",
+          options: [
+            "Phát hiện phương tiện trong ảnh hoặc video",
+            "Mã hóa toàn bộ video",
+            "Điều khiển trực tiếp đèn LED",
+            "Tạo slide Beamer",
+          ],
+          answer: 0,
+          explanation:
+            "YOLO là mô hình phát hiện đối tượng. Trong ATLC, nó phát hiện các phương tiện trong khung hình.",
+        },
+        {
+          q: "13. Bounding box là gì?",
+          options: [
+            "Khung chữ nhật bao quanh đối tượng được phát hiện",
+            "Giao thức truyền dữ liệu UART",
+            "Một loại dashboard",
+            "Một loại file log",
+          ],
+          answer: 0,
+          explanation:
+            "Bounding box biểu diễn vị trí của đối tượng trong ảnh, thường bằng khung chữ nhật bao quanh phương tiện.",
+        },
+        {
+          q: "14. Class label cho biết điều gì?",
+          options: [
+            "Loại đối tượng được phát hiện, ví dụ car, bus, motorbike",
+            "Thời gian xanh của hướng A",
+            "Tốc độ truyền UART",
+            "Số trang của slide",
+          ],
+          answer: 0,
+          explanation:
+            "Class label là nhãn lớp của đối tượng. Trong ATLC, nhãn lớp có thể là xe máy, ô tô, xe buýt hoặc xe tải.",
+        },
+        {
+          q: "15. Confidence trong phát hiện đối tượng có ý nghĩa gì?",
+          options: [
+            "Độ tin cậy của mô hình đối với dự đoán",
+            "Độ sáng của màn hình",
+            "Thời gian all-red",
+            "Số câu trả lời đúng trong quiz",
+          ],
+          answer: 0,
+          explanation:
+            "Confidence score cho biết mô hình tự tin đến mức nào về dự đoán. Confidence thấp thường bị loại bằng threshold.",
+        },
+        {
+          q: "16. ROI có vai trò gì trong ATLC?",
+          options: [
+            "Xác định phương tiện thuộc hướng đường nào",
+            "Huấn luyện lại toàn bộ YOLO sau mỗi frame",
+            "Thay thế camera",
+            "Mã hóa PLAN message",
+          ],
+          answer: 0,
+          explanation:
+            "ROI là vùng quan tâm trong ảnh. Nó giúp gán phương tiện vào hướng A, hướng B hoặc vùng ngoài quan sát.",
+        },
+        {
+          q: "17. Câu nào diễn giải đúng quan hệ giữa YOLO và ROI?",
+          options: [
+            "YOLO cho biết xe ở đâu, ROI giúp biết xe thuộc hướng đường nào",
+            "ROI phát hiện xe, YOLO gửi UART",
+            "YOLO chỉ dùng để vẽ dashboard, ROI chỉ dùng để mã hóa",
+            "YOLO và ROI hoàn toàn không liên quan",
+          ],
+          answer: 0,
+          explanation:
+            "YOLO phát hiện vị trí xe trong ảnh. ROI dùng vị trí đó để xác định hướng đường hoặc khu vực quan tâm.",
+        },
+        {
+          q: "18. Counter trong ATLC làm nhiệm vụ gì?",
+          options: [
+            "Đếm số lượng phương tiện theo hướng hoặc theo lớp",
+            "Mở cổng serial",
+            "Tạo ảnh bounding box",
+            "Thay đổi theme của slide",
+          ],
+          answer: 0,
+          explanation:
+            "Counter tổng hợp detections thành số lượng xe theo từng hướng hoặc từng lớp phương tiện.",
+        },
+        {
+          q: "19. Vì sao ATLC cần ước lượng mật độ giao thông?",
+          options: [
+            "Để scheduler có chỉ số so sánh mức độ đông xe giữa các hướng",
+            "Để thay đổi font chữ dashboard",
+            "Để nén video",
+            "Để tắt camera",
+          ],
+          answer: 0,
+          explanation:
+            "Mật độ là chỉ số trung gian quan trọng giúp scheduler quyết định hướng nào nên được ưu tiên thời gian xanh.",
+        },
+        {
+          q: "20. Vì sao chỉ đếm tổng số xe đôi khi chưa đủ?",
+          options: [
+            "Vì các loại phương tiện có ảnh hưởng khác nhau đến giao thông",
+            "Vì mọi loại xe luôn giống nhau",
+            "Vì số xe không thể dùng trong hệ thống",
+            "Vì ROI không thể dùng với video",
+          ],
+          answer: 0,
+          explanation:
+            "Một xe buýt hoặc xe tải có thể ảnh hưởng nhiều hơn một xe máy. Vì vậy density có thể xét thêm trọng số theo loại phương tiện.",
+        },
+        {
+          q: "21. Scheduler trong ATLC làm gì?",
+          options: [
+            "Đề xuất thời gian đèn dựa trên mật độ giao thông",
+            "Phát hiện bounding box",
+            "Cấp nguồn cho Raspberry Pi",
+            "Tạo file HTML quiz",
+          ],
+          answer: 0,
+          explanation:
+            "Scheduler nhận mật độ của các hướng và tạo ra signal plan, ví dụ green_a, green_b, yellow, all_red.",
+        },
+        {
+          q: "22. Signal plan thường chứa thông tin nào?",
+          options: [
+            "green_a, green_b, yellow, all_red",
+            "username và password",
+            "chỉ tọa độ bounding box",
+            "chỉ tên ảnh đầu vào",
+          ],
+          answer: 0,
+          explanation:
+            "Signal plan mô tả thời gian đèn, thường gồm thời gian xanh cho từng hướng, thời gian vàng và thời gian all-red.",
+        },
+        {
+          q: "23. Vì sao không nên áp dụng ngay mọi raw plan do scheduler tạo ra?",
+          options: [
+            "Vì raw plan có thể thay đổi liên tục theo từng frame, gây hệ thống không ổn định",
+            "Vì raw plan luôn sai",
+            "Vì raw plan chỉ dùng cho ảnh tĩnh",
+            "Vì raw plan không liên quan đến đèn",
+          ],
+          answer: 0,
+          explanation:
+            "Scheduler có thể tạo plan mới theo từng frame. Nếu áp dụng ngay, thời gian đèn có thể nhảy liên tục. Runtime controller giúp ổn định active plan.",
+        },
+        {
+          q: "24. Runtime controller có vai trò chính là gì?",
+          options: [
+            "Ổn định kế hoạch đèn đang thực thi",
+            "Thay thế camera",
+            "Huấn luyện YOLO",
+            "Mã hóa toàn bộ video thời gian thực",
+          ],
+          answer: 0,
+          explanation:
+            "Runtime controller giữ active plan ổn định và chỉ áp dụng pending plan ở thời điểm phù hợp.",
+        },
+        {
+          q: "25. Raw plan là gì?",
+          options: [
+            "Kế hoạch mới nhất do scheduler đề xuất",
+            "Kế hoạch đang chắc chắn được MCU thực thi",
+            "File video đầu vào",
+            "Tên của mô hình YOLO",
+          ],
+          answer: 0,
+          explanation:
+            "Raw plan là output mới nhất của scheduler, nhưng chưa chắc đã là kế hoạch đang được thực thi.",
+        },
+        {
+          q: "26. Pending plan là gì?",
+          options: [
+            "Kế hoạch đang chờ được áp dụng",
+            "Kế hoạch đã bị xóa hoàn toàn",
+            "Video đã annotate",
+            "Mã nguồn firmware",
+          ],
+          answer: 0,
+          explanation:
+            "Pending plan là kế hoạch đã được đề xuất nhưng còn chờ thời điểm an toàn để áp dụng.",
+        },
+        {
+          q: "27. Active plan là gì?",
+          options: [
+            "Kế hoạch đang thật sự được thực thi",
+            "Ảnh đầu vào của YOLO",
+            "Một file CSS",
+            "Một loại dataset",
+          ],
+          answer: 0,
+          explanation:
+            "Active plan là kế hoạch hiện tại đang được runtime controller hoặc phần cứng thực thi.",
+        },
+        {
+          q: "28. Câu nào đúng nhất về quan hệ raw plan, pending plan và active plan?",
+          options: [
+            "Raw plan là khuyến nghị mới nhất, pending plan là kế hoạch chờ áp dụng, active plan là kế hoạch đang chạy",
+            "Ba khái niệm này hoàn toàn giống nhau",
+            "Active plan luôn thay đổi ở mọi frame",
+            "Pending plan là tên khác của camera",
+          ],
+          answer: 0,
+          explanation:
+            "Đây là điểm rất quan trọng khi bảo vệ. Tách ba khái niệm này giúp chứng minh hệ thống không điều khiển đèn tùy tiện theo từng frame.",
+        },
+        {
+          q: "29. Dashboard trong ATLC nên phục vụ ai trước tiên?",
+          options: [
+            "Người vận hành hoặc người giám sát giao thông",
+            "Chỉ compiler LaTeX",
+            "Chỉ firmware MCU",
+            "Chỉ file ảnh trong thư mục pics",
+          ],
+          answer: 0,
+          explanation:
+            "Dashboard cần hiển thị thông tin hữu ích cho người giám sát: số xe, mức giao thông, trạng thái đèn, thời gian còn lại, khuyến nghị và cảnh báo.",
+        },
+        {
+          q: "30. Dashboard không nên chỉ tập trung vào điều gì?",
+          options: [
+            "Các chi tiết debug quá sâu của YOLO nếu người dùng là người vận hành",
+            "Số lượng xe theo hướng",
+            "Trạng thái đèn hiện tại",
+            "Thời gian còn lại",
+          ],
+          answer: 0,
+          explanation:
+            "Người vận hành không nhất thiết cần xem toàn bộ chi tiết debug của mô hình. Dashboard nên ưu tiên thông tin ra quyết định.",
+        },
+        {
+          q: "31. Trong giai đoạn phát triển, hệ thống thường chạy ở đâu?",
+          options: [
+            "Laptop hoặc PC",
+            "Chỉ ngoài giao lộ thật",
+            "Chỉ trong MCU không có máy tính",
+            "Chỉ trong trình duyệt",
+          ],
+          answer: 0,
+          explanation:
+            "Ở giai đoạn phát triển, chạy trên PC/laptop giúp debug, dùng video mẫu, ghi log và tạo biểu đồ thuận tiện.",
+        },
+        {
+          q: "32. Vai trò định hướng của Raspberry Pi trong kiến trúc là gì?",
+          options: [
+            "Máy tính nhúng xử lý video, chạy pipeline và gửi PLAN tới MCU",
+            "Chỉ là đèn LED",
+            "Chỉ là file log",
+            "Chỉ dùng để viết quiz",
+          ],
+          answer: 0,
+          explanation:
+            "Raspberry Pi có thể nhận camera, xử lý pipeline AI, tính plan và gửi qua UART đến MCU trong định hướng triển khai.",
+        },
+        {
+          q: "33. Khi chưa triển khai hoàn chỉnh trên Raspberry Pi, nên trình bày thế nào?",
+          options: [
+            "Nói rõ đây là kiến trúc định hướng hoặc kế hoạch triển khai",
+            "Nói chắc chắn đã triển khai ngoài thực tế",
+            "Nói Raspberry Pi không liên quan đến hệ thống",
+            "Nói Raspberry Pi thay thế camera",
+          ],
+          answer: 0,
+          explanation:
+            "Cần phân biệt rõ implemented và planned/future work. Nếu chưa triển khai, phải nói là định hướng.",
+        },
+        {
+          q: "34. MCU trong kiến trúc ATLC làm gì?",
+          options: [
+            "Thực thi tín hiệu đèn bằng finite-state machine dựa trên PLAN nhận được",
+            "Chạy YOLO trực tiếp",
+            "Phân tích bounding box",
+            "Huấn luyện dataset",
+          ],
+          answer: 0,
+          explanation:
+            "MCU không chạy AI. Nó nhận kế hoạch thời gian đèn và điều khiển LED/traffic light FSM.",
+        },
+        {
+          q: "35. Vì sao chia trách nhiệm giữa host/Raspberry Pi và MCU là hợp lý?",
+          options: [
+            "Host xử lý nhận thức và khuyến nghị, MCU xử lý thực thi phần cứng",
+            "MCU xử lý toàn bộ video còn host chỉ bật LED",
+            "Cả hai đều không làm gì",
+            "Raspberry Pi chỉ dùng để trang trí",
+          ],
+          answer: 0,
+          explanation:
+            "Phân chia này giúp hệ thống modular: phần AI/decision chạy trên host, phần thực thi tín hiệu chạy trên MCU.",
+        },
+        {
+          q: "36. UART trong ATLC dùng để làm gì?",
+          options: [
+            "Truyền PLAN message từ host/Raspberry Pi tới MCU",
+            "Vẽ bounding box",
+            "Tách ROI",
+            "Tạo biểu đồ FPS",
+          ],
+          answer: 0,
+          explanation:
+            "UART là giao tiếp nối tiếp. Trong ATLC, nó có thể truyền kế hoạch đèn từ host sang MCU.",
+        },
+        {
+          q: "37. PLAN message ví dụ `PLAN,42,34,10,3,1` có ý nghĩa gì?",
+          options: [
+            "Một kế hoạch đèn với plan_id và các thời gian green_a, green_b, yellow, all_red",
+            "Một bounding box trong ảnh",
+            "Một dòng dữ liệu training YOLO",
+            "Một câu hỏi quiz",
+          ],
+          answer: 0,
+          explanation:
+            "PLAN message chứa ID kế hoạch và các thông số thời gian đèn để MCU thực thi.",
+        },
+        {
+          q: "38. ACK từ MCU có ý nghĩa gì?",
+          options: [
+            "MCU xác nhận đã nhận một PLAN hợp lệ",
+            "YOLO phát hiện sai",
+            "Camera bị tắt",
+            "Dashboard đổi màu",
+          ],
+          answer: 0,
+          explanation:
+            "ACK là phản hồi xác nhận. Ví dụ ACK,42 nghĩa là MCU xác nhận kế hoạch có plan_id 42.",
+        },
+        {
+          q: "39. Finite-State Machine trong MCU dùng để làm gì?",
+          options: [
+            "Điều khiển các pha đèn theo trạng thái và thời lượng",
+            "Tạo dataset",
+            "Chỉnh sửa ảnh",
+            "Chấm điểm quiz",
+          ],
+          answer: 0,
+          explanation:
+            "FSM chia quá trình điều khiển đèn thành các trạng thái như A green, A yellow, all-red, B green, v.v.",
+        },
+        {
+          q: "40. Trạng thái nào có thể thuộc FSM giao thông hai hướng?",
+          options: ["A green", "Compile LaTeX", "Open browser", "Upload quiz"],
+          answer: 0,
+          explanation:
+            "A green là một pha đèn hợp lệ trong FSM. Các trạng thái khác không liên quan đến điều khiển đèn.",
+        },
+        {
+          q: "41. Vì sao cần log và evidence?",
+          options: [
+            "Để chứng minh hệ thống hoạt động bằng dữ liệu và giúp kiểm tra lại kết quả",
+            "Để làm hệ thống khó hiểu hơn",
+            "Để thay thế hoàn toàn camera",
+            "Để xóa toàn bộ output",
+          ],
+          answer: 0,
+          explanation:
+            "Evidence như video output, CSV log, JSONL log, plots và summary giúp đánh giá hệ thống có căn cứ.",
+        },
+        {
+          q: "42. CSV log phù hợp với mục đích nào?",
+          options: [
+            "Lưu dữ liệu dạng bảng để phân tích và vẽ biểu đồ",
+            "Điều khiển LED trực tiếp",
+            "Huấn luyện MCU",
+            "Tạo bounding box",
+          ],
+          answer: 0,
+          explanation:
+            "CSV là định dạng bảng, rất phù hợp để phân tích bằng Python, Excel hoặc tạo plots.",
+        },
+        {
+          q: "43. JSONL log có đặc điểm gì?",
+          options: [
+            "Mỗi dòng là một đối tượng JSON, phù hợp để lưu sự kiện hoặc dữ liệu runtime",
+            "Là định dạng ảnh",
+            "Là giao thức UART",
+            "Là loại đèn giao thông",
+          ],
+          answer: 0,
+          explanation:
+            "JSONL giúp lưu log theo từng dòng JSON, tiện cho runtime events hoặc dữ liệu từng frame.",
+        },
+        {
+          q: "44. Benchmark trong ATLC giúp chứng minh điều gì?",
+          options: [
+            "Hệ thống chạy như thế nào về FPS, detection, density, timing và logging",
+            "Hệ thống không cần kiểm thử",
+            "Mọi kết quả AI đều đúng tuyệt đối",
+            "Dashboard thay thế hoàn toàn báo cáo",
+          ],
+          answer: 0,
+          explanation:
+            "Benchmark không chỉ đo tốc độ mà còn giúp kiểm tra hành vi pipeline, runtime và output evidence.",
+        },
+        {
+          q: "45. Câu nào là nguyên tắc quan trọng khi bảo vệ dự án?",
+          options: [
+            "Phân biệt rõ implemented, simulated, planned và future work",
+            "Nói mọi thứ đã hoàn thiện dù chưa làm",
+            "Không cần nêu hạn chế",
+            "Nói hệ thống production-ready dù mới là prototype",
+          ],
+          answer: 0,
+          explanation:
+            "Đây là nguyên tắc bảo vệ rất quan trọng. Trình bày trung thực giúp tránh overclaim và tăng độ tin cậy.",
+        },
+      ];
+
+      function renderQuiz() {
+        const quiz = document.getElementById("quiz");
+        quiz.innerHTML = "";
+
+        questions.forEach((item, index) => {
+          const div = document.createElement("div");
+          div.className = "question";
+
+          let html = `<h3>${item.q}</h3>`;
+
+          item.options.forEach((opt, i) => {
+            html += `
+        <label>
+          <input type="radio" name="q${index}" value="${i}">
+          ${opt}
+        </label>
+      `;
+          });
+
+          html += `<div class="explanation" id="exp${index}"></div>`;
+
+          div.innerHTML = html;
+          quiz.appendChild(div);
+        });
+      }
+
+      function submitQuiz() {
+        let score = 0;
+        let answered = 0;
+
+        questions.forEach((item, index) => {
+          const selected = document.querySelector(
+            `input[name="q${index}"]:checked`,
+          );
+          if (selected) {
+            answered++;
+            if (Number(selected.value) === item.answer) {
+              score++;
+            }
+          }
+        });
+
+        const percent = Math.round((score / questions.length) * 100);
+
+        let level = "";
+        if (percent >= 90) {
+          level = "Rất tốt. Bạn đã nắm chắc phần nền tảng.";
+        } else if (percent >= 75) {
+          level = "Tốt. Bạn đã hiểu phần lớn nội dung, nên review các câu sai.";
+        } else if (percent >= 60) {
+          level =
+            "Đạt mức cơ bản. Cần xem lại các khái niệm về runtime, UART và evidence.";
+        } else {
+          level =
+            "Cần học lại bài. Hãy đọc lại phần tóm tắt và xem giải thích từng câu.";
+        }
+
+        document.getElementById("result").innerHTML =
+          `Kết quả: ${score}/${questions.length} câu đúng (${percent}%).<br>` +
+          `Bạn đã trả lời ${answered}/${questions.length} câu.<br>` +
+          `${level}`;
+      }
+
+      function showReview() {
+        questions.forEach((item, index) => {
+          const exp = document.getElementById(`exp${index}`);
+          const selected = document.querySelector(
+            `input[name="q${index}"]:checked`,
+          );
+
+          let status = "";
+          if (!selected) {
+            status = `<span class="wrong">Bạn chưa chọn đáp án.</span>`;
+          } else if (Number(selected.value) === item.answer) {
+            status = `<span class="correct">Đúng.</span>`;
+          } else {
+            status = `<span class="wrong">Sai.</span>`;
+          }
+
+          exp.style.display = "block";
+          exp.innerHTML = `
+      ${status}<br>
+      <strong>Đáp án đúng:</strong> ${item.options[item.answer]}<br>
+      <strong>Giải thích:</strong> ${item.explanation}
+    `;
+        });
+      }
+
+      function resetQuiz() {
+        questions.forEach((item, index) => {
+          const selected = document.querySelector(
+            `input[name="q${index}"]:checked`,
+          );
+          if (selected) {
+            selected.checked = false;
+          }
+          const exp = document.getElementById(`exp${index}`);
+          exp.style.display = "none";
+          exp.innerHTML = "";
+        });
+
+        document.getElementById("result").innerHTML = "";
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+
+      renderQuiz();
+    </script>
+  </body>
 </html>
