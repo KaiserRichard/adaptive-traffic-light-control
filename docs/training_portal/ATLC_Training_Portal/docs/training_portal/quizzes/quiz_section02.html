@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Section 2 — AI / YOLO</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <header class="section-hero"><div class="inner"><h1>Quiz Section 2 — AI / YOLO</h1><p>Quiz kiểm tra nhanh sau bài học.</p><nav class="top-nav"><a href="../index.html">Trang chủ</a></nav></div></header>
+  <main>
+    <section class="card"><h2>Hướng dẫn</h2><p>Chọn một đáp án đúng nhất. Bấm nộp bài để xem điểm, sau đó xem giải thích.</p></section>
+    <div id="quiz"></div>
+    <button class="btn primary" onclick="submitQuiz()">Nộp bài</button>
+    <button class="btn" onclick="showReview()">Xem giải thích</button>
+    <button class="btn" onclick="resetQuiz()">Làm lại</button>
+    <div id="result" class="result"></div>
+  </main>
+  <script src="../assets/app.js"></script>
+  <script>initQuiz([
+  {
+    "q": "YOLO dùng để làm gì trong ATLC?",
+    "options": [
+      "Phát hiện phương tiện trong video",
+      "Gửi UART",
+      "Điều khiển LED",
+      "Viết log CSV"
+    ],
+    "answer": 0,
+    "explanation": "YOLO là object detector trong tầng Computer Vision."
+  },
+  {
+    "q": "Bounding box là gì?",
+    "options": [
+      "Khung bao quanh đối tượng được phát hiện",
+      "Một PLAN message",
+      "Một loại UART",
+      "Một file video"
+    ],
+    "answer": 0,
+    "explanation": "Bounding box mô tả vị trí phương tiện trong ảnh."
+  },
+  {
+    "q": "Confidence threshold dùng để làm gì?",
+    "options": [
+      "Lọc dự đoán có độ tin cậy thấp",
+      "Tăng điện áp MCU",
+      "Đổi màu dashboard",
+      "Chia video"
+    ],
+    "answer": 0,
+    "explanation": "Threshold quyết định detection nào được giữ lại."
+  },
+  {
+    "q": "Dataset ảnh hưởng gì?",
+    "options": [
+      "Chất lượng training/detection",
+      "Tốc độ UART trực tiếp",
+      "Màu đèn LED",
+      "Tên repo"
+    ],
+    "answer": 0,
+    "explanation": "Dataset tốt giúp mô hình học tốt hơn."
+  },
+  {
+    "q": "Class label cho biết gì?",
+    "options": [
+      "Loại đối tượng như car/bus/motorbike",
+      "Thời gian đèn xanh",
+      "Port serial",
+      "FPS"
+    ],
+    "answer": 0,
+    "explanation": "Class label là nhãn phương tiện."
+  }
+]);</script>
+</body>
+</html>

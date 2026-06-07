@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Section 4 — Scheduler / Runtime</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <header class="section-hero"><div class="inner"><h1>Quiz Section 4 — Scheduler / Runtime</h1><p>Quiz kiểm tra nhanh sau bài học.</p><nav class="top-nav"><a href="../index.html">Trang chủ</a></nav></div></header>
+  <main>
+    <section class="card"><h2>Hướng dẫn</h2><p>Chọn một đáp án đúng nhất. Bấm nộp bài để xem điểm, sau đó xem giải thích.</p></section>
+    <div id="quiz"></div>
+    <button class="btn primary" onclick="submitQuiz()">Nộp bài</button>
+    <button class="btn" onclick="showReview()">Xem giải thích</button>
+    <button class="btn" onclick="resetQuiz()">Làm lại</button>
+    <div id="result" class="result"></div>
+  </main>
+  <script src="../assets/app.js"></script>
+  <script>initQuiz([
+  {
+    "q": "Scheduler tạo ra gì?",
+    "options": [
+      "Signal plan",
+      "Bounding box",
+      "Dataset",
+      "Private key"
+    ],
+    "answer": 0,
+    "explanation": "Signal plan gồm green_a, green_b, yellow, all_red."
+  },
+  {
+    "q": "Raw plan là gì?",
+    "options": [
+      "Khuyến nghị mới nhất từ scheduler",
+      "Kế hoạch chắc chắn đang chạy",
+      "Video đầu vào",
+      "ACK từ MCU"
+    ],
+    "answer": 0,
+    "explanation": "Raw plan chưa chắc đang được thực thi."
+  },
+  {
+    "q": "Active plan là gì?",
+    "options": [
+      "Kế hoạch đang thật sự được thực thi",
+      "Tên model YOLO",
+      "File CSS",
+      "Ảnh ROI"
+    ],
+    "answer": 0,
+    "explanation": "Active plan là plan hiện hành."
+  },
+  {
+    "q": "Runtime controller giúp gì?",
+    "options": [
+      "Ổn định kế hoạch đèn, tránh nhảy theo frame",
+      "Huấn luyện YOLO",
+      "Thay camera",
+      "Tạo Google Drive"
+    ],
+    "answer": 0,
+    "explanation": "Runtime controller tách raw/pending/active plan."
+  },
+  {
+    "q": "Countdown cho biết gì?",
+    "options": [
+      "Còn bao nhiêu giây trước khi chuyển pha",
+      "Số dataset",
+      "Số slide",
+      "Confidence"
+    ],
+    "answer": 0,
+    "explanation": "Countdown giúp dashboard dễ theo dõi runtime state."
+  }
+]);</script>
+</body>
+</html>

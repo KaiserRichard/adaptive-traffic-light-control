@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Section 1 — Foundation</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <header class="section-hero"><div class="inner"><h1>Quiz Section 1 — Foundation</h1><p>Quiz kiểm tra nhanh sau bài học.</p><nav class="top-nav"><a href="../index.html">Trang chủ</a></nav></div></header>
+  <main>
+    <section class="card"><h2>Hướng dẫn</h2><p>Chọn một đáp án đúng nhất. Bấm nộp bài để xem điểm, sau đó xem giải thích.</p></section>
+    <div id="quiz"></div>
+    <button class="btn primary" onclick="submitQuiz()">Nộp bài</button>
+    <button class="btn" onclick="showReview()">Xem giải thích</button>
+    <button class="btn" onclick="resetQuiz()">Làm lại</button>
+    <div id="result" class="result"></div>
+  </main>
+  <script src="../assets/app.js"></script>
+  <script>initQuiz([
+  {
+    "q": "ATLC nên được định vị là gì?",
+    "options": [
+      "Hệ thống hỗ trợ giám sát và ra quyết định",
+      "Hệ thống thay thế hoàn toàn cảnh sát giao thông",
+      "Phần mềm chỉ lưu video",
+      "Mạch LED độc lập"
+    ],
+    "answer": 0,
+    "explanation": "ATLC là decision-support system, hỗ trợ người vận hành bằng dữ liệu và khuyến nghị."
+  },
+  {
+    "q": "Điểm yếu của fixed-time traffic light là gì?",
+    "options": [
+      "Không phản ứng theo mật độ xe thay đổi",
+      "Không thể bật đèn vàng",
+      "Không dùng được ở giao lộ",
+      "Không thể có chu kỳ"
+    ],
+    "answer": 0,
+    "explanation": "Chu kỳ cố định đơn giản nhưng không linh hoạt khi mật độ xe biến động."
+  },
+  {
+    "q": "Luồng ATLC đúng nhất là gì?",
+    "options": [
+      "Video → detection → ROI → counting → density → scheduler → runtime",
+      "MCU → YOLO → camera → slide",
+      "Quiz → firmware → camera",
+      "PDF → LED → dataset"
+    ],
+    "answer": 0,
+    "explanation": "Đây là pipeline tổng thể cần nhớ khi bảo vệ."
+  },
+  {
+    "q": "Câu nào nên tránh?",
+    "options": [
+      "AI tự động điều khiển giao thông thực tế không cần con người",
+      "ATLC hỗ trợ phân tích video và đề xuất thời gian đèn",
+      "ATLC ghi log để kiểm tra",
+      "ATLC có dashboard/evidence"
+    ],
+    "answer": 0,
+    "explanation": "Không overclaim hệ thống thay thế con người hoặc đã production-ready."
+  },
+  {
+    "q": "Evidence giúp gì?",
+    "options": [
+      "Chứng minh hệ thống hoạt động có dữ liệu kiểm tra",
+      "Thay thế toàn bộ code",
+      "Xóa lỗi AI",
+      "Bỏ qua demo"
+    ],
+    "answer": 0,
+    "explanation": "Evidence gồm video output, log, plots, summary."
+  }
+]);</script>
+</body>
+</html>

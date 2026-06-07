@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Section 6 — Evidence / Security</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <header class="section-hero"><div class="inner"><h1>Quiz Section 6 — Evidence / Security</h1><p>Quiz kiểm tra nhanh sau bài học.</p><nav class="top-nav"><a href="../index.html">Trang chủ</a></nav></div></header>
+  <main>
+    <section class="card"><h2>Hướng dẫn</h2><p>Chọn một đáp án đúng nhất. Bấm nộp bài để xem điểm, sau đó xem giải thích.</p></section>
+    <div id="quiz"></div>
+    <button class="btn primary" onclick="submitQuiz()">Nộp bài</button>
+    <button class="btn" onclick="showReview()">Xem giải thích</button>
+    <button class="btn" onclick="resetQuiz()">Làm lại</button>
+    <div id="result" class="result"></div>
+  </main>
+  <script src="../assets/app.js"></script>
+  <script>initQuiz([
+  {
+    "q": "CSV log phù hợp để làm gì?",
+    "options": [
+      "Phân tích bảng và vẽ plots",
+      "Điều khiển LED",
+      "Train MCU",
+      "Mã hóa video"
+    ],
+    "answer": 0,
+    "explanation": "CSV dễ phân tích bằng Python/Excel."
+  },
+  {
+    "q": "Benchmark nên chứng minh gì?",
+    "options": [
+      "Hành vi runtime, FPS, timing, density, reliability",
+      "Hệ thống hoàn hảo tuyệt đối",
+      "Không cần log",
+      "Không cần demo"
+    ],
+    "answer": 0,
+    "explanation": "Benchmark là evidence có số liệu."
+  },
+  {
+    "q": "HMAC dùng để làm gì?",
+    "options": [
+      "Xác thực PLAN message",
+      "Vẽ bounding box",
+      "Đếm xe",
+      "Chạy dashboard"
+    ],
+    "answer": 0,
+    "explanation": "HMAC giúp phát hiện PLAN bị sửa/giả mạo."
+  },
+  {
+    "q": "Replay attack là gì?",
+    "options": [
+      "Gửi lại message cũ để đánh lừa hệ thống",
+      "Xem lại video bài giảng",
+      "Làm lại quiz",
+      "Chạy lại git status"
+    ],
+    "answer": 0,
+    "explanation": "Timestamp/nonce/plan_id giúp chống replay."
+  },
+  {
+    "q": "Hash-chain audit log giúp gì?",
+    "options": [
+      "Phát hiện log bị chỉnh sửa",
+      "Tăng FPS YOLO",
+      "Tăng điện áp LED",
+      "Tạo camera"
+    ],
+    "answer": 0,
+    "explanation": "Hash-chain làm log tamper-evident."
+  }
+]);</script>
+</body>
+</html>

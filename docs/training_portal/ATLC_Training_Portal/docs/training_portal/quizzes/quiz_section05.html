@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz Section 5 — UART / MCU</title>
+  <link rel="stylesheet" href="../assets/style.css" />
+</head>
+<body>
+  <header class="section-hero"><div class="inner"><h1>Quiz Section 5 — UART / MCU</h1><p>Quiz kiểm tra nhanh sau bài học.</p><nav class="top-nav"><a href="../index.html">Trang chủ</a></nav></div></header>
+  <main>
+    <section class="card"><h2>Hướng dẫn</h2><p>Chọn một đáp án đúng nhất. Bấm nộp bài để xem điểm, sau đó xem giải thích.</p></section>
+    <div id="quiz"></div>
+    <button class="btn primary" onclick="submitQuiz()">Nộp bài</button>
+    <button class="btn" onclick="showReview()">Xem giải thích</button>
+    <button class="btn" onclick="resetQuiz()">Làm lại</button>
+    <div id="result" class="result"></div>
+  </main>
+  <script src="../assets/app.js"></script>
+  <script>initQuiz([
+  {
+    "q": "MCU có chạy YOLO không?",
+    "options": [
+      "Không, MCU chủ yếu thực thi FSM đèn",
+      "Có, MCU chạy toàn bộ AI",
+      "Có, MCU train model",
+      "Có, MCU tạo dataset"
+    ],
+    "answer": 0,
+    "explanation": "AI pipeline chạy trên host/Raspberry Pi; MCU thực thi tín hiệu."
+  },
+  {
+    "q": "UART dùng để làm gì?",
+    "options": [
+      "Truyền PLAN từ host tới MCU",
+      "Vẽ ROI",
+      "Train model",
+      "Tạo PDF"
+    ],
+    "answer": 0,
+    "explanation": "UART là kênh host-to-MCU."
+  },
+  {
+    "q": "PLAN,42,34,10,3,1 nghĩa là gì?",
+    "options": [
+      "Kế hoạch đèn với plan_id và timing",
+      "Bounding box",
+      "Log JSONL",
+      "Tên video"
+    ],
+    "answer": 0,
+    "explanation": "PLAN chứa id và thời gian green/yellow/all-red."
+  },
+  {
+    "q": "ACK nghĩa là gì?",
+    "options": [
+      "MCU xác nhận nhận PLAN hợp lệ",
+      "Camera tắt",
+      "YOLO sai",
+      "Quiz xong"
+    ],
+    "answer": 0,
+    "explanation": "ACK là acknowledgement."
+  },
+  {
+    "q": "FSM đèn gồm gì?",
+    "options": [
+      "Các pha A_GREEN, A_YELLOW, ALL_RED, B_GREEN...",
+      "Các câu quiz",
+      "Các file PDF",
+      "Các nhãn dataset"
+    ],
+    "answer": 0,
+    "explanation": "FSM điều khiển chuyển pha đèn theo timing."
+  }
+]);</script>
+</body>
+</html>
