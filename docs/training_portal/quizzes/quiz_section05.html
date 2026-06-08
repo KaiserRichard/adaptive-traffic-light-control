@@ -1,78 +1,90 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz Section 5 — UART / MCU</title>
-  <link rel="stylesheet" href="../assets/style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ATLC Quiz Section 05 — Hardware, Serial Link và MCU</title>
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--blue:#12355b;--blue2:#1f5f99;--border:#d9e2ec;--muted:#607089;--green:#087a3d;--red:#b42318;--warn:#fff7df}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#1f2937;line-height:1.55}.wrap{max-width:1080px;margin:0 auto;padding:28px 18px 48px}.top{background:linear-gradient(135deg,#102a43,#1f5f99);color:white;border-radius:18px;padding:26px 30px;margin-bottom:22px;box-shadow:0 10px 30px rgba(16,42,67,.18)}.top h1{margin:0 0 8px;font-size:30px}.top p{margin:0;opacity:.92}.summary,.panel,.question{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin:16px 0;box-shadow:0 4px 14px rgba(15,23,42,.04)}.summary{border-left:6px solid var(--blue2)}.summary h2,.panel h2{color:var(--blue);margin-top:0}.summary ul{margin-top:8px}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.tag{background:#e8f1fb;color:#12355b;border:1px solid #bdd7f0;border-radius:999px;padding:5px 10px;font-size:13px}.question h3{margin:0 0 12px;color:#102a43;font-size:18px}label{display:block;border:1px solid #e5e7eb;border-radius:10px;padding:9px 10px;margin:8px 0;cursor:pointer;background:#fff}label:hover{background:#f4f8fc}input[type=radio]{margin-right:9px}.actions{position:sticky;bottom:0;background:rgba(246,248,251,.96);backdrop-filter:blur(6px);padding:12px 0;border-top:1px solid var(--border);margin-top:18px}button{background:var(--blue);color:white;border:0;border-radius:10px;padding:11px 15px;font-size:15px;cursor:pointer;margin-right:8px}button:hover{background:var(--blue2)}button.secondary{background:#56677e}.result{font-size:20px;font-weight:bold;color:var(--blue);margin:18px 0}.explanation{display:none;margin-top:12px;background:#f8fafc;border-left:4px solid #94a3b8;border-radius:8px;padding:12px}.correct{color:var(--green);font-weight:bold}.wrong{color:var(--red);font-weight:bold}.footer{color:var(--muted);font-size:14px;margin-top:28px}.warn{background:var(--warn);border-left:5px solid #f2b705;padding:12px 14px;border-radius:10px}code{background:#eef2f7;padding:2px 5px;border-radius:5px}@media(max-width:720px){.top h1{font-size:24px}.wrap{padding:18px 12px}.summary,.panel,.question{padding:15px}}
+</style>
 </head>
 <body>
-  <header class="section-hero"><div class="inner"><h1>Quiz Section 5 — UART / MCU</h1><p>Quiz kiểm tra nhanh sau bài học.</p><nav class="top-nav"><a href="../index.html">Trang chủ</a></nav></div></header>
-  <main>
-    <section class="card"><h2>Hướng dẫn</h2><p>Chọn một đáp án đúng nhất. Bấm nộp bài để xem điểm, sau đó xem giải thích.</p></section>
-    <div id="quiz"></div>
-    <button class="btn primary" onclick="submitQuiz()">Nộp bài</button>
-    <button class="btn" onclick="showReview()">Xem giải thích</button>
-    <button class="btn" onclick="resetQuiz()">Làm lại</button>
-    <div id="result" class="result"></div>
-  </main>
-  <script src="../assets/app.js"></script>
-  <script>initQuiz([
-  {
-    "q": "MCU có chạy YOLO không?",
-    "options": [
-      "Không, MCU chủ yếu thực thi FSM đèn",
-      "Có, MCU chạy toàn bộ AI",
-      "Có, MCU train model",
-      "Có, MCU tạo dataset"
-    ],
-    "answer": 0,
-    "explanation": "AI pipeline chạy trên host/Raspberry Pi; MCU thực thi tín hiệu."
-  },
-  {
-    "q": "UART dùng để làm gì?",
-    "options": [
-      "Truyền PLAN từ host tới MCU",
-      "Vẽ ROI",
-      "Train model",
-      "Tạo PDF"
-    ],
-    "answer": 0,
-    "explanation": "UART là kênh host-to-MCU."
-  },
-  {
-    "q": "PLAN,42,34,10,3,1 nghĩa là gì?",
-    "options": [
-      "Kế hoạch đèn với plan_id và timing",
-      "Bounding box",
-      "Log JSONL",
-      "Tên video"
-    ],
-    "answer": 0,
-    "explanation": "PLAN chứa id và thời gian green/yellow/all-red."
-  },
-  {
-    "q": "ACK nghĩa là gì?",
-    "options": [
-      "MCU xác nhận nhận PLAN hợp lệ",
-      "Camera tắt",
-      "YOLO sai",
-      "Quiz xong"
-    ],
-    "answer": 0,
-    "explanation": "ACK là acknowledgement."
-  },
-  {
-    "q": "FSM đèn gồm gì?",
-    "options": [
-      "Các pha A_GREEN, A_YELLOW, ALL_RED, B_GREEN...",
-      "Các câu quiz",
-      "Các file PDF",
-      "Các nhãn dataset"
-    ],
-    "answer": 0,
-    "explanation": "FSM điều khiển chuyển pha đèn theo timing."
-  }
-]);</script>
+<div class="wrap">
+  <header class="top">
+    <h1>ATLC Quiz Section 05 — Hardware, Serial Link và MCU</h1>
+    <p>Kiểm tra phần Host/MCU, Raspberry Pi/PC, USB Serial, PLAN/ACK, Fake MCU và FSM điều khiển đèn.</p>
+    <div class="meta"><span class="tag">ATLC Internal Training</span><span class="tag">30 câu trắc nghiệm</span><span class="tag">Có chấm điểm và giải thích</span></div>
+  </header>
+  <section class="summary">
+    <h2>Tóm tắt lý thuyết</h2>
+    <ul><li>Host là PC hoặc Raspberry Pi xử lý video, AI, ROI, density và scheduler; MCU là ESP32/Arduino thực thi timing plan bằng FSM.</li>
+<li>Nếu demo dùng cáp Type-C/USB, nên gọi là USB Serial hoặc serial communication, không nói cứng là UART dây rời TX/RX.</li>
+<li>PLAN message chứa timing plan; ACK xác nhận MCU nhận plan hợp lệ; Fake MCU giúp kiểm thử giao thức trước phần cứng thật.</li></ul>
+    <div class="warn"><strong>Gợi ý học:</strong> Làm quiz sau khi xem slide section tương ứng. Khi review, tập trung vào câu sai và đọc giải thích để chuẩn bị trả lời bảo vệ.</div>
+  </section>
+  <section class="panel">
+    <h2>Hướng dẫn</h2>
+    <p>Chọn một đáp án đúng nhất cho mỗi câu. Bấm <strong>Nộp bài</strong> để xem điểm. Bấm <strong>Xem giải thích</strong> để review từng câu.</p>
+  </section>
+  <div id="quiz"></div>
+  <div class="actions">
+    <button onclick="submitQuiz()">Nộp bài</button>
+    <button class="secondary" onclick="showReview()">Xem giải thích</button>
+    <button class="secondary" onclick="resetQuiz()">Làm lại</button>
+  </div>
+  <div id="result" class="result"></div>
+  <p class="footer">ATLC Project Team — Quiz package generated for compact defense training.</p>
+</div>
+<script>
+const questions = [{"q": "1. Section 5 tập trung vào nội dung gì?", "options": ["Cách timing plan được minh họa bằng phần cứng MCU", "Cách train YOLO", "Cách tạo website", "Cách viết script quay video"], "answer": 0, "explanation": "Section 5 là hardware, serial link và MCU."}, {"q": "2. Host trong ATLC có thể là gì?", "options": ["PC hoặc Raspberry Pi", "Chỉ LED", "Chỉ resistor", "Chỉ Google Drive"], "answer": 0, "explanation": "Host chạy pipeline mức cao."}, {"q": "3. Vai trò chính của host là gì?", "options": ["Xử lý video, AI, ROI, density, scheduler và gửi plan", "Chạy LED trực tiếp không cần phần mềm", "Chỉ nhận ACK", "Chỉ lưu PDF"], "answer": 0, "explanation": "Host là nơi tính toán logic mức cao."}, {"q": "4. MCU trong demo có thể là gì?", "options": ["ESP32 hoặc Arduino", "Google Meet", "YOLO model", "Git branch"], "answer": 0, "explanation": "ESP32/Arduino là controller phần cứng."}, {"q": "5. Vai trò chính của MCU là gì?", "options": ["Nhận timing plan và điều khiển LED/FSM", "Chạy YOLO", "Tạo density", "Vẽ ROI"], "answer": 0, "explanation": "MCU thực thi hành vi đèn."}, {"q": "6. Câu nào đúng về MCU?", "options": ["MCU không chạy YOLO", "MCU train model", "MCU đọc video camera", "MCU tạo dashboard web"], "answer": 0, "explanation": "YOLO nằm ở host, không phải MCU."}, {"q": "7. Nếu dùng cáp Type-C từ host tới ESP32, nên gọi giao tiếp là gì?", "options": ["USB Serial / serial communication", "Bắt buộc gọi UART dây rời", "HMAC video stream", "Google Drive sync"], "answer": 0, "explanation": "Về mặt phần mềm vẫn là serial port qua USB."}, {"q": "8. Vì sao không nên nói cứng “UART dây rời TX/RX” nếu demo dùng Type-C?", "options": ["Vì không khớp physical connection demo", "Vì UART không tồn tại", "Vì MCU chạy AI", "Vì HTML không hỗ trợ"], "answer": 0, "explanation": "Cách nói an toàn là serial communication/USB Serial."}, {"q": "9. PLAN message mô tả gì?", "options": ["Timing plan gửi từ host xuống MCU", "Ảnh bounding box", "Class label", "GitHub token"], "answer": 0, "explanation": "PLAN chứa plan_id và thời lượng các pha đèn."}, {"q": "10. Ví dụ PLAN,42,34,10,3,1 có thể hiểu thế nào?", "options": ["plan_id 42, green A 34s, green B 10s, yellow 3s, all-red 1s", "bbox có tọa độ 42", "ACK lỗi", "FPS 42"], "answer": 0, "explanation": "Đây là format timing plan dạng text."}, {"q": "11. ACK message có vai trò gì?", "options": ["Xác nhận MCU nhận/chấp nhận plan", "Chạy detection", "Mã hóa video", "Tạo ROI"], "answer": 0, "explanation": "ACK giúp host biết message đã được MCU nhận hợp lệ."}, {"q": "12. ACK,42 nghĩa là gì?", "options": ["MCU xác nhận plan ID 42", "Có 42 xe", "Yellow 42s", "HMAC lỗi"], "answer": 0, "explanation": "ACK gắn với plan_id."}, {"q": "13. Nếu message sai định dạng, MCU nên làm gì?", "options": ["Bỏ qua hoặc trả lỗi", "Crash luôn", "Tự train lại", "Tắt host"], "answer": 0, "explanation": "MCU cần xử lý input lỗi an toàn."}, {"q": "14. Fake MCU dùng để làm gì?", "options": ["Kiểm thử PLAN/ACK trước khi nối board thật", "Thay thế YOLO vĩnh viễn", "Lưu video", "Tạo slide"], "answer": 0, "explanation": "Fake MCU giúp debug communication logic."}, {"q": "15. Fake MCU giúp tách loại lỗi nào?", "options": ["Lỗi phần mềm giao tiếp khỏi lỗi phần cứng", "Lỗi font khỏi lỗi ảnh", "Lỗi quiz khỏi lỗi Drive", "Lỗi màu slide"], "answer": 0, "explanation": "Kiểm thử fake giúp xác nhận protocol trước khi dùng board."}, {"q": "16. FSM là viết tắt của gì?", "options": ["Finite-State Machine", "Frame Sync Method", "Fast Security Module", "File Storage Mode"], "answer": 0, "explanation": "FSM là máy trạng thái hữu hạn điều khiển pha đèn."}, {"q": "17. FSM hai hướng có thể gồm trạng thái nào?", "options": ["GREEN_A, YELLOW_A, ALL_RED, GREEN_B, YELLOW_B", "YOLO_TRAIN, GIT_PUSH", "HTML_OPEN", "DRIVE_SYNC"], "answer": 0, "explanation": "Đây là các pha đèn cơ bản."}, {"q": "18. GREEN_A nghĩa là gì?", "options": ["Hướng A xanh, hướng B đỏ", "Cả hai xanh", "A đỏ B xanh", "Không có đèn"], "answer": 0, "explanation": "Trạng thái này ưu tiên hướng A."}, {"q": "19. ALL_RED dùng để làm gì?", "options": ["Cả hai hướng đỏ trong thời gian chuyển pha", "Cả hai xanh", "Tắt hệ thống", "Train model"], "answer": 0, "explanation": "All-red là trạng thái chuyển tiếp an toàn/mô phỏng."}, {"q": "20. Kịch bản demo phần cứng đúng là gì?", "options": ["Host chạy pipeline → tạo plan → gửi serial → MCU chạy FSM → LED hiển thị", "MCU chạy YOLO → host nhận bbox", "Google Meet → HMAC → ROI", "Slide → GitHub → LED"], "answer": 0, "explanation": "Đây là demo flow Section 5."}, {"q": "21. Trong demo, LED chứng minh điều gì?", "options": ["Timing plan có thể được thực thi thành trạng thái đèn", "YOLO chính xác tuyệt đối", "Hệ thống đã triển khai ngoài đường", "Video stream đã mã hóa"], "answer": 0, "explanation": "LED là mô hình minh họa output hardware."}, {"q": "22. Câu nào là overclaim về hardware?", "options": ["Mô hình đã triển khai điều khiển đèn thật ngoài đường", "MCU nhận plan và điều khiển LED", "Host xử lý video", "USB Serial dùng trong demo"], "answer": 0, "explanation": "Không nên nói đã triển khai thực tế nếu chưa."}, {"q": "23. ACK có đảm bảo an toàn giao thông không?", "options": ["Không, ACK chỉ xác nhận message ở mức giao tiếp", "Có, ACK thay thế kiểm định an toàn", "ACK là HMAC", "ACK là dashboard"], "answer": 0, "explanation": "ACK là protocol-level acknowledgement, không phải safety certification."}, {"q": "24. Raspberry Pi trong kiến trúc đóng vai trò gì?", "options": ["Host device có thể chạy pipeline AI và gửi plan", "MCU thực thi FSM duy nhất", "LED output", "Dataset storage only"], "answer": 0, "explanation": "Pi có thể là host nhúng."}, {"q": "25. Arduino trong demo có thể dùng để làm gì?", "options": ["MCU tạm thời nhận serial và điều khiển LED", "Huấn luyện YOLO", "Chạy dashboard full", "Lưu Google Drive"], "answer": 0, "explanation": "Arduino/ESP32 đều có thể làm controller demo."}, {"q": "26. “Host là nơi tính toán; MCU là nơi thực thi” thể hiện nguyên tắc gì?", "options": ["Phân chia trách nhiệm rõ ràng", "Trộn AI vào firmware", "Bỏ module scheduler", "Không cần communication"], "answer": 0, "explanation": "Đây là kiến trúc modular host-MCU."}, {"q": "27. Firmware MCU cần biết gì về YOLO?", "options": ["Không cần biết YOLO, chỉ cần timing plan", "Cần biết toàn bộ dataset", "Cần train model", "Cần xử lý image frame"], "answer": 0, "explanation": "MCU nhận timing values, không xử lý vision."}, {"q": "28. Trong slide, serial link nên được mô tả thế nào?", "options": ["Host gửi PLAN qua serial communication, demo có thể là USB Serial", "Luôn là dây TX/RX rời", "Không cần dây", "Chỉ qua Google Drive"], "answer": 0, "explanation": "Cách nói này khớp demo Type-C/USB."}, {"q": "29. Khi giáo viên hỏi “MCU làm gì?”, trả lời tốt nhất là gì?", "options": ["MCU thực thi FSM điều khiển LED dựa trên timing plan nhận từ host", "MCU phát hiện xe", "MCU tính density", "MCU tạo quiz"], "answer": 0, "explanation": "Đây là câu trả lời đúng trọng tâm."}, {"q": "30. Câu tổng kết đúng nhất Section 5 là gì?", "options": ["Host xử lý nhận thức/quyết định; MCU thực thi timing plan qua serial link trên mô hình đèn", "MCU thay host xử lý tất cả", "Serial link thay YOLO", "ACK là bằng chứng deployment thực tế"], "answer": 0, "explanation": "Section 5 chứng minh phân tầng hardware-demo đúng scope."}];
+function renderQuiz() {
+  const quiz = document.getElementById('quiz');
+  quiz.innerHTML = '';
+  questions.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'question';
+    let html = `<h3>${item.q}</h3>`;
+    item.options.forEach((opt, i) => {
+      html += `<label><input type="radio" name="q${index}" value="${i}">${opt}</label>`;
+    });
+    html += `<div class="explanation" id="exp${index}"></div>`;
+    div.innerHTML = html;
+    quiz.appendChild(div);
+  });
+}
+function submitQuiz() {
+  let score = 0, answered = 0;
+  questions.forEach((item, index) => {
+    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+    if (selected) { answered++; if (Number(selected.value) === item.answer) score++; }
+  });
+  const percent = Math.round(score / questions.length * 100);
+  let level = percent >= 90 ? 'Rất tốt. Bạn nắm chắc section này.' : percent >= 75 ? 'Tốt. Nên review các câu sai.' : percent >= 60 ? 'Đạt cơ bản. Cần xem lại các khái niệm trọng tâm.' : 'Cần học lại section này trước khi bảo vệ.';
+  document.getElementById('result').innerHTML = `Kết quả: ${score}/${questions.length} câu đúng (${percent}%).<br>Bạn đã trả lời ${answered}/${questions.length} câu.<br>${level}`;
+}
+function showReview() {
+  questions.forEach((item, index) => {
+    const exp = document.getElementById(`exp${index}`);
+    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+    let status = '';
+    if (!selected) status = '<span class="wrong">Bạn chưa chọn đáp án.</span>';
+    else if (Number(selected.value) === item.answer) status = '<span class="correct">Đúng.</span>';
+    else status = '<span class="wrong">Sai.</span>';
+    exp.style.display = 'block';
+    exp.innerHTML = `${status}<br><strong>Đáp án đúng:</strong> ${item.options[item.answer]}<br><strong>Giải thích:</strong> ${item.explanation}`;
+  });
+}
+function resetQuiz() {
+  questions.forEach((item,index) => {
+    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+    if (selected) selected.checked = false;
+    const exp = document.getElementById(`exp${index}`);
+    exp.style.display = 'none'; exp.innerHTML = '';
+  });
+  document.getElementById('result').innerHTML = '';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+renderQuiz();
+</script>
 </body>
 </html>

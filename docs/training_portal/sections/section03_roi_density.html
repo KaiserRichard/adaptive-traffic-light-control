@@ -1,68 +1,101 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Section 3 — ROI, Counting và Density | ATLC Training</title>
-  <link rel="stylesheet" href="../assets/style.css" />
-</head>
-<body>
-  <header class="section-hero">
-    <div class="inner">
-      <h1>Section 3 — ROI, Counting và Density</h1>
-      <p>Cách hệ thống tách xe theo hướng và biến số lượng xe thành mật độ giao thông.</p>
-      <nav class="top-nav" style="margin-top:16px">
-        <a href="../index.html">Trang chủ</a>
-        <a href="../quizzes/quiz_section03.html">Quiz</a>
-        <a href="../slides/section03_roi_density.pdf">Slide PDF</a>
-      </nav>
-    </div>
-  </header>
-
-  <main class="lesson-layout">
-    <article class="lesson-content card">
-      <h2>Mục tiêu bài học</h2>
-      <ul><li>ROI xác định phương tiện thuộc hướng đường nào.</li>
-<li>Counting tổng hợp số xe theo hướng và theo lớp phương tiện.</li>
-<li>Class normalization giúp thống nhất nhãn xe giữa dataset/model.</li>
-<li>Density/weighted density giúp scheduler so sánh mức độ đông xe giữa các hướng.</li></ul>
-
-      <h2>Video bài giảng</h2>
-      <p>Upload video lên Google Drive, bật quyền <strong>Anyone with the link can view</strong>, rồi thay link bên dưới trong file HTML này.</p>
-      <p><a class="btn primary" href="https://drive.google.com/PASTE_SECTION_03_VIDEO_LINK_HERE" target="_blank">Xem video trên Google Drive</a></p>
-
-      <div class="placeholder">
-        Placeholder cho hình hoặc thumbnail video. Bạn có thể thay bằng ảnh trong <code>../assets/</code> nếu muốn.
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Section 3 — ROI, Counting và Density | ATLC Training</title>
+    <link rel="stylesheet" href="../assets/style.css" />
+  </head>
+  <body>
+    <header class="section-hero">
+      <div class="inner">
+        <h1>Section 3 — ROI, Counting và Density</h1>
+        <p>
+          Cách hệ thống tách xe theo hướng và biến số lượng xe thành mật độ giao
+          thông.
+        </p>
+        <nav class="top-nav" style="margin-top: 16px">
+          <a href="../index.html">Trang chủ</a>
+          <a href="../quizzes/quiz_section03.html">Quiz</a>
+          <a href="../slides/section03_roi_density.pdf">Slide PDF</a>
+        </nav>
       </div>
+    </header>
 
-      <h2>Nội dung cần nắm</h2>
-      <p>Phần này chỉ cần học ở mức đủ bảo vệ: hiểu vai trò trong hệ thống, biết liên hệ với ATLC, và biết trả lời ngắn gọn khi giáo viên hỏi.</p>
-
-      <div class="good"><strong>Chuẩn đầu ra:</strong> sau khi học xong, thành viên nhóm phải giải thích được phần này trong 1–2 phút mà không nói quá phạm vi triển khai.</div>
-
-      <h2>Tài liệu</h2>
-      <div class="actions">
-        <a class="btn" href="../slides/section03_roi_density.pdf">Tải slide PDF</a>
-        <a class="btn accent" href="../quizzes/quiz_section03.html">Làm quiz</a>
-      </div>
-    </article>
-
-    <aside class="sidebar">
-      <div class="panel">
-        <h3>Checklist học nhanh</h3>
-        <ul class="checklist">
-          <li>Xem video.</li>
-          <li>Đọc slide PDF.</li>
-          <li>Làm quiz.</li>
-          <li>Ghi lại 3 câu khó để hỏi lại.</li>
+    <main class="lesson-layout">
+      <article class="lesson-content card">
+        <h2>Mục tiêu bài học</h2>
+        <ul>
+          <li>ROI xác định phương tiện thuộc hướng đường nào.</li>
+          <li>Counting tổng hợp số xe theo hướng và theo lớp phương tiện.</li>
+          <li>
+            Class normalization giúp thống nhất nhãn xe giữa dataset/model.
+          </li>
+          <li>
+            Density/weighted density giúp scheduler so sánh mức độ đông xe giữa
+            các hướng.
+          </li>
         </ul>
-      </div>
-      <div class="panel">
-        <h3>Link cần sửa</h3>
-        <p>Sửa video link trong file:</p>
-        <code>sections/section03_roi_density.html</code>
-      </div>
-    </aside>
-  </main>
-</body>
+
+        <h2>Video bài giảng</h2>
+        <p>
+          Upload video lên Google Drive, bật quyền
+          <strong>Anyone with the link can view</strong>, rồi thay link bên dưới
+          trong file HTML này.
+        </p>
+        <p>
+          <a
+            class="btn primary"
+            href="https://drive.google.com/PASTE_SECTION_03_VIDEO_LINK_HERE"
+            target="_blank"
+            >Xem video trên Google Drive</a
+          >
+        </p>
+
+        <div class="placeholder">
+          Placeholder cho hình hoặc thumbnail video. Bạn có thể thay bằng ảnh
+          trong <code>../assets/</code> nếu muốn.
+        </div>
+
+        <h2>Nội dung cần nắm</h2>
+        <p>
+          Phần này chỉ cần học ở mức đủ bảo vệ: hiểu vai trò trong hệ thống,
+          biết liên hệ với ATLC, và biết trả lời ngắn gọn khi giáo viên hỏi.
+        </p>
+
+        <div class="good">
+          <strong>Chuẩn đầu ra:</strong> sau khi học xong, thành viên nhóm phải
+          giải thích được phần này trong 1–2 phút mà không nói quá phạm vi triển
+          khai.
+        </div>
+
+        <h2>Tài liệu</h2>
+        <div class="actions">
+          <a class="btn" href="../slides/section03_roi_density.pdf"
+            >Tải slide PDF</a
+          >
+          <a class="btn accent" href="../quizzes/quiz_section03.html"
+            >Làm quiz</a
+          >
+        </div>
+      </article>
+
+      <aside class="side-panel">
+        <div class="quote-card">
+          <img
+            class="quote-art"
+            src="../assets/images/atlc_mascot.png"
+            alt="ATLC training mascot"
+          />
+
+          <div class="quote-content">
+            <p class="quote-text">
+              “Hiểu hệ thống trước, rồi mới bảo vệ hệ thống.”
+            </p>
+            <p class="quote-author">ATLC Training Note</p>
+          </div>
+        </div>
+      </aside>
+    </main>
+  </body>
 </html>

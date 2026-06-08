@@ -1,78 +1,90 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz Section 2 — AI / YOLO</title>
-  <link rel="stylesheet" href="../assets/style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ATLC Quiz Section 02 — AI và YOLO Pipeline</title>
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--blue:#12355b;--blue2:#1f5f99;--border:#d9e2ec;--muted:#607089;--green:#087a3d;--red:#b42318;--warn:#fff7df}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#1f2937;line-height:1.55}.wrap{max-width:1080px;margin:0 auto;padding:28px 18px 48px}.top{background:linear-gradient(135deg,#102a43,#1f5f99);color:white;border-radius:18px;padding:26px 30px;margin-bottom:22px;box-shadow:0 10px 30px rgba(16,42,67,.18)}.top h1{margin:0 0 8px;font-size:30px}.top p{margin:0;opacity:.92}.summary,.panel,.question{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin:16px 0;box-shadow:0 4px 14px rgba(15,23,42,.04)}.summary{border-left:6px solid var(--blue2)}.summary h2,.panel h2{color:var(--blue);margin-top:0}.summary ul{margin-top:8px}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.tag{background:#e8f1fb;color:#12355b;border:1px solid #bdd7f0;border-radius:999px;padding:5px 10px;font-size:13px}.question h3{margin:0 0 12px;color:#102a43;font-size:18px}label{display:block;border:1px solid #e5e7eb;border-radius:10px;padding:9px 10px;margin:8px 0;cursor:pointer;background:#fff}label:hover{background:#f4f8fc}input[type=radio]{margin-right:9px}.actions{position:sticky;bottom:0;background:rgba(246,248,251,.96);backdrop-filter:blur(6px);padding:12px 0;border-top:1px solid var(--border);margin-top:18px}button{background:var(--blue);color:white;border:0;border-radius:10px;padding:11px 15px;font-size:15px;cursor:pointer;margin-right:8px}button:hover{background:var(--blue2)}button.secondary{background:#56677e}.result{font-size:20px;font-weight:bold;color:var(--blue);margin:18px 0}.explanation{display:none;margin-top:12px;background:#f8fafc;border-left:4px solid #94a3b8;border-radius:8px;padding:12px}.correct{color:var(--green);font-weight:bold}.wrong{color:var(--red);font-weight:bold}.footer{color:var(--muted);font-size:14px;margin-top:28px}.warn{background:var(--warn);border-left:5px solid #f2b705;padding:12px 14px;border-radius:10px}code{background:#eef2f7;padding:2px 5px;border-radius:5px}@media(max-width:720px){.top h1{font-size:24px}.wrap{padding:18px 12px}.summary,.panel,.question{padding:15px}}
+</style>
 </head>
 <body>
-  <header class="section-hero"><div class="inner"><h1>Quiz Section 2 — AI / YOLO</h1><p>Quiz kiểm tra nhanh sau bài học.</p><nav class="top-nav"><a href="../index.html">Trang chủ</a></nav></div></header>
-  <main>
-    <section class="card"><h2>Hướng dẫn</h2><p>Chọn một đáp án đúng nhất. Bấm nộp bài để xem điểm, sau đó xem giải thích.</p></section>
-    <div id="quiz"></div>
-    <button class="btn primary" onclick="submitQuiz()">Nộp bài</button>
-    <button class="btn" onclick="showReview()">Xem giải thích</button>
-    <button class="btn" onclick="resetQuiz()">Làm lại</button>
-    <div id="result" class="result"></div>
-  </main>
-  <script src="../assets/app.js"></script>
-  <script>initQuiz([
-  {
-    "q": "YOLO dùng để làm gì trong ATLC?",
-    "options": [
-      "Phát hiện phương tiện trong video",
-      "Gửi UART",
-      "Điều khiển LED",
-      "Viết log CSV"
-    ],
-    "answer": 0,
-    "explanation": "YOLO là object detector trong tầng Computer Vision."
-  },
-  {
-    "q": "Bounding box là gì?",
-    "options": [
-      "Khung bao quanh đối tượng được phát hiện",
-      "Một PLAN message",
-      "Một loại UART",
-      "Một file video"
-    ],
-    "answer": 0,
-    "explanation": "Bounding box mô tả vị trí phương tiện trong ảnh."
-  },
-  {
-    "q": "Confidence threshold dùng để làm gì?",
-    "options": [
-      "Lọc dự đoán có độ tin cậy thấp",
-      "Tăng điện áp MCU",
-      "Đổi màu dashboard",
-      "Chia video"
-    ],
-    "answer": 0,
-    "explanation": "Threshold quyết định detection nào được giữ lại."
-  },
-  {
-    "q": "Dataset ảnh hưởng gì?",
-    "options": [
-      "Chất lượng training/detection",
-      "Tốc độ UART trực tiếp",
-      "Màu đèn LED",
-      "Tên repo"
-    ],
-    "answer": 0,
-    "explanation": "Dataset tốt giúp mô hình học tốt hơn."
-  },
-  {
-    "q": "Class label cho biết gì?",
-    "options": [
-      "Loại đối tượng như car/bus/motorbike",
-      "Thời gian đèn xanh",
-      "Port serial",
-      "FPS"
-    ],
-    "answer": 0,
-    "explanation": "Class label là nhãn phương tiện."
-  }
-]);</script>
+<div class="wrap">
+  <header class="top">
+    <h1>ATLC Quiz Section 02 — AI và YOLO Pipeline</h1>
+    <p>Kiểm tra phần AI cơ bản, Computer Vision, Object Detection, YOLO output, bounding box, class label và confidence.</p>
+    <div class="meta"><span class="tag">ATLC Internal Training</span><span class="tag">30 câu trắc nghiệm</span><span class="tag">Có chấm điểm và giải thích</span></div>
+  </header>
+  <section class="summary">
+    <h2>Tóm tắt lý thuyết</h2>
+    <ul><li>AI là phạm vi rộng; Machine Learning học từ dữ liệu; Deep Learning dùng mạng nơ-ron nhiều lớp để học đặc trưng phức tạp.</li>
+<li>Trong ATLC, Computer Vision giúp hệ thống hiểu video giao thông, YOLO phát hiện phương tiện và tạo detection output.</li>
+<li>Mỗi detection thường gồm bounding box, class label và confidence; chất lượng detection ảnh hưởng tới ROI, counting, density và scheduler.</li></ul>
+    <div class="warn"><strong>Gợi ý học:</strong> Làm quiz sau khi xem slide section tương ứng. Khi review, tập trung vào câu sai và đọc giải thích để chuẩn bị trả lời bảo vệ.</div>
+  </section>
+  <section class="panel">
+    <h2>Hướng dẫn</h2>
+    <p>Chọn một đáp án đúng nhất cho mỗi câu. Bấm <strong>Nộp bài</strong> để xem điểm. Bấm <strong>Xem giải thích</strong> để review từng câu.</p>
+  </section>
+  <div id="quiz"></div>
+  <div class="actions">
+    <button onclick="submitQuiz()">Nộp bài</button>
+    <button class="secondary" onclick="showReview()">Xem giải thích</button>
+    <button class="secondary" onclick="resetQuiz()">Làm lại</button>
+  </div>
+  <div id="result" class="result"></div>
+  <p class="footer">ATLC Project Team — Quiz package generated for compact defense training.</p>
+</div>
+<script>
+const questions = [{"q": "1. Section 2 tập trung vào nội dung nào?", "options": ["Cách ATLC chuyển video thành danh sách phương tiện được phát hiện", "Cách nạp firmware LED", "Cách deploy GitHub Pages", "Cách viết README"], "answer": 0, "explanation": "Section 2 là phần AI/CV/YOLO pipeline."}, {"q": "2. AI được hiểu đúng là gì?", "options": ["Lĩnh vực xây dựng hệ thống làm tác vụ cần trí tuệ", "Chỉ là camera", "Chỉ là cổng serial", "Một loại LED"], "answer": 0, "explanation": "AI là khái niệm rộng nhất trong ba tầng AI/ML/DL."}, {"q": "3. Machine Learning khác luật viết tay ở điểm nào?", "options": ["Học quy luật từ dữ liệu", "Chỉ chạy trên ESP32", "Không cần dữ liệu", "Chỉ dùng để vẽ slide"], "answer": 0, "explanation": "ML học từ dữ liệu thay vì chỉ dựa vào rule hard-code."}, {"q": "4. Deep Learning dùng gì để học đặc trưng phức tạp?", "options": ["Mạng nơ-ron nhiều lớp", "Dây USB", "Bảng Excel", "FSM LED"], "answer": 0, "explanation": "Deep Learning là nhánh ML dùng neural networks nhiều lớp."}, {"q": "5. Computer Vision trong ATLC giúp gì?", "options": ["Giúp máy tính hiểu thông tin từ ảnh/video giao thông", "Gửi ACK", "Cấp nguồn MCU", "Tạo quiz HTML"], "answer": 0, "explanation": "CV biến pixel thành thông tin có ý nghĩa như xe ở đâu, loại gì."}, {"q": "6. Với máy tính, ảnh ban đầu được hiểu như gì?", "options": ["Ma trận pixel", "Kế hoạch đèn", "Cổng COM", "Dòng log JSONL"], "answer": 0, "explanation": "Máy tính xử lý ảnh dưới dạng dữ liệu pixel."}, {"q": "7. Object Detection trả lời câu hỏi nào?", "options": ["Có đối tượng gì và nằm ở đâu trong ảnh", "Chỉ ảnh đẹp hay xấu", "Chỉ FPS của MCU", "Chỉ tên file"], "answer": 0, "explanation": "Detection vừa phân loại vừa định vị đối tượng."}, {"q": "8. Một detection thường gồm gì?", "options": ["Bounding box, class label, confidence score", "ACK, ERR, baud rate", "green_a, green_b, yellow", "README, CSS, HTML"], "answer": 0, "explanation": "Đây là output cơ bản từ object detector."}, {"q": "9. YOLO dùng để làm gì trong ATLC?", "options": ["Phát hiện phương tiện trong từng khung hình", "Điều khiển LED trực tiếp", "Lưu Drive", "Tạo portal"], "answer": 0, "explanation": "YOLO là detector ở tầng Computer Vision."}, {"q": "10. YOLO output cung cấp dữ liệu đầu vào cho module nào?", "options": ["ROI, counting, density và scheduler", "Chỉ GitHub Pages", "Chỉ Overleaf", "Chỉ Google Meet"], "answer": 0, "explanation": "Detection là đầu vào cho pipeline phía sau."}, {"q": "11. Bounding box là gì?", "options": ["Khung chữ nhật bao quanh đối tượng phát hiện", "Mật khẩu HMAC", "Cổng serial", "Một loại dashboard"], "answer": 0, "explanation": "Bounding box biểu diễn vị trí đối tượng trong ảnh."}, {"q": "12. Tọa độ bounding box thường có dạng nào?", "options": ["(x1, y1, x2, y2)", "(green_a, yellow)", "ACK, plan_id", "LOW, MEDIUM, HIGH"], "answer": 0, "explanation": "Tọa độ này xác định hai góc của box."}, {"q": "13. Tâm bounding box có thể dùng để làm gì?", "options": ["Kiểm tra phương tiện thuộc ROI nào", "Xác thực HMAC", "Đổi theme slide", "Upload video"], "answer": 0, "explanation": "Tâm box là cách đơn giản để gán detection vào ROI."}, {"q": "14. Class label cho biết gì?", "options": ["Loại phương tiện/đối tượng được phát hiện", "Thời gian xanh", "Tên branch git", "Dung lượng Drive"], "answer": 0, "explanation": "Class label có thể là motorbike, car, bus, truck."}, {"q": "15. Vì sao class label có ích cho density?", "options": ["Loại phương tiện khác nhau có thể có trọng số ảnh hưởng khác nhau", "Vì class label thay cáp USB", "Vì class label sửa log", "Vì class label tạo macro"], "answer": 0, "explanation": "Xe buýt/xe tải có thể ảnh hưởng giao thông nhiều hơn xe máy."}, {"q": "16. Confidence score là gì?", "options": ["Mức độ tự tin của mô hình với dự đoán", "Số giây all-red", "Số port USB", "Số slide section"], "answer": 0, "explanation": "Confidence càng cao thì mô hình càng tự tin với detection đó."}, {"q": "17. Confidence threshold dùng để làm gì?", "options": ["Lọc detection có độ tin cậy thấp", "Tăng điện áp LED", "Đổi file PDF", "Tạo Google Meet"], "answer": 0, "explanation": "Threshold quyết định giữ hoặc loại detection."}, {"q": "18. Ngưỡng confidence quá thấp có rủi ro gì?", "options": ["Dễ giữ detection nhiễu và đếm nhầm", "Bỏ hết xe thật", "Tắt camera", "Không compile LaTeX"], "answer": 0, "explanation": "Threshold thấp làm tăng false positives."}, {"q": "19. Ngưỡng confidence quá cao có rủi ro gì?", "options": ["Dễ bỏ sót xe thật", "Luôn đếm thừa", "Tự bảo mật PLAN", "Tự sửa ROI"], "answer": 0, "explanation": "Threshold cao làm tăng false negatives."}, {"q": "20. Detection output ví dụ {bbox, car, 0.86} nghĩa là gì?", "options": ["Có một xe car ở vị trí bbox với confidence 0.86", "Có một ACK id 0.86", "Có một GPIO pin", "Có một PDF"], "answer": 0, "explanation": "Đây là dữ liệu có cấu trúc cho module sau xử lý."}, {"q": "21. Custom YOLO model trong ATLC nhằm mục tiêu gì?", "options": ["Phát hiện phương tiện tốt hơn trong bối cảnh giao thông cụ thể", "Chạy trực tiếp trên Arduino Uno", "Thay thế ROI", "Tự tạo Google Drive folder"], "answer": 0, "explanation": "Fine-tune/custom model giúp phù hợp hơn với dữ liệu giao thông của dự án."}, {"q": "22. Dữ liệu huấn luyện detection cần gì?", "options": ["Ảnh và nhãn bounding box", "Chỉ file audio", "Chỉ README", "Chỉ dây nguồn"], "answer": 0, "explanation": "Object detection cần ảnh có annotation vị trí đối tượng."}, {"q": "23. Vì sao detection ảnh hưởng toàn hệ thống?", "options": ["Detection sai kéo theo counting, density và scheduler sai", "Detection chỉ ảnh hưởng màu slide", "Detection chỉ ảnh hưởng GitHub", "Detection không liên quan module sau"], "answer": 0, "explanation": "Pipeline phụ thuộc vào chất lượng detection đầu vào."}, {"q": "24. Hạn chế của YOLO trong giao thông là gì?", "options": ["Che khuất, ánh sáng kém, góc camera xấu, xe nhỏ ở xa", "Không thể detect bất kỳ vật gì", "Luôn đúng tuyệt đối", "Không cần dữ liệu"], "answer": 0, "explanation": "YOLO mạnh nhưng không hoàn hảo trong điều kiện thực tế."}, {"q": "25. Khi bảo vệ về YOLO nên tránh nói gì?", "options": ["Mô hình phát hiện đúng tuyệt đối", "YOLO phát hiện phương tiện", "Detection có thể sai", "Cần log/evidence"], "answer": 0, "explanation": "Không mô hình AI nào nên được trình bày là tuyệt đối đúng."}, {"q": "26. “YOLO cho biết xe ở đâu” liên quan tới thành phần nào?", "options": ["Bounding box", "HMAC", "ACK", "Meet recording"], "answer": 0, "explanation": "Bounding box cho biết vị trí xe."}, {"q": "27. “YOLO cho biết xe loại gì” liên quan tới thành phần nào?", "options": ["Class label", "UART baud rate", "Runtime state", "Git branch"], "answer": 0, "explanation": "Class label thể hiện loại đối tượng."}, {"q": "28. “YOLO tự tin bao nhiêu” liên quan tới thành phần nào?", "options": ["Confidence score", "All-red time", "Dashboard URL", "PDF outline"], "answer": 0, "explanation": "Confidence thể hiện độ tin cậy dự đoán."}, {"q": "29. Vì sao cần log/evidence cho tầng detection?", "options": ["Để kiểm tra lại khi mô hình bỏ sót hoặc phát hiện sai", "Để tăng số trang slide", "Để tắt scheduler", "Để compile nhanh hơn"], "answer": 0, "explanation": "Evidence giúp phân tích lỗi và bảo vệ kết quả detection."}, {"q": "30. Câu tổng kết đúng nhất Section 2 là gì?", "options": ["YOLO tạo detection có cấu trúc, là nền tảng cho ROI, counting, density và scheduler", "YOLO trực tiếp điều khiển MCU", "YOLO thay thế toàn bộ ATLC", "YOLO chỉ dùng để lưu video"], "answer": 0, "explanation": "Section 2 nối video input với dữ liệu phương tiện cho các module sau."}];
+function renderQuiz() {
+  const quiz = document.getElementById('quiz');
+  quiz.innerHTML = '';
+  questions.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'question';
+    let html = `<h3>${item.q}</h3>`;
+    item.options.forEach((opt, i) => {
+      html += `<label><input type="radio" name="q${index}" value="${i}">${opt}</label>`;
+    });
+    html += `<div class="explanation" id="exp${index}"></div>`;
+    div.innerHTML = html;
+    quiz.appendChild(div);
+  });
+}
+function submitQuiz() {
+  let score = 0, answered = 0;
+  questions.forEach((item, index) => {
+    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+    if (selected) { answered++; if (Number(selected.value) === item.answer) score++; }
+  });
+  const percent = Math.round(score / questions.length * 100);
+  let level = percent >= 90 ? 'Rất tốt. Bạn nắm chắc section này.' : percent >= 75 ? 'Tốt. Nên review các câu sai.' : percent >= 60 ? 'Đạt cơ bản. Cần xem lại các khái niệm trọng tâm.' : 'Cần học lại section này trước khi bảo vệ.';
+  document.getElementById('result').innerHTML = `Kết quả: ${score}/${questions.length} câu đúng (${percent}%).<br>Bạn đã trả lời ${answered}/${questions.length} câu.<br>${level}`;
+}
+function showReview() {
+  questions.forEach((item, index) => {
+    const exp = document.getElementById(`exp${index}`);
+    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+    let status = '';
+    if (!selected) status = '<span class="wrong">Bạn chưa chọn đáp án.</span>';
+    else if (Number(selected.value) === item.answer) status = '<span class="correct">Đúng.</span>';
+    else status = '<span class="wrong">Sai.</span>';
+    exp.style.display = 'block';
+    exp.innerHTML = `${status}<br><strong>Đáp án đúng:</strong> ${item.options[item.answer]}<br><strong>Giải thích:</strong> ${item.explanation}`;
+  });
+}
+function resetQuiz() {
+  questions.forEach((item,index) => {
+    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+    if (selected) selected.checked = false;
+    const exp = document.getElementById(`exp${index}`);
+    exp.style.display = 'none'; exp.innerHTML = '';
+  });
+  document.getElementById('result').innerHTML = '';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+renderQuiz();
+</script>
 </body>
 </html>

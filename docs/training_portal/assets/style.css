@@ -175,3 +175,47 @@ main { padding: 26px 18px 60px; }
   .sidebar { position: static; }
   .site-header h1 { font-size: 28px; }
 }
+
+.quote-text {
+    color: #1e3a5f;
+
+    font-size: 1.65rem;
+
+    font-weight: 800;
+
+    font-style: italic;
+
+    line-height: 1.7;
+
+    text-align: center;
+}
+
+.quote-art {
+    width: 100%;
+
+    height: 260px;
+
+    object-fit: cover;
+
+    object-position: center center;
+
+    border-radius: 18px;
+
+    display: block;
+
+    margin-bottom: 24px;
+}
+
+.quote-author {
+  margin-top: 18px;
+
+  text-align: center;
+
+  color: #93c5fd;
+
+  font-size: 1.05rem;
+
+  font-style: italic;
+
+  font-weight: 600;
+}

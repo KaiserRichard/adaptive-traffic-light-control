@@ -1,78 +1,90 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Quiz Section 3 — ROI / Density</title>
-  <link rel="stylesheet" href="../assets/style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ATLC Quiz Section 03 — ROI, Counting và Density</title>
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--blue:#12355b;--blue2:#1f5f99;--border:#d9e2ec;--muted:#607089;--green:#087a3d;--red:#b42318;--warn:#fff7df}*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:#1f2937;line-height:1.55}.wrap{max-width:1080px;margin:0 auto;padding:28px 18px 48px}.top{background:linear-gradient(135deg,#102a43,#1f5f99);color:white;border-radius:18px;padding:26px 30px;margin-bottom:22px;box-shadow:0 10px 30px rgba(16,42,67,.18)}.top h1{margin:0 0 8px;font-size:30px}.top p{margin:0;opacity:.92}.summary,.panel,.question{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin:16px 0;box-shadow:0 4px 14px rgba(15,23,42,.04)}.summary{border-left:6px solid var(--blue2)}.summary h2,.panel h2{color:var(--blue);margin-top:0}.summary ul{margin-top:8px}.meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.tag{background:#e8f1fb;color:#12355b;border:1px solid #bdd7f0;border-radius:999px;padding:5px 10px;font-size:13px}.question h3{margin:0 0 12px;color:#102a43;font-size:18px}label{display:block;border:1px solid #e5e7eb;border-radius:10px;padding:9px 10px;margin:8px 0;cursor:pointer;background:#fff}label:hover{background:#f4f8fc}input[type=radio]{margin-right:9px}.actions{position:sticky;bottom:0;background:rgba(246,248,251,.96);backdrop-filter:blur(6px);padding:12px 0;border-top:1px solid var(--border);margin-top:18px}button{background:var(--blue);color:white;border:0;border-radius:10px;padding:11px 15px;font-size:15px;cursor:pointer;margin-right:8px}button:hover{background:var(--blue2)}button.secondary{background:#56677e}.result{font-size:20px;font-weight:bold;color:var(--blue);margin:18px 0}.explanation{display:none;margin-top:12px;background:#f8fafc;border-left:4px solid #94a3b8;border-radius:8px;padding:12px}.correct{color:var(--green);font-weight:bold}.wrong{color:var(--red);font-weight:bold}.footer{color:var(--muted);font-size:14px;margin-top:28px}.warn{background:var(--warn);border-left:5px solid #f2b705;padding:12px 14px;border-radius:10px}code{background:#eef2f7;padding:2px 5px;border-radius:5px}@media(max-width:720px){.top h1{font-size:24px}.wrap{padding:18px 12px}.summary,.panel,.question{padding:15px}}
+</style>
 </head>
 <body>
-  <header class="section-hero"><div class="inner"><h1>Quiz Section 3 — ROI / Density</h1><p>Quiz kiểm tra nhanh sau bài học.</p><nav class="top-nav"><a href="../index.html">Trang chủ</a></nav></div></header>
-  <main>
-    <section class="card"><h2>Hướng dẫn</h2><p>Chọn một đáp án đúng nhất. Bấm nộp bài để xem điểm, sau đó xem giải thích.</p></section>
-    <div id="quiz"></div>
-    <button class="btn primary" onclick="submitQuiz()">Nộp bài</button>
-    <button class="btn" onclick="showReview()">Xem giải thích</button>
-    <button class="btn" onclick="resetQuiz()">Làm lại</button>
-    <div id="result" class="result"></div>
-  </main>
-  <script src="../assets/app.js"></script>
-  <script>initQuiz([
-  {
-    "q": "ROI dùng để làm gì?",
-    "options": [
-      "Tách phương tiện theo hướng đường",
-      "Huấn luyện lại YOLO",
-      "Mã hóa video",
-      "Gửi ACK"
-    ],
-    "answer": 0,
-    "explanation": "ROI xác định xe thuộc vùng/hướng nào."
-  },
-  {
-    "q": "Counting trả ra gì?",
-    "options": [
-      "Số lượng phương tiện theo hướng/lớp",
-      "Private key",
-      "PDF slide",
-      "Baud rate"
-    ],
-    "answer": 0,
-    "explanation": "Counter tổng hợp detection thành số lượng xe."
-  },
-  {
-    "q": "Vì sao cần class normalization?",
-    "options": [
-      "Tên lớp khác nhau cần thống nhất",
-      "Để compile LaTeX",
-      "Để mở Google Drive",
-      "Để tăng RAM"
-    ],
-    "answer": 0,
-    "explanation": "Ví dụ motorcycle/motorbike cần map về cùng một lớp."
-  },
-  {
-    "q": "Weighted density có ý nghĩa gì?",
-    "options": [
-      "Xét ảnh hưởng khác nhau của từng loại xe",
-      "Chỉ đếm frame",
-      "Chỉ đo FPS",
-      "Chỉ dùng cho quiz"
-    ],
-    "answer": 0,
-    "explanation": "Xe buýt/tải ảnh hưởng nhiều hơn xe máy."
-  },
-  {
-    "q": "Density giúp scheduler làm gì?",
-    "options": [
-      "So sánh mức đông xe giữa các hướng",
-      "Vẽ bounding box",
-      "Upload video",
-      "Mở serial monitor"
-    ],
-    "answer": 0,
-    "explanation": "Scheduler cần density để phân bổ thời gian xanh."
-  }
-]);</script>
+<div class="wrap">
+  <header class="top">
+    <h1>ATLC Quiz Section 03 — ROI, Counting và Density</h1>
+    <p>Kiểm tra phần ROI, gán xe theo hướng, counting, class normalization, density, weighted density và EMA smoothing.</p>
+    <div class="meta"><span class="tag">ATLC Internal Training</span><span class="tag">30 câu trắc nghiệm</span><span class="tag">Có chấm điểm và giải thích</span></div>
+  </header>
+  <section class="summary">
+    <h2>Tóm tắt lý thuyết</h2>
+    <ul><li>ROI giúp biến detection trong ảnh thành dữ liệu theo từng hướng đường.</li>
+<li>Counting tổng hợp số lượng phương tiện theo hướng hoặc theo lớp; class normalization giúp thống nhất tên lớp từ model/dataset khác nhau.</li>
+<li>Density là tín hiệu để scheduler so sánh mức độ giao thông; weighted density và EMA smoothing giúp tín hiệu hợp lý và ổn định hơn.</li></ul>
+    <div class="warn"><strong>Gợi ý học:</strong> Làm quiz sau khi xem slide section tương ứng. Khi review, tập trung vào câu sai và đọc giải thích để chuẩn bị trả lời bảo vệ.</div>
+  </section>
+  <section class="panel">
+    <h2>Hướng dẫn</h2>
+    <p>Chọn một đáp án đúng nhất cho mỗi câu. Bấm <strong>Nộp bài</strong> để xem điểm. Bấm <strong>Xem giải thích</strong> để review từng câu.</p>
+  </section>
+  <div id="quiz"></div>
+  <div class="actions">
+    <button onclick="submitQuiz()">Nộp bài</button>
+    <button class="secondary" onclick="showReview()">Xem giải thích</button>
+    <button class="secondary" onclick="resetQuiz()">Làm lại</button>
+  </div>
+  <div id="result" class="result"></div>
+  <p class="footer">ATLC Project Team — Quiz package generated for compact defense training.</p>
+</div>
+<script>
+const questions = [{"q": "1. Section 3 giải thích điều gì?", "options": ["Cách chuyển detection thành dữ liệu giao thông theo từng hướng", "Cách bật GitHub Pages", "Cách quay Google Meet", "Cách tạo HMAC key"], "answer": 0, "explanation": "Section 3 là ROI, counting và density."}, {"q": "2. Vì sao cần ROI sau YOLO?", "options": ["YOLO chỉ cho biết xe ở đâu, chưa biết thuộc hướng nào", "YOLO không tạo ảnh", "YOLO thay thế camera", "YOLO chỉ chạy trên MCU"], "answer": 0, "explanation": "ROI gán detection vào hướng đường có ý nghĩa giao thông."}, {"q": "3. ROI là viết tắt của gì?", "options": ["Region of Interest", "Runtime Output Interface", "Remote Operator Input", "Road Object Index"], "answer": 0, "explanation": "ROI nghĩa là vùng quan tâm."}, {"q": "4. ROI thường có dạng gì trên khung hình?", "options": ["Vùng đa giác hoặc vùng quan tâm", "File âm thanh", "Cổng serial", "Hash log"], "answer": 0, "explanation": "ROI thường được vẽ theo hình dạng vùng đường trên ảnh."}, {"q": "5. Mỗi ROI trong ATLC có thể tương ứng với gì?", "options": ["Một hướng đường", "Một mật khẩu", "Một file ZIP", "Một branch Git"], "answer": 0, "explanation": "Ví dụ ROI A và ROI B tương ứng hai hướng giao thông."}, {"q": "6. Cách đơn giản để gán xe vào ROI là gì?", "options": ["Dùng tâm bounding box", "Dùng tên file ảnh", "Dùng số slide", "Dùng URL Drive"], "answer": 0, "explanation": "Nếu tâm bbox nằm trong ROI nào thì xe được gán cho ROI đó."}, {"q": "7. Công thức tâm bounding box là gì?", "options": ["((x1+x2)/2, (y1+y2)/2)", "green_a + green_b", "ACK + ERR", "FPS / timestamp"], "answer": 0, "explanation": "Tâm box là trung bình tọa độ hai góc."}, {"q": "8. Vehicle counting là gì?", "options": ["Đếm phương tiện theo hướng hoặc theo lớp", "Đếm số file trong repo", "Đếm số người trong Meet", "Đếm số lần compile"], "answer": 0, "explanation": "Counting chuyển detection đã gán ROI thành số liệu."}, {"q": "9. Counting là cầu nối giữa gì?", "options": ["Computer Vision và quyết định điều phối", "Google Drive và GitHub", "OBS và Meet", "Overleaf và PDF"], "answer": 0, "explanation": "Counting biến kết quả CV thành dữ liệu cho density/scheduler."}, {"q": "10. Vì sao cần chuẩn hóa class label?", "options": ["Model/dataset khác nhau có thể dùng tên khác nhau cho cùng loại xe", "Vì class label không dùng được", "Vì Arduino yêu cầu tiếng Việt", "Vì dashboard không có chữ"], "answer": 0, "explanation": "Ví dụ motorcycle, motorbike, xe_may cần map về một schema."}, {"q": "11. Ví dụ chuẩn hóa đúng là gì?", "options": ["motorcycle, motorbike, xe_may → motorbike", "green_a → yellow", "ACK → PLAN", "ROI → HMAC"], "answer": 0, "explanation": "Đây là ví dụ class normalization cho xe máy."}, {"q": "12. Density estimation dùng để làm gì?", "options": ["Ước lượng mức độ đông xe để scheduler so sánh các hướng", "Tạo bounding box", "Nạp firmware", "Tạo Google Meet"], "answer": 0, "explanation": "Density là tín hiệu mức giao thông."}, {"q": "13. Raw count là gì?", "options": ["Chỉ đếm số lượng phương tiện", "Tính HMAC", "Đo điện áp LED", "Kiểm tra branch"], "answer": 0, "explanation": "Raw count không xét loại xe/trọng số."}, {"q": "14. Weighted density khác raw count ở điểm nào?", "options": ["Tính thêm trọng số theo loại phương tiện", "Không dùng số xe", "Chỉ dùng thời gian vàng", "Chỉ dùng UART"], "answer": 0, "explanation": "Weighted density phản ánh ảnh hưởng tương đối của từng loại phương tiện."}, {"q": "15. Vì sao xe buýt có thể có trọng số lớn hơn xe máy?", "options": ["Vì thường chiếm nhiều không gian và ảnh hưởng giao thông hơn", "Vì xe buýt có màu khác", "Vì xe buýt tạo HMAC", "Vì xe buýt là dashboard"], "answer": 0, "explanation": "Trọng số giúp density thực tế hơn raw count."}, {"q": "16. Trong ví dụ 10 xe máy trọng số 0.5, 4 ô tô trọng số 1.0, 1 bus trọng số 2.5 thì density là bao nhiêu?", "options": ["11.5", "15.0", "7.5", "2.5"], "answer": 0, "explanation": "10*0.5 + 4*1.0 + 1*2.5 = 11.5."}, {"q": "17. Vì sao cần làm mượt dữ liệu?", "options": ["Detection dao động theo từng frame", "Vì ảnh quá đẹp", "Vì MCU chạy YOLO", "Vì URL quá dài"], "answer": 0, "explanation": "Detection có thể lúc có lúc mất, làm count/density dao động."}, {"q": "18. EMA là viết tắt của gì?", "options": ["Exponential Moving Average", "Embedded Motor Algorithm", "External MCU ACK", "Estimated Manual Action"], "answer": 0, "explanation": "EMA là trung bình trượt hàm mũ."}, {"q": "19. Công thức EMA trong slide là gì?", "options": ["S_t = alpha D_t + (1-alpha)S_{t-1}", "D = N/ACK", "green = HMAC + ROI", "FPS = timestamp/nonce"], "answer": 0, "explanation": "EMA trộn giá trị hiện tại và giá trị đã làm mượt trước đó."}, {"q": "20. Alpha lớn trong EMA có ý nghĩa gì?", "options": ["Phản ứng nhanh hơn nhưng dễ dao động hơn", "Luôn ổn định hơn", "Không dùng dữ liệu mới", "Tắt scheduler"], "answer": 0, "explanation": "Alpha lớn đặt nhiều trọng số vào dữ liệu mới."}, {"q": "21. Alpha nhỏ trong EMA có ý nghĩa gì?", "options": ["Ổn định hơn nhưng phản ứng chậm hơn", "Luôn sai", "Bỏ qua dữ liệu cũ hoàn toàn", "Làm LED sáng hơn"], "answer": 0, "explanation": "Alpha nhỏ giữ ảnh hưởng lớn từ giá trị trước."}, {"q": "22. ROI phụ thuộc mạnh vào yếu tố nào?", "options": ["Góc đặt camera và kích thước khung hình", "Tên GitHub account", "Màu slide", "Mật khẩu Drive"], "answer": 0, "explanation": "ROI là cấu hình theo scene/camera."}, {"q": "23. Nếu camera đổi vị trí thì cần làm gì?", "options": ["Cấu hình lại ROI", "Xóa YOLO", "Đổi HMAC key", "Dùng Google Meet"], "answer": 0, "explanation": "Camera đổi góc làm vùng đường trong ảnh thay đổi."}, {"q": "24. Xe sát biên ROI có thể gây vấn đề gì?", "options": ["Nhầm hướng hoặc gán không ổn định", "Tự tạo ACK", "Tắt camera", "Không compile HTML"], "answer": 0, "explanation": "Xe gần biên ROI dễ bị gán sai hoặc dao động."}, {"q": "25. Counting theo lớp giúp gì?", "options": ["Biết phân bố loại phương tiện và hỗ trợ weighted density", "Tăng số phút quay video", "Thay HMAC", "Tự động upload Drive"], "answer": 0, "explanation": "Class-level counts có thể dùng để tính PCE/weighted density."}, {"q": "26. Direction-level count dùng để làm gì?", "options": ["So sánh hướng A và hướng B", "Xác thực token GitHub", "Tạo caption ảnh", "Chọn font"], "answer": 0, "explanation": "ATLC cần biết hướng nào đông hơn."}, {"q": "27. “Không nên để một frame đơn lẻ quyết định toàn bộ kế hoạch đèn” liên quan đến gì?", "options": ["Làm mượt dữ liệu và runtime stability", "Chỉ upload ảnh", "Chỉ tạo quiz", "Chỉ đặt tên file"], "answer": 0, "explanation": "Dữ liệu từng frame có thể nhiễu nên cần smoothing/runtime controller."}, {"q": "28. Density là đầu vào quan trọng của module nào?", "options": ["Scheduler", "Camera driver", "Google Sites", "Fontspec"], "answer": 0, "explanation": "Scheduler dùng density để đề xuất green time."}, {"q": "29. Cách nói đúng về ROI khi bảo vệ là gì?", "options": ["ROI là cách thực tế, dễ giải thích nhưng cần cấu hình phù hợp từng góc camera", "ROI luôn đúng mọi camera", "ROI thay thế YOLO", "ROI tự chống replay"], "answer": 0, "explanation": "Nên thừa nhận giới hạn phụ thuộc scene/camera."}, {"q": "30. Câu tổng kết đúng nhất Section 3 là gì?", "options": ["ROI và counting biến detection thành dữ liệu hướng; density và smoothing tạo tín hiệu ổn định cho scheduler", "ROI tự điều khiển đèn", "Density chỉ dùng để vẽ màu", "Counting không ảnh hưởng scheduler"], "answer": 0, "explanation": "Đây là vai trò tổng hợp của Section 3."}];
+function renderQuiz() {
+  const quiz = document.getElementById('quiz');
+  quiz.innerHTML = '';
+  questions.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'question';
+    let html = `<h3>${item.q}</h3>`;
+    item.options.forEach((opt, i) => {
+      html += `<label><input type="radio" name="q${index}" value="${i}">${opt}</label>`;
+    });
+    html += `<div class="explanation" id="exp${index}"></div>`;
+    div.innerHTML = html;
+    quiz.appendChild(div);
+  });
+}
+function submitQuiz() {
+  let score = 0, answered = 0;
+  questions.forEach((item, index) => {
+    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+    if (selected) { answered++; if (Number(selected.value) === item.answer) score++; }
+  });
+  const percent = Math.round(score / questions.length * 100);
+  let level = percent >= 90 ? 'Rất tốt. Bạn nắm chắc section này.' : percent >= 75 ? 'Tốt. Nên review các câu sai.' : percent >= 60 ? 'Đạt cơ bản. Cần xem lại các khái niệm trọng tâm.' : 'Cần học lại section này trước khi bảo vệ.';
+  document.getElementById('result').innerHTML = `Kết quả: ${score}/${questions.length} câu đúng (${percent}%).<br>Bạn đã trả lời ${answered}/${questions.length} câu.<br>${level}`;
+}
+function showReview() {
+  questions.forEach((item, index) => {
+    const exp = document.getElementById(`exp${index}`);
+    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+    let status = '';
+    if (!selected) status = '<span class="wrong">Bạn chưa chọn đáp án.</span>';
+    else if (Number(selected.value) === item.answer) status = '<span class="correct">Đúng.</span>';
+    else status = '<span class="wrong">Sai.</span>';
+    exp.style.display = 'block';
+    exp.innerHTML = `${status}<br><strong>Đáp án đúng:</strong> ${item.options[item.answer]}<br><strong>Giải thích:</strong> ${item.explanation}`;
+  });
+}
+function resetQuiz() {
+  questions.forEach((item,index) => {
+    const selected = document.querySelector(`input[name="q${index}"]:checked`);
+    if (selected) selected.checked = false;
+    const exp = document.getElementById(`exp${index}`);
+    exp.style.display = 'none'; exp.innerHTML = '';
+  });
+  document.getElementById('result').innerHTML = '';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+renderQuiz();
+</script>
 </body>
 </html>
