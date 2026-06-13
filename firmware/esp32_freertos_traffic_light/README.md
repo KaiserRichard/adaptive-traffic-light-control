@@ -1,55 +1,82 @@
 # ATLC Phase 15 — ESP32 FreeRTOS Traffic Light Controller
 
-## Phase 15.1 — FreeRTOS Queue Warm-Up with RawMessage
+## Overview
 
-This firmware belongs to:
+Phase 15 upgrades the ATLC embedded controller from a simple Arduino loop-based design into a FreeRTOS-based architecture.
 
-```text
-Phase 15 — FreeRTOS-Based Embedded Controller and Edge Deployment Upgrade
-```
+The long-term goal is to move traffic light control logic onto the ESP32 so the controller can operate independently from the host computer.
 
-## Goal
+---
 
-This Phase implements a minimal FreeRTOS queue demo:
+## Target Architecture
 
 ```text
-TaskSimulatedProducer
+Host / Raspberry Pi / MacBook
+        ↓
+USB Serial
+        ↓
+TaskUARTReceive
         ↓
 rawMessageQueue
         ↓
 TaskPlanParser
+        ↓
+planQueue
+        ↓
+TaskTrafficFSM
+        ↓
+Traffic Light Outputs
 ```
 
-The producer sends a fake ATLC command:
+The host sends high-level signal plans.
 
-```text
-PLAN,17,25,15,3,1
-```
+The ESP32 validates plans and executes the traffic light FSM locally.
 
-The parser receives the message from the queue and prints it.
+---
 
-## Not Implemented Yet
+## Current Progress
 
-```text
-Real UART input
-PLAN parsing
-SignalPlan validation
-Traffic light FSM
-ACK/NACK protocol
-STATUS messages
-Software timers
-Watchdog fallback
-```
+* Phase 15.1 — FreeRTOS RawMessage Queue Warm-Up
+* Phase 15.2 — Queue-Based Fake PLAN Parser
+
+---
+
+## Current Status
+
+### Implemented
+
+* FreeRTOS task creation
+* RawMessage queue
+* Queue-based task-to-task communication
+* Fake PLAN message generation
+* PLAN command detection
+* PLAN field extraction using `sscanf()`
+
+### Planned
+
+* Validated SignalPlan queue
+* Real USB Serial receive task
+* Traffic light FSM task
+* ACK/NACK protocol
+* STATUS messages
+* Software timers
+* Host timeout watchdog
+* Runtime diagnostics
+
+---
 
 ## Platform
 
 ```text
 ESP32 DevKit
 PlatformIO
-Arduino framework
+Arduino Framework
+FreeRTOS
 USB Serial
-Baud rate: 115200
+115200 baud
 ```
+
+---
 
 ## Build
 
@@ -57,34 +84,62 @@ Baud rate: 115200
 pio run
 ```
 
+---
+
 ## Upload
 
 ```bash
 pio run --target upload
 ```
 
-## Monitor
+---
+
+## Serial Monitor
 
 ```bash
 pio device monitor -b 115200
 ```
 
-## Expected Output
+---
+
+## Project Structure
 
 ```text
-[BOOT] ATLC Phase 15 FreeRTOS Controller
-[BOOT] Phase 15.1 - Queue Warm-Up with RawMessage
-[BOOT] rawMessageQueue created.
-[BOOT] TaskSimulatedProducer created.
-[BOOT] TaskPlanParser created.
-[BOOT] Phase 15.1 system is running.
-[PRODUCER] Sent raw message: PLAN,17,25,15,3,1
-[PARSER] Received raw message: PLAN,17,25,15,3,1
+firmware/
+└── esp32_freertos_traffic_light/
+    ├── platformio.ini
+    ├── README.md
+    └── src/
+        └── main.cpp
+
+docs/
+└── embedded/
+    ├── Phase_15_1_freertos_queue_warmup.md
+    └── Phase_15_2_queue_based_fake_plan_parser.md
 ```
 
-## Git Commit
+---
+
+## Documentation
+
+* Phase 15.1 — FreeRTOS RawMessage Queue Warm-Up
+* Phase 15.2 — Queue-Based Fake PLAN Parser
+
+Future documentation will be added incrementally as Phase 15 evolves.
+
+---
+
+## Git Workflow
 
 ```bash
-git add firmware/esp32_freertos_traffic_light
-git commit -m "Phase 15: add FreeRTOS RawMessage queue warm-up"
+git status
+git add <files>
+git commit -m "<message>"
+git push
+```
+
+Example:
+
+```bash
+git commit -m "Phase 15: add queue-based fake PLAN parser"
 ```
