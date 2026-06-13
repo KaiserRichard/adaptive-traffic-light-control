@@ -3,94 +3,441 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Section 7 — Final Defense Preparation | ATLC Training</title>
+    <title>
+      Section 7 — Real-Time Embedded Controller | ATLC Training Portal
+    </title>
     <link rel="stylesheet" href="../assets/style.css" />
+
+    <style>
+      .section-nav {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin: 24px 0;
+      }
+
+      .mini-card {
+        background: rgba(15, 27, 45, 0.92);
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22);
+      }
+
+      .mini-card h3 {
+        margin-top: 0;
+        color: #dbeafe;
+        font-size: 1.05rem;
+      }
+
+      .mini-card p {
+        color: #cbd5e1;
+        margin-bottom: 14px;
+      }
+
+      .module-block {
+        margin: 34px 0;
+        padding: 26px;
+        border-radius: 24px;
+        background: linear-gradient(
+          180deg,
+          rgba(15, 27, 45, 0.96),
+          rgba(8, 18, 34, 0.96)
+        );
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        box-shadow: 0 18px 46px rgba(0, 0, 0, 0.25);
+      }
+
+      .module-block h2 {
+        margin-top: 0;
+        color: #f8fbff;
+      }
+
+      .module-subtitle {
+        color: #93c5fd;
+        font-weight: 700;
+        margin-top: -6px;
+      }
+
+      .resource-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 14px;
+        margin-top: 18px;
+      }
+
+      .resource-card {
+        background: #0a1424;
+        border: 1px solid #27405f;
+        border-radius: 16px;
+        padding: 15px;
+      }
+
+      .resource-card strong {
+        display: block;
+        color: #e5eefb;
+        margin-bottom: 6px;
+      }
+
+      .resource-card span {
+        display: block;
+        color: #9fb1ca;
+        font-size: 0.92rem;
+        margin-bottom: 10px;
+      }
+
+      .btn-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      .btn {
+        display: inline-block;
+        padding: 10px 14px;
+        border-radius: 999px;
+        border: 1px solid #334155;
+        background: #111f35;
+        color: #e5eefb;
+        text-decoration: none;
+        font-weight: 800;
+      }
+
+      .btn.primary {
+        background: #2563eb;
+        border-color: #3b82f6;
+        color: white;
+      }
+
+      .btn:hover {
+        filter: brightness(1.08);
+        text-decoration: none;
+      }
+
+      .concept-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+      }
+
+      .concept {
+        border-left: 4px solid #60a5fa;
+        background: rgba(37, 99, 235, 0.1);
+        padding: 12px 14px;
+        border-radius: 12px;
+        color: #dbeafe;
+      }
+
+      .warning-box {
+        margin-top: 18px;
+        padding: 16px 18px;
+        border-radius: 18px;
+        border: 1px solid rgba(251, 191, 36, 0.35);
+        background: rgba(251, 191, 36, 0.09);
+        color: #fde68a;
+      }
+
+      .flow-box {
+        font-family: "SFMono-Regular", Consolas, monospace;
+        white-space: pre-wrap;
+        background: #020617;
+        border: 1px solid #334155;
+        border-radius: 18px;
+        padding: 18px;
+        color: #bfdbfe;
+        line-height: 1.5;
+        margin: 18px 0;
+      }
+
+      .placeholder {
+        color: #fbbf24;
+        font-weight: 800;
+      }
+    </style>
   </head>
+
   <body>
-    <header class="section-hero">
-      <div class="inner">
-        <h1>Section 7 — Final Defense Preparation</h1>
-        <p>Cách trình bày, trả lời câu hỏi và tránh các claim nguy hiểm.</p>
-        <nav class="top-nav" style="margin-top: 16px">
-          <a href="../index.html">Trang chủ</a>
-          <a href="../quizzes/quiz_section06.html">Quiz</a>
-          <a href="../slides/atlc_compact_training_full.pdf">Slide PDF</a>
-        </nav>
-      </div>
-    </header>
-
-    <main class="lesson-layout">
-      <article class="lesson-content card">
-        <h2>Mục tiêu bài học</h2>
-        <ul>
-          <li>Nói rõ implemented, simulated, planned và future work.</li>
-          <li>Giải thích ATLC như decision-support system.</li>
-          <li>Tập trung vào pipeline, evidence và limitation trung thực.</li>
-          <li>
-            Chuẩn bị demo workflow và câu trả lời ngắn cho các câu hỏi thường
-            gặp.
-          </li>
-        </ul>
-
-        <h2>Video bài giảng</h2>
-        <p>
-          Upload video lên Google Drive, bật quyền
-          <strong>Anyone with the link can view</strong>, rồi thay link bên dưới
-          trong file HTML này.
-        </p>
-        <p>
-          <a
-            class="btn primary"
-            href="https://drive.google.com/PASTE_SECTION_07_VIDEO_LINK_HERE"
-            target="_blank"
-            >Xem video trên Google Drive</a
-          >
+    <main class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">ATLC Training Portal</p>
+        <h1>Section 7 — Real-Time Embedded Controller Architecture</h1>
+        <p class="hero-subtitle">
+          Kiến trúc điều khiển nhúng real-time, FreeRTOS vừa đủ để hiểu Phase
+          15, và cách trình bày phần embedded khi bảo vệ.
         </p>
 
-        <div class="placeholder">
-          Placeholder cho hình hoặc thumbnail video. Bạn có thể thay bằng ảnh
-          trong <code>../assets/</code> nếu muốn.
+        <div class="btn-row">
+          <a class="btn" href="../index.html">← Về portal</a>
+          <a class="btn primary" href="../quizzes/quiz_section07_1.html"
+            >Làm quiz Section 7.1</a
+          >
+          <a class="btn" href="../quizzes/final_defense_quiz.html"
+            >Final defense quiz</a
+          >
         </div>
+      </header>
 
-        <h2>Nội dung cần nắm</h2>
+      <section class="summary-card">
+        <h2>Mục tiêu của Section 7</h2>
         <p>
-          Phần này chỉ cần học ở mức đủ bảo vệ: hiểu vai trò trong hệ thống,
-          biết liên hệ với ATLC, và biết trả lời ngắn gọn khi giáo viên hỏi.
+          Section này không nhằm dạy toàn bộ FreeRTOS. Mục tiêu là giúp người
+          học hiểu vì sao Phase 15 là một nâng cấp kiến trúc embedded
+          controller, không chỉ là việc thêm một thư viện.
         </p>
 
-        <div class="good">
-          <strong>Chuẩn đầu ra:</strong> sau khi học xong, thành viên nhóm phải
-          giải thích được phần này trong 1–2 phút mà không nói quá phạm vi triển
-          khai.
+        <div class="flow-box">
+          Host / Raspberry Pi / PC ↓ USB Serial TaskUARTReceive ↓
+          rawMessageQueue TaskPlanParser ↓ planQueue TaskTrafficFSM ↓ LED /
+          Traffic Light Output
         </div>
 
-        <h2>Tài liệu</h2>
-        <div class="actions">
-          <a class="btn" href="../slides/atlc_compact_training_full.pdf"
-            >Tải slide PDF</a
-          >
-          <a class="btn accent" href="../quizzes/quiz_section06.html"
-            >Làm quiz</a
-          >
+        <div class="warning-box">
+          <strong>Điểm cần nhớ khi bảo vệ:</strong>
+          FreeRTOS giúp chuyển controller từ firmware dạng single loop sang kiến
+          trúc real-time nhiều task, trong đó nhận message, parse/validate plan
+          và điều khiển FSM được tách trách nhiệm rõ ràng.
         </div>
-      </article>
+      </section>
 
-      <aside class="side-panel">
-        <div class="quote-card">
-          <img
-            class="quote-art"
-            src="../assets/images/atlc_mascot.png"
-            alt="ATLC training mascot"
-          />
+      <section class="section-nav">
+        <article class="mini-card">
+          <h3>7.1 Motivation & Required Background</h3>
+          <p>
+            Vì sao embedded controller quan trọng, single loop là gì,
+            RTOS/FreeRTOS là gì, task, scheduler, blocked state và queue.
+          </p>
+          <a class="btn primary" href="#section-7-1">Mở 7.1</a>
+        </article>
 
-          <div class="quote-content">
-            <p class="quote-text">
-              “Hiểu hệ thống trước, rồi mới bảo vệ hệ thống.”
-            </p>
-            <p class="quote-author">ATLC Training Note</p>
+        <article class="mini-card">
+          <h3>7.2 FreeRTOS Controller Implementation</h3>
+          <p>
+            TaskUARTReceive, RawMessage, TaskPlanParser, SignalPlan, planQueue,
+            TaskTrafficFSM và safe plan apply.
+          </p>
+          <a class="btn" href="#section-7-2">Mở 7.2</a>
+        </article>
+
+        <article class="mini-card">
+          <h3>7.3 Reliability, Debug & Defense</h3>
+          <p>
+            ACK/NACK, STATUS, watchdog, runtime debugging, giới hạn hiện tại và
+            câu hỏi bảo vệ thường gặp.
+          </p>
+          <a class="btn" href="#section-7-3">Mở 7.3</a>
+        </article>
+      </section>
+
+      <section id="section-7-1" class="module-block">
+        <h2>7.1 — Embedded Controller Motivation & Required Background</h2>
+        <p class="module-subtitle">
+          Động lực nâng cấp controller và kiến thức nền tảng RTOS/FreeRTOS cần
+          nắm.
+        </p>
+
+        <p>
+          Phần 7.1 giải thích từ gốc: embedded controller đóng vai trò gì trong
+          ATLC, tại sao firmware dạng single loop bắt đầu hạn chế khi hệ thống
+          lớn hơn, và vì sao FreeRTOS giúp tái cấu trúc controller thành kiến
+          trúc nhiều task.
+        </p>
+
+        <div class="concept-list">
+          <div class="concept">
+            <strong>Single loop</strong><br />Một vòng lặp xử lý nhiều trách
+            nhiệm tuần tự.
+          </div>
+          <div class="concept">
+            <strong>Task</strong><br />Một luồng xử lý riêng có nhiệm vụ rõ
+            ràng.
+          </div>
+          <div class="concept">
+            <strong>Scheduler</strong><br />Quyết định task nào được chạy khi có
+            nhiều task.
+          </div>
+          <div class="concept">
+            <strong>Blocked state</strong><br />Task chờ message/event mà không
+            polling liên tục.
+          </div>
+          <div class="concept">
+            <strong>Queue</strong><br />Kênh truyền dữ liệu giữa producer task
+            và consumer task.
+          </div>
+          <div class="concept">
+            <strong>FSM task</strong><br />Task duy trì chu kỳ đèn cục bộ trên
+            MCU.
           </div>
         </div>
-      </aside>
+
+        <div class="resource-grid">
+          <div class="resource-card">
+            <strong>Slide 7.1 — Background</strong>
+            <span>PDF sau khi compile từ XeLaTeX.</span>
+            <a
+              class="btn primary"
+              href="../slides/section07_1_embedded_controller_background.pdf"
+            >
+              Mở slide 7.1
+            </a>
+          </div>
+
+          <div class="resource-card">
+            <strong>Source LaTeX 7.1</strong>
+            <span>File source để sửa nội dung slide.</span>
+            <a
+              class="btn"
+              href="../slides/section07_1_embedded_controller_background.tex"
+            >
+              Mở .tex
+            </a>
+          </div>
+
+          <div class="resource-card">
+            <strong>Video 7.1</strong>
+            <span class="placeholder">Placeholder Google Drive link.</span>
+            <a class="btn" href="#" target="_blank">
+              Thêm link video 7.1 sau
+            </a>
+          </div>
+
+          <div class="resource-card">
+            <strong>Quiz Section 7.1</strong>
+            <span>Kiểm tra hiểu single loop, RTOS, task và queue.</span>
+            <a class="btn primary" href="../quizzes/quiz_section07_1.html">
+              Làm quiz 7.1
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-7-2" class="module-block">
+        <h2>7.2 — ATLC FreeRTOS Controller Implementation</h2>
+        <p class="module-subtitle">
+          Phần triển khai cụ thể của Phase 15 trên firmware ESP32.
+        </p>
+
+        <p>
+          Phần 7.2 dành cho việc đọc kiến trúc triển khai: task nào làm gì, dữ
+          liệu đi qua queue nào, PLAN message được chuyển thành SignalPlan ra
+          sao, và FSM áp dụng plan như thế nào.
+        </p>
+
+        <div class="flow-box">
+          TaskUARTReceive produces RawMessage ↓ rawMessageQueue ↓ TaskPlanParser
+          parses + validates PLAN produces SignalPlan ↓ planQueue ↓
+          TaskTrafficFSM applies plan safely controls LED outputs
+        </div>
+
+        <div class="resource-grid">
+          <div class="resource-card">
+            <strong>Slide 7.2 — Implementation</strong>
+            <span class="placeholder">Placeholder cho slide triển khai.</span>
+            <a
+              class="btn"
+              href="../slides/section07_2_freertos_controller_implementation.pdf"
+            >
+              Mở slide 7.2
+            </a>
+          </div>
+
+          <div class="resource-card">
+            <strong>Video 7.2</strong>
+            <span class="placeholder">Placeholder Google Drive link.</span>
+            <a class="btn" href="#" target="_blank">
+              Thêm link video 7.2 sau
+            </a>
+          </div>
+
+          <div class="resource-card">
+            <strong>Implementation checklist</strong>
+            <span>Phase 15.1 đến Phase 15.10.</span>
+            <a class="btn" href="#phase15-roadmap"> Xem roadmap </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="section-7-3" class="module-block">
+        <h2>7.3 — Reliability, Debugging & Defense Discussion</h2>
+        <p class="module-subtitle">
+          Cách giải thích độ tin cậy, bug/debug và giới hạn hiện tại khi bảo vệ.
+        </p>
+
+        <p>
+          Phần 7.3 dùng để chuẩn bị trả lời phản biện: ACK có nghĩa là gì, NACK
+          dùng khi nào, STATUS/watchdog giúp gì, và phần nào đã triển khai hoặc
+          mới là hướng mở rộng.
+        </p>
+
+        <div class="concept-list">
+          <div class="concept">
+            <strong>ACK</strong><br />Plan hợp lệ đã được nhận/chấp nhận ở mức
+            protocol.
+          </div>
+          <div class="concept">
+            <strong>NACK</strong><br />Plan bị từ chối vì sai format hoặc timing
+            không hợp lệ.
+          </div>
+          <div class="concept">
+            <strong>STATUS</strong><br />MCU báo state, remaining time và health
+            về host.
+          </div>
+          <div class="concept">
+            <strong>Watchdog</strong><br />Phát hiện host timeout và chuyển
+            fallback timing.
+          </div>
+          <div class="concept">
+            <strong>Safe apply</strong><br />Không restart FSM ngay mỗi khi có
+            PLAN mới.
+          </div>
+          <div class="concept">
+            <strong>Debug</strong><br />Serial log, queue check, heap/stack
+            check, timeout log.
+          </div>
+        </div>
+
+        <div class="resource-grid">
+          <div class="resource-card">
+            <strong>Slide 7.3 — Reliability & Debug</strong>
+            <span class="placeholder">Placeholder cho slide tương lai.</span>
+            <a
+              class="btn"
+              href="../slides/section07_3_reliability_debug_defense.pdf"
+            >
+              Mở slide 7.3
+            </a>
+          </div>
+
+          <div class="resource-card">
+            <strong>Final Defense Quiz</strong>
+            <span>Câu hỏi tổng hợp từ Section 1 đến 7.1.</span>
+            <a class="btn primary" href="../quizzes/final_defense_quiz.html">
+              Làm final quiz
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="phase15-roadmap" class="module-block">
+        <h2>Phase 15 Roadmap Summary</h2>
+        <p class="module-subtitle">
+          Roadmap triển khai nhỏ, dễ test, dễ commit và dễ giải thích.
+        </p>
+
+        <div class="flow-box">
+          15.1 RawMessage queue warm-up 15.2 Queue-based fake PLAN parser 15.3
+          Validated SignalPlan queue 15.4 Real USB Serial receive task 15.5
+          Traffic FSM task 15.6 ACK/NACK protocol 15.7 Safe plan apply at cycle
+          boundary 15.8 STATUS software timer 15.9 Host timeout watchdog
+          fallback 15.10 Runtime debugging checks
+        </div>
+
+        <div class="warning-box">
+          <strong>Nguyên tắc triển khai:</strong>
+          One phase = one FreeRTOS concept = one small working firmware commit.
+        </div>
+      </section>
     </main>
   </body>
 </html>

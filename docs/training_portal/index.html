@@ -1,97 +1,231 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ATLC Training Portal</title>
-  <link rel="stylesheet" href="assets/style.css" />
-</head>
-<body>
-  <header class="site-header">
-    <div class="header-inner">
-      <h1>ATLC Defense Training Portal</h1>
-      <p>Khóa học ngắn giúp team hiểu hệ thống, xem bài giảng, tải slide và làm quiz trước khi bảo vệ.</p>
-      <nav class="top-nav">
-        <a href="#course">Nội dung khóa học</a>
-        <a href="downloads/setup_guide.md">Setup guide</a>
-        <a href="quizzes/quiz_section06.html">Final quiz</a>
-      </nav>
-    </div>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ATLC Training Portal</title>
+    <link rel="stylesheet" href="assets/style.css" />
+  </head>
 
-  <main>
-    <section class="card">
-      <h2>Mục tiêu khóa học</h2>
-      <p>Khóa học này không nhằm biến thành viên nhóm thành chuyên gia AI. Mục tiêu là giúp mọi người hiểu đúng kiến trúc ATLC, biết demo, biết nói đúng phạm vi triển khai và trả lời được các câu hỏi bảo vệ cơ bản.</p>
-      <ul>
-        <li>Hiểu ATLC là hệ thống hỗ trợ giám sát và ra quyết định, không thay thế con người.</li>
-        <li>Nắm luồng dữ liệu: video → detection → ROI → counting → density → scheduler → runtime → dashboard/hardware demo.</li>
-        <li>Biết phần nào đã làm, phần nào là mô phỏng, phần nào là định hướng/future work.</li>
-        <li>Làm quiz để kiểm tra hiểu biết trước khi thuyết trình.</li>
-      </ul>
-    </section>
+  <body>
+    <header class="site-header">
+      <div class="header-inner">
+        <h1>ATLC Technical Defense Training Portal</h1>
+        <p>
+          Khóa học ngắn giúp team hiểu hệ thống, xem bài giảng, tải slide và làm
+          quiz trước khi bảo vệ.
+        </p>
 
-    <section id="course">
-      <h2>Nội dung khóa học</h2>
-      <div class="grid">
-        <article class="course-card">
-          <h3>Section 1 — Foundation</h3>
-          <p>ATLC là gì, bài toán giao thông, kiến trúc tổng thể và cách tránh overclaim.</p>
-          <div class="meta">Thời lượng gợi ý: 20–30 phút</div>
-          <div class="actions"><a class="btn primary" href="sections/section01_foundation.html">Vào bài học</a><a class="btn" href="quizzes/quiz_section01.html">Quiz</a><a class="btn" href="slides/section01_foundation.pdf">Slide PDF</a></div>
-        </article>
-        <article class="course-card">
-          <h3>Section 2 — AI / YOLO</h3>
-          <p>AI, Computer Vision, object detection, YOLO, bounding box, confidence và dataset.</p>
-          <div class="meta">Thời lượng gợi ý: 25–35 phút</div>
-          <div class="actions"><a class="btn primary" href="sections/section02_ai_yolo.html">Vào bài học</a><a class="btn" href="quizzes/quiz_section02.html">Quiz</a><a class="btn" href="slides/section02_ai_yolo.pdf">Slide PDF</a></div>
-        </article>
-        <article class="course-card">
-          <h3>Section 3 — ROI / Density</h3>
-          <p>ROI, đếm xe theo hướng, class normalization, density và weighted density.</p>
-          <div class="meta">Thời lượng gợi ý: 20–25 phút</div>
-          <div class="actions"><a class="btn primary" href="sections/section03_roi_density.html">Vào bài học</a><a class="btn" href="quizzes/quiz_section03.html">Quiz</a><a class="btn" href="slides/section03_roi_density.pdf">Slide PDF</a></div>
-        </article>
-        <article class="course-card">
-          <h3>Section 4 — Scheduler / Runtime</h3>
-          <p>Signal plan, raw/pending/active plan, runtime controller và countdown.</p>
-          <div class="meta">Thời lượng gợi ý: 20–30 phút</div>
-          <div class="actions"><a class="btn primary" href="sections/section04_scheduler_runtime.html">Vào bài học</a><a class="btn" href="quizzes/quiz_section04.html">Quiz</a><a class="btn" href="slides/section04_scheduler_runtime.pdf">Slide PDF</a></div>
-        </article>
-        <article class="course-card">
-          <h3>Section 5 — UART / MCU</h3>
-          <p>PC/Raspberry Pi, UART PLAN message, ACK/ERR, MCU và traffic light FSM.</p>
-          <div class="meta">Thời lượng gợi ý: 20–25 phút</div>
-          <div class="actions"><a class="btn primary" href="sections/section05_uart_mcu.html">Vào bài học</a><a class="btn" href="quizzes/quiz_section05.html">Quiz</a><a class="btn" href="slides/section05_hardware_serial_mcu.pdf">Slide PDF</a></div>
-        </article>
-        <article class="course-card">
-          <h3>Section 6 — Evidence / Security</h3>
-          <p>Logs, benchmark, figures, security overview, HMAC, replay và audit log.</p>
-          <div class="meta">Thời lượng gợi ý: 20–25 phút</div>
-          <div class="actions"><a class="btn primary" href="sections/section06_evidence_security.html">Vào bài học</a><a class="btn" href="quizzes/quiz_section06.html">Quiz</a><a class="btn" href="slides/section06_evidence_security.pdf">Slide PDF</a></div>
-        </article>
-        <article class="course-card">
-          <h3>Section 7 — Final Defense</h3>
-          <p>Câu hỏi bảo vệ, cách trả lời, lỗi cần tránh, hạn chế và future work.</p>
-          <div class="meta">Thời lượng gợi ý: 20–30 phút</div>
-          <div class="actions"><a class="btn primary" href="sections/section07_defense.html">Vào bài học</a><a class="btn accent" href="quizzes/quiz_section06.html">Final Quiz</a></div>
-        </article>
+        <nav class="top-nav">
+          <a href="#course">Nội dung khóa học</a>
+          <a href="downloads/setup_guide.md">Setup guide</a>
+          <a href="quizzes/final_defense_quiz.html">Final quiz</a>
+        </nav>
       </div>
-    </section>
+    </header>
 
-    <section class="card">
-      <h2>Download</h2>
-      <p>Thay các file placeholder trong folder <code>slides/</code> và <code>downloads/</code> bằng file thật của bạn.</p>
-      <div class="actions">
-        <a class="btn primary" href="slides/atlc_compact_training_full.pdf">Tải full slide PDF</a>
-        <a class="btn" href="downloads/ATLC_Compact_Defense_Training_Overleaf.zip">Tải source Overleaf ZIP</a>
-        <a class="btn" href="downloads/setup_guide.md">Hướng dẫn chạy project</a>
-      </div>
-    </section>
-  </main>
+    <main>
+      <section class="card">
+        <h2>Mục tiêu khóa học</h2>
+        <p>
+          Khóa học này không nhằm biến thành viên nhóm thành chuyên gia AI hay
+          FreeRTOS. Mục tiêu là giúp mọi người hiểu đúng kiến trúc ATLC, biết
+          demo, biết nói đúng phạm vi triển khai và trả lời được các câu hỏi bảo
+          vệ cơ bản.
+        </p>
 
-  <footer class="site-footer">
-    <p>ATLC Training Portal — static site for GitHub Pages. Videos should be stored on Google Drive and linked from each section page.</p>
-  </footer>
-</body>
+        <ul>
+          <li>
+            Hiểu ATLC là hệ thống hỗ trợ giám sát và ra quyết định, không thay
+            thế con người.
+          </li>
+          <li>
+            Nắm luồng dữ liệu: video → detection → ROI → counting → density →
+            scheduler → runtime → dashboard/hardware demo.
+          </li>
+          <li>
+            Hiểu thêm vai trò của embedded controller, MCU, serial communication
+            và FreeRTOS trong Phase 15.
+          </li>
+          <li>
+            Biết phần nào đã làm, phần nào là mô phỏng, phần nào là định
+            hướng/future work.
+          </li>
+          <li>Làm quiz để kiểm tra hiểu biết trước khi thuyết trình.</li>
+        </ul>
+      </section>
+
+      <section id="course">
+        <h2>Nội dung khóa học</h2>
+
+        <div class="grid">
+          <article class="course-card">
+            <h3>Section 1 — Foundation</h3>
+            <p>
+              ATLC là gì, bài toán giao thông, kiến trúc tổng thể và cách tránh
+              overclaim.
+            </p>
+            <div class="meta">Thời lượng gợi ý: 20–30 phút</div>
+            <div class="actions">
+              <a class="btn primary" href="sections/section01_foundation.html">
+                Vào bài học
+              </a>
+              <a class="btn" href="quizzes/quiz_section01.html">Quiz</a>
+              <a class="btn" href="slides/section01_foundation.pdf">
+                Slide PDF
+              </a>
+            </div>
+          </article>
+
+          <article class="course-card">
+            <h3>Section 2 — AI / YOLO</h3>
+            <p>
+              AI, Computer Vision, object detection, YOLO, bounding box,
+              confidence và dataset.
+            </p>
+            <div class="meta">Thời lượng gợi ý: 25–35 phút</div>
+            <div class="actions">
+              <a class="btn primary" href="sections/section02_ai_yolo.html">
+                Vào bài học
+              </a>
+              <a class="btn" href="quizzes/quiz_section02.html">Quiz</a>
+              <a class="btn" href="slides/section02_ai_yolo.pdf">Slide PDF</a>
+            </div>
+          </article>
+
+          <article class="course-card">
+            <h3>Section 3 — ROI / Density</h3>
+            <p>
+              ROI, đếm xe theo hướng, class normalization, density và weighted
+              density.
+            </p>
+            <div class="meta">Thời lượng gợi ý: 20–25 phút</div>
+            <div class="actions">
+              <a class="btn primary" href="sections/section03_roi_density.html">
+                Vào bài học
+              </a>
+              <a class="btn" href="quizzes/quiz_section03.html">Quiz</a>
+              <a class="btn" href="slides/section03_roi_density.pdf">
+                Slide PDF
+              </a>
+            </div>
+          </article>
+
+          <article class="course-card">
+            <h3>Section 4 — Scheduler / Runtime</h3>
+            <p>
+              Signal plan, raw/pending/active plan, runtime controller và
+              countdown.
+            </p>
+            <div class="meta">Thời lượng gợi ý: 20–30 phút</div>
+            <div class="actions">
+              <a
+                class="btn primary"
+                href="sections/section04_scheduler_runtime.html"
+              >
+                Vào bài học
+              </a>
+              <a class="btn" href="quizzes/quiz_section04.html">Quiz</a>
+              <a class="btn" href="slides/section04_scheduler_runtime.pdf">
+                Slide PDF
+              </a>
+            </div>
+          </article>
+
+          <article class="course-card">
+            <h3>Section 5 — UART / MCU</h3>
+            <p>
+              PC/Raspberry Pi, USB Serial / UART-style PLAN message, ACK/NACK,
+              MCU và traffic light FSM.
+            </p>
+            <div class="meta">Thời lượng gợi ý: 20–25 phút</div>
+            <div class="actions">
+              <a class="btn primary" href="sections/section05_uart_mcu.html">
+                Vào bài học
+              </a>
+              <a class="btn" href="quizzes/quiz_section05.html">Quiz</a>
+              <a class="btn" href="slides/section05_hardware_serial_mcu.pdf">
+                Slide PDF
+              </a>
+            </div>
+          </article>
+
+          <article class="course-card">
+            <h3>Section 6 — Evidence / Security</h3>
+            <p>
+              Logs, benchmark, figures, security overview, HMAC, replay và audit
+              log.
+            </p>
+            <div class="meta">Thời lượng gợi ý: 20–25 phút</div>
+            <div class="actions">
+              <a
+                class="btn primary"
+                href="sections/section06_evidence_security.html"
+              >
+                Vào bài học
+              </a>
+              <a class="btn" href="quizzes/quiz_section06.html">Quiz</a>
+              <a class="btn" href="slides/section06_evidence_security.pdf">
+                Slide PDF
+              </a>
+            </div>
+          </article>
+
+          <article class="course-card">
+            <h3>Section 7 — Real-Time Embedded Controller</h3>
+            <p>
+              FreeRTOS vừa đủ để hiểu Phase 15: embedded controller, single
+              loop, task, queue, FSM cục bộ, debug và defense preparation.
+            </p>
+            <div class="meta">Thời lượng gợi ý: 120-180 phút</div>
+            <div class="actions">
+              <a class="btn primary" href="sections/section07_defense.html">
+                Vào bài học
+              </a>
+              <a class="btn" href="quizzes/quiz_section07_1.html">Quiz 7.1</a>
+              <a
+                class="btn"
+                href="slides/section07_1_embedded_controller_background.pdf"
+              >
+                Slide PDF 7.1
+              </a>
+              <a class="btn accent" href="quizzes/final_defense_quiz.html">
+                Final Quiz
+              </a>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Download</h2>
+        <p>
+          Thay các file placeholder trong folder <code>slides/</code> và
+          <code>downloads/</code> bằng file thật của bạn.
+        </p>
+
+        <div class="actions">
+          <a class="btn primary" href="slides/atlc_compact_training_full.pdf">
+            Tải full slide PDF
+          </a>
+          <a
+            class="btn"
+            href="downloads/ATLC_Compact_Defense_Training_Overleaf.zip"
+          >
+            Tải source Overleaf ZIP
+          </a>
+          <a class="btn" href="downloads/setup_guide.md">
+            Hướng dẫn chạy project
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        ATLC Training Portal — static site for GitHub Pages. Videos should be
+        stored on Google Drive and linked from each section page.
+      </p>
+    </footer>
+  </body>
 </html>
