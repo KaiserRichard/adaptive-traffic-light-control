@@ -124,7 +124,8 @@ docs/
 
 * Phase 15.1 — FreeRTOS RawMessage Queue Warm-Up
 * Phase 15.2 — Queue-Based Fake PLAN Parser
-- Phase 15.3 — Validated SignalPlan Queue
+* Phase 15.3 — Validated SignalPlan Queue
+* Phase 15.4 — Real USB Serial Receive Task
 
 Future documentation will be added incrementally as Phase 15 evolves.
 

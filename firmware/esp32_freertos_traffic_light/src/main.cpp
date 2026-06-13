@@ -13,16 +13,25 @@ static const UBaseType_t RAW_MESSAGE_QUEUE_LENGTH = 5;
 // Queue length: 3 validated SignalPlan objects at the same time
 static const UBaseType_t PLAN_QUEUE_LENGTH = 3;
 
+// Maximum serial command length, including null terminator
+static const size_t SERIAL_LINE_BUFFER_SIZE = 96;
+
 // TaskSimulatedProducer will send one fake message every 3000 ms
-static const TickType_t PRODUCER_PERIOD_TICKS = pdMS_TO_TICKS(3000);
+// static const TickType_t PRODUCER_PERIOD_TICKS = pdMS_TO_TICKS(3000);
+
+// UART receive task checks Serial periodically
+static const TickType_t UART_RECEIVE_POLL_TICK = pdMS_TO_TICKS(20); //Phase 15.4 
+
 
 // Stack size for each task
-static const uint32_t PRODUCER_TASK_STACK_SIZE = 4096;
+// static const uint32_t PRODUCER_TASK_STACK_SIZE = 4096;
+static const uint32_t UART_RECEIVE_TASK_STACK_SIZE = 4096; //Phase 15.4 
 static const uint32_t PARSER_TASK_STACK_SIZE = 4096;
 static const uint32_t FSM_TASK_STACK_SIZE = 4096;
 
 // Task priorities
-static const UBaseType_t PRODUCER_TASK_PRIORITY = 1;
+// static const UBaseType_t PRODUCER_TASK_PRIORITY = 1;
+static const UBaseType_t UART_RECEIVE_TASK_PRIORITY = 1; //Phase 15.4 
 static const UBaseType_t PARSER_TASK_PRIORITY = 1;
 static const UBaseType_t FSM_TASK_PRIORITY = 1;
 
@@ -79,7 +88,7 @@ static void printBootBanner()
 {
     Serial.println();
     Serial.println("[BOOT] ATLC Phase 15 FreeRTOS Controller");
-    Serial.println("[BOOT] Phase 15.3 - Validate Signal Plan Queue");
+    Serial.println("[BOOT] Phase 15.4 - Real USB Serial Receive Task");
 }
 
 // Copy text into a RawMessage object safely
@@ -228,66 +237,149 @@ static bool validateSignalPlan(const SignalPlan *plan, const char **reason)
 // Print a validated SignalPlan for debugging
 static void printSignalPlan(const SignalPlan *plan)
 {
+    if (plan == nullptr)
+    {
+        return;
+    }
 
+    Serial.print("[PLAN] plan_id=");
+    Serial.print(plan->plan_id);
+    Serial.print(" green_a=");
+    Serial.print(plan->green_a);
+    Serial.print(" green_b=");
+    Serial.print(plan->green_b);
+    Serial.print(" yellow=");
+    Serial.print(plan->yellow);
+    Serial.print(" all_red=");
+    Serial.println(plan->all_red);
 }
 
 /*
  * TaskSimulatedProducer:
  * Simulates a future host computer sending a command over USB Serial.
  */
-void TaskSimulatedProducer(void *pvParameters)
+// In Phase 15.4 We dont neeedSimulated Producer anymore 
+// void TaskSimulatedProducer(void *pvParameters)
+// {
+//     // Prevent compiler warnings
+//     (void)pvParameters;
+
+//     // The producer sends multiple test messages.
+//     const char *testMessages[] = {
+//         "PLAN,17,25,15,3,1",    // valid
+//         "HELLO",                // unknown
+//         "BAD,17,25",            // unknown
+//         "PLAN,18,30,20,3,1",    // valid
+//         "PLAN,19,2,15,3,1",     // invalid green_a
+//         "PLAN,20,25,200,3,1",   // invalid green_b
+//         "PLAN,21,25,15,0,1"     // invalid yellow
+//     };
+
+//     size_t messageIndex = 0;
+//     const size_t messageCount = sizeof(testMessages) / sizeof(testMessages[0]);
+
+//     for (;;)
+//     {
+//         // Local RawMessage variable
+//         RawMessage message;
+
+//         // Fill message.data with fake PLAN text
+//         setRawMessage(&message, testMessages[messageIndex]);
+
+//         messageIndex++;
+//         if (messageIndex >= messageCount)
+//         {
+//             messageIndex = 0;
+//         }
+
+//         // Send the RawMessage into the queue
+//         BaseType_t sendResult = xQueueSendToBack(
+//             rawMessageQueue,
+//             &message,
+//             portMAX_DELAY
+//         );
+
+//         // Check if the send operation succeeded
+//         if (sendResult == pdPASS)
+//         {
+//             Serial.print("[PRODUCER] Sent raw message: ");
+//             Serial.println(message.data);
+//         }
+//         else
+//         {
+//             Serial.println("[PRODUCER] ERROR: Failed to send raw message.");
+//         }
+
+//         // Sleep for 3 seconds
+//         vTaskDelay(PRODUCER_PERIOD_TICKS);
+//     }
+// }
+
+/*
+ * TaskUARTReceive: 
+ * Reads command lines from USB Serial and sends them to rawMessageQueue.
+ */
+void TaskUARTReceive(void *pvParameters)
 {
-    // Prevent compiler warnings
     (void)pvParameters;
 
-    // The producer sends multiple test messages.
-    const char *testMessages[] = {
-        "PLAN,17,25,15,3,1",    // valid
-        "HELLO",                // unknown
-        "BAD,17,25",            // unknown
-        "PLAN,18,30,20,3,1",    // valid
-        "PLAN,19,2,15,3,1",     // invalid green_a
-        "PLAN,20,25,200,3,1",   // invalid green_b
-        "PLAN,21,25,15,0,1"     // invalid yellow
-    };
-
-    size_t messageIndex = 0;
-    const size_t messageCount = sizeof(testMessages) / sizeof(testMessages[0]);
-
+    char lineBuffer[SERIAL_LINE_BUFFER_SIZE];
+    size_t lineIndex = 0;
     for (;;)
     {
-        // Local RawMessage variable
-        RawMessage message;
-
-        // Fill message.data with fake PLAN text
-        setRawMessage(&message, testMessages[messageIndex]);
-
-        messageIndex++;
-        if (messageIndex >= messageCount)
+        while(Serial.available() > 0) // Check if characters exist
         {
-            messageIndex = 0;
-        }
+            char receivedChar = static_cast<char>(Serial.read());
 
-        // Send the RawMessage into the queue
-        BaseType_t sendResult = xQueueSendToBack(
-            rawMessageQueue,
-            &message,
-            portMAX_DELAY
-        );
+            if (receivedChar == '\r') 
+            {
+                continue;
+            }
 
-        // Check if the send operation succeeded
-        if (sendResult == pdPASS)
-        {
-            Serial.print("[PRODUCER] Sent raw message: ");
-            Serial.println(message.data);
-        }
-        else
-        {
-            Serial.println("[PRODUCER] ERROR: Failed to send raw message.");
-        }
+            if (receivedChar == '\n') // New line means: User pressed Enter or Command complete.
+            {
+                // Check Empty line
+                if (lineIndex > 0)
+                {
+                    lineBuffer[lineIndex] = '\0'; // Without \0, C does know where the string ends
+                    RawMessage message;
+                    setRawMessage(&message, lineBuffer);
 
-        // Sleep for 3 seconds
-        vTaskDelay(PRODUCER_PERIOD_TICKS);
+                    // Send RawMessage to parser task
+                    BaseType_t sendResult = xQueueSendToBack(
+                        rawMessageQueue,
+                        &message,
+                        portMAX_DELAY
+                    );
+
+                        if (sendResult == pdPASS)
+                        {
+                            Serial.print("[UART] Received line: ");
+                            Serial.println(message.data);
+                        }
+                        else
+                        {
+                            Serial.println("[UART] ERROR: Failed to send raw message.");
+                        }
+
+                        lineIndex = 0;
+                }
+            }
+            else 
+            {
+                if (lineIndex < SERIAL_LINE_BUFFER_SIZE -1) 
+                {
+                    lineBuffer[lineIndex] = receivedChar;
+                    lineIndex++;
+                }
+                else
+                {
+                    Serial.println("[UART] ERROR: Serial line too long. Dropping line.");
+                    lineIndex = 0;
+                }
+            }
+        }
+        vTaskDelay(UART_RECEIVE_POLL_TICK);
     }
 }
 
@@ -462,22 +554,49 @@ void setup()
 
     Serial.println("[BOOT] planQueue created.");
 
+    // In Phase 15.4 We dont neeedSimulated Producer anymore 
     /*
      * Create the producer task
      */
-    BaseType_t producerCreated = xTaskCreate(
-        TaskSimulatedProducer,    // Function that implements the task
-        "SimProducer",            // Human-readable task name
-        PRODUCER_TASK_STACK_SIZE, // Stack size
-        nullptr,                  // No parameter passed to the task
-        PRODUCER_TASK_PRIORITY,   // Task priority
-        nullptr                   // Do not store task handle for now
-    );
+    // BaseType_t producerCreated = xTaskCreate(
+    //     TaskSimulatedProducer,    // Function that implements the task
+    //     "SimProducer",            // Human-readable task name
+    //     PRODUCER_TASK_STACK_SIZE, // Stack size
+    //     nullptr,                  // No parameter passed to the task
+    //     PRODUCER_TASK_PRIORITY,   // Task priority
+    //     nullptr                   // Do not store task handle for now
+    // );
 
     // Check if task creation failed
-    if (producerCreated != pdPASS)
+    // if (producerCreated != pdPASS)
+    // {
+    //     Serial.println("[BOOT] ERROR: Failed to create TaskSimulatedProducer.");
+    //     Serial.println("[BOOT] System halted.");
+
+    //     while (true)
+    //     {
+    //         delay(1000);
+    //     }
+    // }
+
+    // Serial.println("[BOOT] TaskSimulatedProducer created.");
+
+    /*
+     * Create the UART receive task 
+     */
+    BaseType_t uartReceiveCreated = xTaskCreate(
+        TaskUARTReceive,
+        "UARTReceive",
+        UART_RECEIVE_TASK_STACK_SIZE,
+        nullptr,
+        UART_RECEIVE_TASK_PRIORITY,
+        nullptr
+    );
+
+    // CHeck if task creation failed
+    if (uartReceiveCreated != pdPASS)
     {
-        Serial.println("[BOOT] ERROR: Failed to create TaskSimulatedProducer.");
+        Serial.println("[BOOT] ERROR: Failed to create TaskUARTReceive.");
         Serial.println("[BOOT] System halted.");
 
         while (true)
@@ -486,7 +605,7 @@ void setup()
         }
     }
 
-    Serial.println("[BOOT] TaskSimulatedProducer created.");
+    Serial.println("[BOOT] TaskUARTReceive created.");
 
     /*
      * Create the parser task
@@ -525,12 +644,23 @@ void setup()
         FSM_TASK_PRIORITY,
         nullptr
     );
+    
+    if (fsmCreated != pdPASS)
+    {
+        Serial.println("[BOOT] ERROR: Failed to create TaskTrafficFSMPlaceholder.");
+        Serial.println("[BOOT] System halted.");
+
+        while (true)
+        {
+            delay(1000);
+        }
+    }
 
     Serial.println("[BOOT] TaskTrafficFSMPlaceholder created.");
 
 
 
-    Serial.println("[BOOT] Phase 15.3 system is running.");
+    Serial.println("[BOOT] Phase 15.4 - Real USB Serial Receive Task");
 }
 
 // In Arduino projects, loop() usually contains the main logic.
