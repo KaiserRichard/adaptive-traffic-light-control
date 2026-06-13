@@ -1,25 +1,5 @@
 /*
  * ATLC Phase 15 — FreeRTOS-Based Embedded Controller and Edge Deployment Upgrade
- * Phase 15.1 — FreeRTOS Queue Warm-Up with RawMessage
- *
- * Current architecture:
- *
- *   TaskSimulatedProducer
- *          |
- *          v
- *   rawMessageQueue
- *          |
- *          v
- *   TaskPlanParser
- *
- * This Phase does not implement:
- * - real UART input
- * - PLAN parsing
- * - SignalPlan validation
- * - traffic light FSM
- * - ACK/NACK
- * - STATUS messages
- * - watchdog fallback
  */
 
 #include <Arduino.h>
@@ -48,6 +28,16 @@ struct RawMessage
     char data[96]; // Fixed-size character buffer
 };
 
+// Temporary structure for parsed PLAN fields
+struct ParsedPlanFields
+{
+    int plan_id;
+    int green_a;
+    int green_b;
+    int yellow;
+    int all_red;
+};
+
 /*
  * Global FreeRTOS Objects
  */
@@ -59,7 +49,7 @@ static void printBootBanner()
 {
     Serial.println();
     Serial.println("[BOOT] ATLC Phase 15 FreeRTOS Controller");
-    Serial.println("[BOOT] Phase 15.1 - Queue Warm-Up with RawMessage");
+    Serial.println("[BOOT] Phase 15.2 -  Queue-Based Fake PLAN Parser");
 }
 
 // Copy text into a RawMessage object safely
@@ -78,6 +68,63 @@ static void setRawMessage(RawMessage *message, const char *text)
     );
 }
 
+// Check whether a raw message starts with "PLAN, "
+static bool isPlanCommand(const RawMessage *message)
+{
+    if (message == nullptr)
+    {
+        return false;
+    }
+    return strncmp(message->data, "PLAN,", 5) == 0;
+}
+
+// Parse: PLAN,<plan_id>,<green_a>,<green_b>,<yellow>,<all_red>
+static bool parsePlanCommand(const RawMessage *message, ParsedPlanFields *fields)
+{
+    if(message == nullptr || fields == nullptr)
+    {
+        return false;
+    }
+
+    // ParsedPlanFields = extracted numbers
+    // sscanf() returns: How many values were successfully parsed
+    int parsedCount = sscanf(
+        message->data,
+        "PLAN,%d,%d,%d,%d,%d",
+        &fields->plan_id,
+        &fields->green_a,
+        &fields->green_b,
+        &fields->yellow,
+        &fields->all_red
+    );
+    return parsedCount == 5;
+}
+
+// Print parsed PLAN fields for debugging
+static void printParsedPlan  (const ParsedPlanFields *fields)
+{
+    if (fields == nullptr)
+    {
+        return;
+    }
+
+    Serial.print("[PARSER] plan_id=");
+    Serial.print(fields->plan_id);
+
+    Serial.print(" green_a=");
+    Serial.print(fields->green_a);
+
+    Serial.print(" green_b=");
+    Serial.print(fields->green_b);
+
+    Serial.print(" yellow=");
+    Serial.print(fields->yellow);
+
+    Serial.print(" all_red=");
+    Serial.println(fields->all_red);
+}
+
+
 /*
  * TaskSimulatedProducer:
  * Simulates a future host computer sending a command over USB Serial.
@@ -87,7 +134,16 @@ void TaskSimulatedProducer(void *pvParameters)
     // Prevent compiler warnings
     (void)pvParameters;
 
-    const char *testPlanMessage = "PLAN,17,25,15,3,1";
+    // The producer sends multiple test messages.
+    const char *testMessages[] = {
+        "PLAN,17,25,15,3,1",
+        "HELLO",
+        "BAD,17,25",
+        "PLAN,18,30,20,3,1"
+    };
+
+    size_t messageIndex = 0;
+    const size_t messageCount = sizeof(testMessages) / sizeof(testMessages[0]);
 
     for (;;)
     {
@@ -95,7 +151,13 @@ void TaskSimulatedProducer(void *pvParameters)
         RawMessage message;
 
         // Fill message.data with fake PLAN text
-        setRawMessage(&message, testPlanMessage);
+        setRawMessage(&message, testMessages[messageIndex]);
+
+        messageIndex++;
+        if (messageIndex >= messageCount)
+        {
+            messageIndex = 0;
+        }
 
         // Send the RawMessage into the queue
         BaseType_t sendResult = xQueueSendToBack(
@@ -145,6 +207,25 @@ void TaskPlanParser(void *pvParameters)
         {
             Serial.print("[PARSER] Received raw message: ");
             Serial.println(receivedMessage.data);
+
+            if (isPlanCommand(&receivedMessage))
+            {
+                ParsedPlanFields fields;
+
+                if (parsePlanCommand(&receivedMessage, &fields))
+                {
+                    Serial.println("[PARSER] PLAN command detected.");
+                    printParsedPlan(&fields);
+                }
+                else
+                {
+                    Serial.println("[PARSER] ERROR: Malformed PLAN command.");
+                }
+            }
+            else
+            {
+                Serial.println("[PARSER] Unknown command format.");
+            }
         }
         else
         {
@@ -235,7 +316,7 @@ void setup()
     }
 
     Serial.println("[BOOT] TaskPlanParser created.");
-    Serial.println("[BOOT] Phase 15.1 system is running.");
+    Serial.println("[BOOT] Phase 15.2 - Queue-Based Fake PLAN Parser");
 }
 
 // In Arduino projects, loop() usually contains the main logic.
