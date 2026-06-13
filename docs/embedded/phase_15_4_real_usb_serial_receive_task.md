@@ -1,4 +1,3 @@
-```markdown
 # Phase 15.4 — Real USB Serial Receive Task
 
 ## Goal
