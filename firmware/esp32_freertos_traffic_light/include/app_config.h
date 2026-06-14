@@ -21,6 +21,8 @@ static const UBaseType_t PLAN_QUEUE_LENGTH = 3;
 // Maximum serial command length, including null terminator
 static const size_t SERIAL_LINE_BUFFER_SIZE = 96;
 
+// FSM task checks state timing periodically.
+static const TickType_t FSM_UPDATE_PERIOD_TICK = pdMS_TO_TICKS(50);
 // Task Timing
 static const TickType_t UART_RECEIVE_POLL_TICK = pdMS_TO_TICKS(20);
 
@@ -43,3 +45,4 @@ static const int MAX_YELLOW_SECONDS = 3;
 
 static const int MIN_ALL_RED_SECONDS = 1;
 static const int MAX_ALL_RED_SECONDS = 1;
+

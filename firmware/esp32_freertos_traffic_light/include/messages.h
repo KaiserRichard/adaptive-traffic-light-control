@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include "app_config.h"
 
-// RawMessage represents one raw command line.
+// RawMessage represents one raw command line.  
 // Example: PLAN,17,25,15,3,1
 struct RawMessage
 {

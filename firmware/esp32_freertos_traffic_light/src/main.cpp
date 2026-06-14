@@ -1,9 +1,3 @@
-// main.cpp
-
-/*
- * ATLC Phase 15 — FreeRTOS-Based Embedded Controller and Edge Deployment Upgrade
- */
-
 /*
  * ATLC Phase 15 — FreeRTOS-Based Embedded Controller and Edge Deployment Upgrade
  */
@@ -12,6 +6,7 @@
 #include "app_config.h"
 #include "queues.h"
 #include "tasks.h"
+#include "traffic_fsm.h"
 
 
 
@@ -19,7 +14,7 @@ static void printBootBanner()
 {
     Serial.println();
     Serial.println("[BOOT] ATLC Phase 15 FreeRTOS Controller");
-    Serial.println("[BOOT] Phase 15.5B - FreeRTOS Firmware Modularization");
+    Serial.println("[BOOT] Phase 15.5 - Traffic FSM Task");
 }
 
 static void haltSystem()
@@ -38,6 +33,9 @@ void setup()
     delay(1000);
 
     printBootBanner();
+
+    setupTrafficLightPins();
+    Serial.println("[BOOT] Traffic light GPIO pins initialized.");
 
     if (!createApplicationQueues())
     {
@@ -82,8 +80,8 @@ void setup()
     Serial.println("[BOOT] TaskPlanParser created.");
 
     BaseType_t fsmCreated = xTaskCreate(
-        TaskTrafficFSMPlaceholder,
-        "FSMPlaceholder",
+        TaskTrafficFSM,
+        "TrafficFSM",
         FSM_TASK_STACK_SIZE,
         nullptr,
         FSM_TASK_PRIORITY,
@@ -92,12 +90,12 @@ void setup()
 
     if (fsmCreated != pdPASS)
     {
-        Serial.println("[BOOT] ERROR: Failed to create TaskTrafficFSMPlaceholder.");
+        Serial.println("[BOOT] ERROR: Failed to create TaskTrafficFSM.");
         haltSystem();
     }
 
-    Serial.println("[BOOT] TaskTrafficFSMPlaceholder created.");
-    Serial.println("[BOOT] Phase 15.5B system is running.");
+    Serial.println("[BOOT] TaskTrafficFSM created.");
+    Serial.println("[BOOT] Phase 15.5 system is running.");
 }
 
 void loop()
