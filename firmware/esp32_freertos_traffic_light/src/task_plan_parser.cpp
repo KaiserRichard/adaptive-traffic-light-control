@@ -3,18 +3,20 @@
  * TaskPlanParser:
  * Waits for RawMessage objects from rawMessageQueue.
  * Parser behavior: 
+ * Phase 15.6: Add ACK and NACK into Valid and Invalid PLAN 
  * Valid PLAN
         → parse
         → validate
         → send to planQueue
+        → ACK
 
     Invalid PLAN
         → parse
         → fail validation
         → reject
-
+        → NACK 
     Unknown message
-        → reject before parsing
+        → NACK 
  */
 #include <Arduino.h>
 
@@ -22,12 +24,11 @@
 #include "queues.h"
 #include "protocol.h"
 #include "tasks.h"
+
 void TaskPlanParser(void *pvParameters)
 {
-    // Prevent compiler warnings
     (void)pvParameters;
 
-    // Local variable to store the message received from the queue
     RawMessage receivedMessage;
 
     for (;;)
@@ -38,59 +39,62 @@ void TaskPlanParser(void *pvParameters)
             portMAX_DELAY
         );
 
-        // If receive succeeded, print the raw message
-        if (receiveResult == pdPASS)
+        if (receiveResult != pdPASS)
         {
-            Serial.print("[PARSER] Received raw message: ");
-            Serial.println(receivedMessage.data);
+            Serial.println("[PARSER] ERROR: Failed to receive raw message.");
+            continue;
+        }
 
-            if (isPlanCommand(&receivedMessage))
-            {
-                ParsedPlanFields fields;
+        Serial.print("[PARSER] Received raw message: ");
+        Serial.println(receivedMessage.data);
 
-                if (parsePlanCommand(&receivedMessage, &fields))
-                {
-                    Serial.println("[PARSER] PLAN command detected.");
-                    printParsedPlan(&fields);
+        if (!isPlanCommand(&receivedMessage))
+        {
+            Serial.println("[PARSER] Rejected: unknown command.");
+            sendNack(-1, "UNKNOWN_COMMAND");
+            continue;
+        }
 
-                    SignalPlan plan = makeSignalPlan(&fields);
+        ParsedPlanFields fields;
 
-                    const char *validationReason = "OK";
-                    if (validateSignalPlan(&plan, &validationReason))
-                    {
-                        BaseType_t sendResult = xQueueSendToBack(
-                            planQueue,
-                            &plan,
-                            portMAX_DELAY);
+        if (!parsePlanCommand(&receivedMessage, &fields))
+        {
+            Serial.println("[PARSER] Rejected: malformed PLAN.");
+            sendNack(-1, "MALFORMED_PLAN");
+            continue;
+        }
 
-                        if (sendResult == pdPASS)
-                        {
-                            Serial.println("[PARSER] Valid SignalPlan sent to planQueue.");
-                        }
-                        else
-                        {
-                            Serial.println("[PARSER] ERROR: Failed to send SignalPlan to planQueue.");
-                        }
-                    }
-                    else
-                    {
-                        Serial.print("[PARSER] Rejected SignalPlan: ");
-                        Serial.println(validationReason);
-                    }
-                }
-                else
-                {
-                    Serial.println("[PARSER] ERROR: Malformed PLAN command.");
-                }
-            }
-            else
-            {
-                Serial.println("[PARSER] Unknown command format.");
-            }
+        Serial.println("[PARSER] PLAN command detected.");
+        printParsedPlan(&fields);
+
+        SignalPlan plan = makeSignalPlan(&fields);
+
+        const char *validationReason = "OK";
+
+        if (!validateSignalPlan(&plan, &validationReason))
+        {
+            Serial.print("[PARSER] Rejected SignalPlan: ");
+            Serial.println(validationReason);
+
+            sendNack(plan.plan_id, validationReason);
+            continue;
+        }
+
+        BaseType_t sendResult = xQueueSendToBack(
+            planQueue,
+            &plan,
+            pdMS_TO_TICKS(100)
+        );
+
+        if (sendResult == pdPASS)
+        {
+            Serial.println("[PARSER] Valid SignalPlan sent to planQueue.");
+            sendAck(plan.plan_id);
         }
         else
         {
-            Serial.println("[PARSER] ERROR: Failed to receive raw message.");
+            Serial.println("[PARSER] ERROR: planQueue full.");
+            sendNack(plan.plan_id, "PLAN_QUEUE_FULL");
         }
     }
-}
+}   

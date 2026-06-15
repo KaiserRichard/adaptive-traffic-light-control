@@ -111,6 +111,15 @@ bool validateSignalPlan(
         return false;
     }
 
+    if(plan->plan_id < 0)
+    {
+        if (reason != nullptr)
+        {
+            *reason = "PLAN_ID_OUT_OF_RANGE";
+        }
+        return false;
+    }
+
     if (plan->green_a < MIN_GREEN_SECONDS ||
         plan->green_a > MAX_GREEN_SECONDS)
     {
@@ -172,3 +181,26 @@ void printSignalPlan(const SignalPlan *plan)
     Serial.print(" all_red=");
     Serial.println(plan->all_red);
 }
+
+void sendAck(int planId)
+{
+    Serial.print("ACK,");
+    Serial.println(planId);
+}
+
+void sendNack(int planId, const char *reason)
+{
+    Serial.print("NACK,");
+    Serial.print(planId);
+    Serial.print(",");
+
+    if (reason == nullptr)
+    {
+        Serial.println("UNKNONW_REASON");
+        return;
+    }
+
+    Serial.println(reason);
+}
+
+// 

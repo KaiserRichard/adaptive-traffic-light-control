@@ -14,7 +14,7 @@ static void printBootBanner()
 {
     Serial.println();
     Serial.println("[BOOT] ATLC Phase 15 FreeRTOS Controller");
-    Serial.println("[BOOT] Phase 15.5 - Traffic FSM Task");
+    Serial.println("[BOOT] Phase 15.6 - ACK/NACK Protocol");
 }
 
 static void haltSystem()
@@ -95,7 +95,9 @@ void setup()
     }
 
     Serial.println("[BOOT] TaskTrafficFSM created.");
-    Serial.println("[BOOT] Phase 15.5 system is running.");
+
+    
+    Serial.println("[BOOT] Phase 15.6 system is running.");
 }
 
 void loop()
