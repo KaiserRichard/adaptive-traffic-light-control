@@ -44,6 +44,7 @@ The ESP32 validates plans and executes the traffic light FSM locally.
 * Phase 15.6 — ACK/NACK Protocol
 * Phase 15.7 — Safe Plan Apply at FSM Cycle Boundary
 * Phase 15.8 — Software Timer STATUS Messages
+* Phase 15.9 — Host Timeout Watchdog and Fallback Plan
 
 ---
 

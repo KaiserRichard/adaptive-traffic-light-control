@@ -8,6 +8,8 @@ void initStatusReporter();
 void updateControllerStatus(
     const SignalPlan *activePlan,
     TrafficState currentState,
-    TickType_t stateStartTick);
+    TickType_t stateStartTick,
+    const char *health 
+);
 
 void startStatusTimer();

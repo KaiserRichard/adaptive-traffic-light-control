@@ -15,7 +15,7 @@ static void printBootBanner()
 {
     Serial.println();
     Serial.println("[BOOT] ATLC Phase 15 FreeRTOS Controller");
-    Serial.println("[BOOT] Phase 15.8 - Software Timer STATUS Messages");
+    Serial.println("[BOOT] Phase 15.9 - Host Timeout Watchdog");
 }
 
 static void haltSystem()
@@ -101,7 +101,7 @@ void setup()
     Serial.println("[BOOT] TaskTrafficFSM created.");
 
     startStatusTimer();
-    Serial.println("[BOOT] Phase 15.8 system is running.");
+    Serial.println("[BOOT] Phase 15.9 system is running.");
 }
 
 void loop()

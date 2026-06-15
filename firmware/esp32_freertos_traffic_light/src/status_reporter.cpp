@@ -84,7 +84,8 @@ void initStatusReporter()
 void updateControllerStatus(
     const SignalPlan *activePlan,
     TrafficState currentState,
-    TickType_t stateStartTick
+    TickType_t stateStartTick,
+    const char *health
 )
 {
     if (activePlan == nullptr)
@@ -123,7 +124,17 @@ void updateControllerStatus(
         controllerStatus.state = currentState;
         controllerStatus.plan_id = activePlan->plan_id;
         controllerStatus.remaining_seconds = remainingMs / 1000;
-        controllerStatus.health = "OK";
+
+        // Update Status Reporter Source
+        // Health is supplied by TaskTrafficFSM
+        if (health == nullptr)
+        {
+            controllerStatus.health = "UNKNOWN";
+        }
+        else
+        {
+            controllerStatus.health = health;
+        }
 }
 
 

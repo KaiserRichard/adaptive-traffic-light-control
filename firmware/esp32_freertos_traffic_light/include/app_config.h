@@ -50,3 +50,7 @@ static const int MAX_ALL_RED_SECONDS = 1;
 // Send one STATUS message every 1000ms.
 static const TickType_t STATUS_TIMER_PERIOD_TICK = pdMS_TO_TICKS(1000);
 
+// Host timeout Watchdog
+// If no valid PLAN is received within this timeout, the controller enters fallback mode.
+static const uint32_t HOST_TIMEOUT_SECONDS = 30;
+static const uint32_t HOST_TIMEOUT_MS = HOST_TIMEOUT_SECONDS * 1000;

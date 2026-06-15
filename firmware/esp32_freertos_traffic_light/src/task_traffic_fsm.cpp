@@ -7,8 +7,13 @@
  * Receives validated SignalPlan objects from planQueue.
  *
  * Phase 15.7:
- * New plans are stored as pendingPlan first.
- * They are applied only at a safe FSM boundary.
+ * New SignalPlans are first stored as pendingPlan.
+ * The plan is only applied when the FSM reaches a safe boundary.
+ *
+ * Phase 15.9:
+ * Detect host communication timeout.
+ * Switch to a fallback plan if the host disappears.
+ * Publish controller health through STATUS messages.
  */
 
 #include <Arduino.h>
@@ -25,7 +30,12 @@ void TaskTrafficFSM(void *pvParameters)
 {
     (void)pvParameters;
 
+    // Current active timing plan used by the FSM.
     SignalPlan activePlan = getDefaultSignalPlan();
+
+    // Safe fallback plan used when host stop sending valid PLAN messages.
+    SignalPlan fallbackPlan = getDefaultSignalPlan();
+
     // Temporary buffer used when a new plan arrives from planQueue.
     SignalPlan receivedPlan;
 
@@ -35,6 +45,22 @@ void TaskTrafficFSM(void *pvParameters)
     // True when pendingPlan contains a new valid plan
     bool hasPendingPlan = false;
 
+    /*
+     * Phase 15.9: Host watchdog states
+     * 
+     */
+
+    // Current controller health reported through STATUS messages.
+    const char *controllerHealth = "OK";
+
+    // True after a host timeout is detected.
+    // Used to trigger fallback logic.
+    bool isHostInTimeoutState = false;
+
+    // Tick count when the last valid PLAN arrived.
+    // Used by the host timeout watchdog.
+    TickType_t lastValidPlanTick = xTaskGetTickCount();
+
     TrafficState currentState = STATE_A_GREEN;
 
     // Tick count when the current FSM state started.
@@ -42,6 +68,20 @@ void TaskTrafficFSM(void *pvParameters)
     TickType_t stateStartTick = xTaskGetTickCount();
 
     applyTrafficOutputs(currentState);
+
+    /*
+     * Publish initial controller state.
+     *
+     * STATUS timer cannot access local FSM variables.
+     * Instead it reads the shared ControllerStatus snapshot.
+     */
+    updateControllerStatus(
+        &activePlan,
+        currentState,
+        stateStartTick,
+        controllerHealth
+    );
+
 
     Serial.println("[FSM] Traffic FSM started.");
     Serial.print("[FSM] Initial state: ");
@@ -66,12 +106,24 @@ void TaskTrafficFSM(void *pvParameters)
         if (receiveResult == pdPASS)
         {
             /*
-             * Phase 15.7: Safe plan apply
-             * Do not apply the plan immediately.
-             * Store it as pending and wait for a safe boundary.
+             * A valid PLAN means: 
+             *      Host is alive.
+             *      Refresh watchdog timer.
+             *      Store plan for safe boundary apply.
              */
             pendingPlan = receivedPlan;
             hasPendingPlan = true;
+
+            lastValidPlanTick = xTaskGetTickCount();
+            
+            // If the controller was previously in timeout mode,
+            // This PLAN marks communication recovery.
+            if(isHostInTimeoutState)
+            {
+                Serial.println("[FSM] Host communication recovered");
+                isHostInTimeoutState = false;
+            }
+            controllerHealth = "OK";
 
             Serial.println("[FSM] Pending SignalPlan received.");
             printSignalPlan(&pendingPlan);
@@ -79,6 +131,25 @@ void TaskTrafficFSM(void *pvParameters)
 
         TickType_t now = xTaskGetTickCount();
         
+        // How long has the host been silent ? 
+        uint32_t hostSilentMs =
+            static_cast<uint32_t>(now - lastValidPlanTick) *
+            portTICK_PERIOD_MS;
+        
+        if(!isHostInTimeoutState && hostSilentMs >= HOST_TIMEOUT_MS)
+        {
+            // Host timeout detected.
+            isHostInTimeoutState = true;
+            controllerHealth = "HOST_TIMEOUT";
+
+            activePlan = fallbackPlan; // Switch to fallback plan immediately.
+            hasPendingPlan = false; // Clear pending plan to avoid applying old plans at safe boundary.
+
+            Serial.println("[FSM] WARNING: Host communication timeout detected.");
+            Serial.println("[FSM] Switching to fallback plan.");
+            printSignalPlan(&activePlan);
+        }
+
         // How many milliseconds has the current FSM state been running?
         uint32_t elapsedMs =
             static_cast<uint32_t>(now - stateStartTick) *
@@ -116,18 +187,6 @@ void TaskTrafficFSM(void *pvParameters)
 
             applyTrafficOutputs(currentState);
 
-            /***
-             * Publish the initial FSM state
-             * 
-             * Without this call, the STATUS timer would now know
-             * the controller's current state immediately after boot.
-             */
-            updateControllerStatus(
-                &activePlan,
-                currentState,
-                stateStartTick
-            );
-
             Serial.print("[FSM] Transition to ");
             Serial.println(trafficStateToString(currentState));
         }
@@ -136,12 +195,14 @@ void TaskTrafficFSM(void *pvParameters)
          *Publish the latest FSM snapshot 
          *  
          * StatusTimerCallback never calculates FSM state
-         * It only reads the latst published snapshot.
+         * It only reads the latest published snapshot.
+         * EX: STATUS,17,A_GREEN,12,OK
          */
         updateControllerStatus(
             &activePlan,
             currentState,
-            stateStartTick
+            stateStartTick,
+            controllerHealth
         );
 
         vTaskDelay(FSM_UPDATE_PERIOD_TICK);
