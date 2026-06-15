@@ -1,9 +1,16 @@
 // task_traffic_fsm.cpp
-/* 
- * TaskTrafficFSMPlaceholder:
- * Receives validated SignalPlan object from planQueue
- * 
+
+
+/*
+ * TaskTrafficFSM:
+ * Runs the local traffic light state machine.
+ * Receives validated SignalPlan objects from planQueue.
+ *
+ * Phase 15.7:
+ * New plans are stored as pendingPlan first.
+ * They are applied only at a safe FSM boundary.
  */
+
 #include <Arduino.h>
 
 #include "app_config.h"
@@ -13,38 +20,6 @@
 #include "tasks.h"
 #include "traffic_fsm.h"
 
-// Phase 15.5: We replace placeholder with real FSM task
-// void TaskTrafficFSMPlaceholder(void *pvParmeters)
-// {
-//     (void)pvParmeters;
-
-//     SignalPlan receivedPlan;
-
-//     for (;;)
-//     {
-//         BaseType_t receiveResult = xQueueReceive(
-//             planQueue,
-//             &receivedPlan,
-//             portMAX_DELAY
-//         );
-
-//         if (receiveResult == pdPASS)
-//         {
-//             Serial.println("[FSM] Received validated SignalPlan from planQueue.");
-//             printSignalPlan(&receivedPlan);
-//         }
-//         else
-//         {
-//             Serial.println("[FSM] ERROR: Failed to receive SignalPlan.");
-//         }
-//     }
-// }
-
-/*
- * TaskTrafficFSM:
- * Runs the local traffic light state machine. 
- * Receives validated SignalPlan objects from planQueue.
- */
 void TaskTrafficFSM(void *pvParameters)
 {
     (void)pvParameters;
@@ -52,6 +27,12 @@ void TaskTrafficFSM(void *pvParameters)
     SignalPlan activePlan = getDefaultSignalPlan();
     // Temporary buffer used when a new plan arrives from planQueue.
     SignalPlan receivedPlan;
+
+    // Latest valid plan waiting to be applied at a safe boundary
+    SignalPlan pendingPlan;
+
+    // True when pendingPlan contains a new valid plan
+    bool hasPendingPlan = false;
 
     TrafficState currentState = STATE_A_GREEN;
 
@@ -83,11 +64,16 @@ void TaskTrafficFSM(void *pvParameters)
 
         if (receiveResult == pdPASS)
         {
-            // Replace the current timing plan with the new validated plan.
-            activePlan = receivedPlan;
+            /*
+             * Phase 15.7: Safe plan apply
+             * Do not apply the plan immediately.
+             * Store it as pending and wait for a safe boundary.
+             */
+            pendingPlan = receivedPlan;
+            hasPendingPlan = true;
 
-            Serial.println("[FSM] New active SignalPlan received.");
-            printSignalPlan(&activePlan);
+            Serial.println("[FSM] Pending SignalPlan received.");
+            printSignalPlan(&pendingPlan);
         }
 
         TickType_t now = xTaskGetTickCount();
@@ -103,7 +89,8 @@ void TaskTrafficFSM(void *pvParameters)
         // A_YELLOW -> activePlan.yellow
         uint32_t durationMs = getStateDurationMs(
             currentState,
-            &activePlan);
+            &activePlan
+        );
         
         if (elapsedMs >= durationMs)
         {
@@ -111,6 +98,20 @@ void TaskTrafficFSM(void *pvParameters)
             // Move to the next traffic state.
             currentState = getNextTrafficState(currentState);
             stateStartTick = xTaskGetTickCount();
+            
+            /*
+             * Safe apply boundary: 
+             * Apply the pending plan only when the FSM returns to A_GREEN.
+             * Meaning one full cycle has completed
+             */
+            if (currentState == STATE_A_GREEN && hasPendingPlan)
+            {
+                activePlan = pendingPlan;
+                hasPendingPlan = false;
+
+                Serial.println("[FSM] Pending SignalPlan applied at safe boundary.");
+                printSignalPlan(&activePlan); // pendingPlan now becomes activePlan
+            }
 
             applyTrafficOutputs(currentState);
 
