@@ -46,3 +46,7 @@ static const int MAX_YELLOW_SECONDS = 3;
 static const int MIN_ALL_RED_SECONDS = 1;
 static const int MAX_ALL_RED_SECONDS = 1;
 
+// Add Timer Configuration
+// Send one STATUS message every 1000ms.
+static const TickType_t STATUS_TIMER_PERIOD_TICK = pdMS_TO_TICKS(1000);
+

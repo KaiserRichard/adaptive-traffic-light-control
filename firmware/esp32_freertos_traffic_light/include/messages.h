@@ -41,3 +41,12 @@ enum TrafficState
     STATE_B_YELLOW,
     STATE_ALL_RED_AFTER_B
 };
+
+// Controller status structure
+struct ControllerStatus
+{
+    int plan_id;
+    TrafficState state;
+    uint32_t remaining_seconds;
+    const char *health;
+};

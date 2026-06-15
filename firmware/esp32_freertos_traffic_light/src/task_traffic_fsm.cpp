@@ -19,6 +19,7 @@
 #include "protocol.h"
 #include "tasks.h"
 #include "traffic_fsm.h"
+#include "status_reporter.h"
 
 void TaskTrafficFSM(void *pvParameters)
 {
@@ -115,12 +116,34 @@ void TaskTrafficFSM(void *pvParameters)
 
             applyTrafficOutputs(currentState);
 
+            /***
+             * Publish the initial FSM state
+             * 
+             * Without this call, the STATUS timer would now know
+             * the controller's current state immediately after boot.
+             */
+            updateControllerStatus(
+                &activePlan,
+                currentState,
+                stateStartTick
+            );
+
             Serial.print("[FSM] Transition to ");
             Serial.println(trafficStateToString(currentState));
         }
 
-        // Keep it simple first. 
-        // Later use:  vTaskDelayUntil for more precise periodic execution
+        /*
+         *Publish the latest FSM snapshot 
+         *  
+         * StatusTimerCallback never calculates FSM state
+         * It only reads the latst published snapshot.
+         */
+        updateControllerStatus(
+            &activePlan,
+            currentState,
+            stateStartTick
+        );
+
         vTaskDelay(FSM_UPDATE_PERIOD_TICK);
     }
 }

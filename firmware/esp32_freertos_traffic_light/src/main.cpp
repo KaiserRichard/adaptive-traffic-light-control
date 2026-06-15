@@ -7,6 +7,7 @@
 #include "queues.h"
 #include "tasks.h"
 #include "traffic_fsm.h"
+#include "status_reporter.h"
 
 
 
@@ -14,7 +15,7 @@ static void printBootBanner()
 {
     Serial.println();
     Serial.println("[BOOT] ATLC Phase 15 FreeRTOS Controller");
-    Serial.println("[BOOT] Phase 15.6 - ACK/NACK Protocol");
+    Serial.println("[BOOT] Phase 15.8 - Software Timer STATUS Messages");
 }
 
 static void haltSystem()
@@ -36,6 +37,9 @@ void setup()
 
     setupTrafficLightPins();
     Serial.println("[BOOT] Traffic light GPIO pins initialized.");
+
+    initStatusReporter();
+    Serial.println("[BOOT] Status reporter initialized.");
 
     if (!createApplicationQueues())
     {
@@ -96,8 +100,8 @@ void setup()
 
     Serial.println("[BOOT] TaskTrafficFSM created.");
 
-    
-    Serial.println("[BOOT] Phase 15.6 system is running.");
+    startStatusTimer();
+    Serial.println("[BOOT] Phase 15.8 system is running.");
 }
 
 void loop()
