@@ -8,14 +8,14 @@
 #include "tasks.h"
 #include "traffic_fsm.h"
 #include "status_reporter.h"
-
+#include "diagnostics.h"
 
 
 static void printBootBanner()
 {
     Serial.println();
     Serial.println("[BOOT] ATLC Phase 15 FreeRTOS Controller");
-    Serial.println("[BOOT] Phase 15.9 - Host Timeout Watchdog");
+    Serial.println("[BOOT] Phase 15.10 - Runtime Diagnostics");
 }
 
 static void haltSystem()
@@ -49,13 +49,22 @@ void setup()
 
     Serial.println("[BOOT] Application queues created.");
 
+    /*
+     * Phase 15.10:
+     * Store task handles so diagnostics can inspect each task's stack high-water mark later.
+     */
+    TaskHandle_t uartReceiveTaskHandle = nullptr;
+    TaskHandle_t planParserTaskHandle = nullptr;
+    TaskHandle_t trafficFsmTaskHandle = nullptr;
+
+
     BaseType_t uartReceiveCreated = xTaskCreate(
         TaskUARTReceive,
         "UARTReceive",
         UART_RECEIVE_TASK_STACK_SIZE,
         nullptr,
         UART_RECEIVE_TASK_PRIORITY,
-        nullptr
+        &uartReceiveTaskHandle
     );
 
     if (uartReceiveCreated != pdPASS)
@@ -72,7 +81,7 @@ void setup()
         PARSER_TASK_STACK_SIZE,
         nullptr,
         PARSER_TASK_PRIORITY,
-        nullptr
+        &planParserTaskHandle
     );
 
     if (parserCreated != pdPASS)
@@ -89,7 +98,7 @@ void setup()
         FSM_TASK_STACK_SIZE,
         nullptr,
         FSM_TASK_PRIORITY,
-        nullptr
+        &trafficFsmTaskHandle
     );
 
     if (fsmCreated != pdPASS)
@@ -100,8 +109,23 @@ void setup()
 
     Serial.println("[BOOT] TaskTrafficFSM created.");
 
+    /**
+     * Start diagnostics after all tasks are created.
+     * 
+     * Diagnostics need valid task handles to measure task stack high-water marks.
+     */
+
+    initDiagnosticsReporter(
+        uartReceiveTaskHandle,
+        planParserTaskHandle,
+        trafficFsmTaskHandle
+    );
+    
+    Serial.println("[BOOT] Diagnostics reporter initialized.");
+
     startStatusTimer();
-    Serial.println("[BOOT] Phase 15.9 system is running.");
+    startDiagnosticsTimer();
+    Serial.println("[BOOT] Phase 15.10 system is running.");
 }
 
 void loop()

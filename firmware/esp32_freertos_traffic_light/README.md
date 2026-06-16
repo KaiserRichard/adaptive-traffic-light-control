@@ -45,6 +45,7 @@ The ESP32 validates plans and executes the traffic light FSM locally.
 * Phase 15.7 — Safe Plan Apply at FSM Cycle Boundary
 * Phase 15.8 — Software Timer STATUS Messages
 * Phase 15.9 — Host Timeout Watchdog and Fallback Plan
+* Phase 15.10 — Runtime Diagnostics: Heap and Stack Monitoring
 
 ---
 
@@ -133,6 +134,12 @@ docs/
 * Phase 15.2 — Queue-Based Fake PLAN Parser
 * Phase 15.3 — Validated SignalPlan Queue
 * Phase 15.4 — Real USB Serial Receive Task
+* Phase 15.5 — Traffic FSM Task
+* Phase 15.6 — ACK/NACK Protocol
+* Phase 15.7 — Safe Plan Apply at FSM Cycle Boundary
+* Phase 15.8 — Software Timer STATUS Messages
+* Phase 15.9 — Host Timeout Watchdog and Fallback Plan
+* Phase 15.10 — Runtime Diagnostics: Heap and Stack Monitoring
 
 Future documentation will be added incrementally as Phase 15 evolves.
 
