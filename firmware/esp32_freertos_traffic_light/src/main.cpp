@@ -9,13 +9,13 @@
 #include "traffic_fsm.h"
 #include "status_reporter.h"
 #include "diagnostics.h"
-
+#include "logging.h"
 
 static void printBootBanner()
 {
     Serial.println();
     Serial.println("[BOOT] ATLC Phase 15 FreeRTOS Controller");
-    Serial.println("[BOOT] Phase 15.10 - Runtime Diagnostics");
+    Serial.println("[BOOT] Phase 15.11 - Serial Logging Mutex");
 }
 
 static void haltSystem()
@@ -32,6 +32,11 @@ void setup()
 {
     Serial.begin(SERIAL_BAUD_RATE);
     delay(1000);
+
+    if (!initLogging())
+    {
+        haltSystem();
+    }
 
     printBootBanner();
 

@@ -4,6 +4,7 @@
 
 #include "app_config.h"
 #include "diagnostics.h"
+#include "logging.h"
 
 // Task handles are stored here so the diagnostic timer can inspect task stack usage periodically.
 static TaskHandle_t uartReceiveHandle = nullptr;
@@ -35,22 +36,29 @@ static UBaseType_t getStackRemainingBytes(TaskHandle_t taskHandle)
 // Print one complete diagnostic line.
 static void printDiagnosticsLine()
 {
+    /*
+     * DIAG is periodic telemetry.
+     * 
+     * It is useful, but not important enough to block the FreeRTOS daemond task
+     * Therefore if Serial is busy, this DIAG frame can be skipped.
+     */
     uint32_t freeHeapBytes = static_cast<uint32_t>(xPortGetFreeHeapSize());
     UBaseType_t uartStackBytes = getStackRemainingBytes(uartReceiveHandle);
     UBaseType_t parserStackBytes = getStackRemainingBytes(planParserHandle);
     UBaseType_t fsmStackBytes = getStackRemainingBytes(trafficFsmHandle);
 
-    Serial.print("DIAG,heap=");
-    Serial.print(freeHeapBytes);
+    char line[160];
+    snprintf(
+        line,
+        sizeof(line),
+        "DIAG,heap=%lu,uart_stack=%lu,parser_stack=%lu,fsm_stack=%lu",
+        static_cast<unsigned long>(freeHeapBytes),
+        static_cast<unsigned long>(uartStackBytes),
+        static_cast<unsigned long>(parserStackBytes),
+        static_cast<unsigned long>(fsmStackBytes)
+    );
 
-    Serial.print(",uart_stack=");
-    Serial.print(uartStackBytes);
-
-    Serial.print(",parser_stack=");
-    Serial.print(parserStackBytes);
-
-    Serial.print(",fsm_stack=");
-    Serial.println(fsmStackBytes);
+    tryLogLine(line);
 }
 
 /*

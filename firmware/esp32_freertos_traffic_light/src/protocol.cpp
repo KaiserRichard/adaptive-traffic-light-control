@@ -1,6 +1,7 @@
 // protocol.cpp 
 #include "protocol.h"
 #include "app_config.h"
+#include "logging.h"
 
 void setRawMessage(RawMessage *message, const char *text)
 {
@@ -184,23 +185,39 @@ void printSignalPlan(const SignalPlan *plan)
 
 void sendAck(int planId)
 {
-    Serial.print("ACK,");
-    Serial.println(planId);
+    // We use a bounded wait instead of portMAX_DELAY
+    // So a Serial fault or programming error cannot block this task forever.
+    if (lockSerial(pdMS_TO_TICKS(20)))
+    {
+        Serial.print("ACK,");
+        Serial.println(planId);
+
+        // ACK is protocol-critical
+        // The whole line must be printed under one mutex lock.
+        unlockSerial();
+    }
 }
 
 void sendNack(int planId, const char *reason)
 {
-    Serial.print("NACK,");
-    Serial.print(planId);
-    Serial.print(",");
-
-    if (reason == nullptr)
+    if(lockSerial(pdMS_TO_TICKS(20)))
     {
-        Serial.println("UNKNONW_REASON");
-        return;
-    }
+        Serial.print("NACK,");
+        Serial.print(planId);
+        Serial.print(",");
 
-    Serial.println(reason);
+        if (reason == nullptr)
+        {
+            Serial.println("UNKNONW_REASON");
+            return;
+        }
+
+        else
+        {
+            Serial.println(reason);
+        }
+        unlockSerial();
+    }
 }
 
 // 

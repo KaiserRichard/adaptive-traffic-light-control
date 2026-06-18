@@ -5,6 +5,7 @@
 #include "messages.h"
 #include "status_reporter.h"
 #include "traffic_fsm.h"
+#include "logging.h"
 
 /*
  * Shared status snapshot.
@@ -25,14 +26,30 @@ static TimerHandle_t statusTimer = nullptr;
 
 static void printStatusLine()
 {
-    Serial.print("STATUS,");
-    Serial.print(controllerStatus.plan_id);
-    Serial.print(",");
-    Serial.print(trafficStateToString(controllerStatus.state));
-    Serial.print(",");
-    Serial.print(controllerStatus.remaining_seconds);
-    Serial.print(",");
-    Serial.println(controllerStatus.health);
+    /*
+     * STATUS is periodic telemetry.
+     * 
+     * We only need to use tryLogLine(), which internally uses lockSerial(0)
+     */
+    char line[96];
+
+    snprintf(
+        line,
+        sizeof(line),
+        "STATUS,%d,%s,%lu,%s",
+        controllerStatus.plan_id,
+        trafficStateToString(controllerStatus.state),
+        static_cast<unsigned long>(controllerStatus.remaining_seconds),
+        controllerStatus.health
+    );
+    /*
+     * Build complete line first.
+     * Lock Serial briefly.
+     * Print one complete line.
+     * Unlock immediately.
+     */
+
+    tryLogLine(line);
 }
 
 // Software timer callback
