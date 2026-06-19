@@ -2,101 +2,179 @@
 #include <Arduino.h>
 
 #include "app_config.h"
+#include "logging.h"
 #include "messages.h"
 #include "status_reporter.h"
 #include "traffic_fsm.h"
-#include "logging.h"
 
 /*
- * Shared status snapshot.
+ * STATUS REPORTER
  *
- * TaskTrafficFSM updates this structure.
- * StatusTimerCallback reads this structure.
+ * "The traffic FSM owns the truth. The status reporter only tells the story."
  *
- * Phase 15.8 goal:
- * Separate control logic from monitoring logic.
+ * TaskTrafficFSM updates controllerStatus with the latest plan/state/health.
+ * A FreeRTOS software timer decides when a STATUS line is due.
+ * The timer callback wakes TaskStatusReporter, and the task prints the line.
+ *
+ * This keeps two jobs separate:
+ *     - control logic: calculate and update traffic state
+ *     - monitoring logic: publish the latest state as telemetry
  */
 static ControllerStatus controllerStatus;
 
-// FreeRTOS software timer handle
+/*
+ * ESP32 FreeRTOS critical sections require a portMUX_TYPE spinlock.
+ *
+ * In many FreeRTOS examples you will see:
+ *
+ *     taskENTER_CRITICAL();
+ *     taskEXIT_CRITICAL();
+ *
+ * In ESP32 Arduino FreeRTOS we use:
+ *
+ *     taskENTER_CRITICAL(&controllerStatusMux);
+ *     taskEXIT_CRITICAL(&controllerStatusMux);
+ *
+ * Reason:
+ *     ESP32 is dual-core. The mux protects this shared snapshot from tasks
+ *     running on either core.
+ */
+static portMUX_TYPE controllerStatusMux = portMUX_INITIALIZER_UNLOCKED;
+
+// FreeRTOS software timer: decides WHEN a STATUS report is needed.
 static TimerHandle_t statusTimer = nullptr;
 
-// Print one machine-readable STATUS line 
-// ex :  STATUS,17,A_GREEN,12,OK
+// Dedicated reporter task: decides HOW the STATUS line is printed.
+static TaskHandle_t statusReporterTaskHandle = nullptr;
 
+/*
+ * Take a safe local copy of the shared status.
+ *
+ * "Lock, copy, unlock" keeps the critical section very short.
+ * After this function returns, formatting and Serial logging can happen without
+ * holding the mux.
+ */
+static ControllerStatus copyControllerStatus()
+{
+    ControllerStatus snapshot;
+
+    taskENTER_CRITICAL(&controllerStatusMux);
+    snapshot = controllerStatus;
+    taskEXIT_CRITICAL(&controllerStatusMux);
+
+    return snapshot;
+}
+
+/*
+ * Print one machine-readable STATUS line.
+ *
+ * Format:
+ *     STATUS,<plan_id>,<state>,<remaining_seconds>,<health>
+ *
+ * Example:
+ *     STATUS,17,A_GREEN,12,OK
+ */
 static void printStatusLine()
 {
-    /*
-     * STATUS is periodic telemetry.
-     * 
-     * We only need to use tryLogLine(), which internally uses lockSerial(0)
-     */
+    ControllerStatus snapshot = copyControllerStatus();
+
     char line[96];
 
     snprintf(
         line,
         sizeof(line),
         "STATUS,%d,%s,%lu,%s",
-        controllerStatus.plan_id,
-        trafficStateToString(controllerStatus.state),
-        static_cast<unsigned long>(controllerStatus.remaining_seconds),
-        controllerStatus.health
+        snapshot.plan_id,
+        trafficStateToString(snapshot.state),
+        static_cast<unsigned long>(snapshot.remaining_seconds),
+        snapshot.health
     );
-    /*
-     * Build complete line first.
-     * Lock Serial briefly.
-     * Print one complete line.
-     * Unlock immediately.
-     */
 
+    /*
+     * Build the complete line first, then print it with the Serial mutex.
+     * tryLogLine() uses lockSerial(0), so telemetry never blocks the controller.
+     */
     tryLogLine(line);
 }
 
-// Software timer callback
-// Executed by the FreeRTOS Daemon Task, not by TaskTrafficFSM
+/*
+ * Timer callback rule:
+ *     Keep it tiny.
+ *
+ * FreeRTOS software timer callbacks run in the timer service task. If this
+ * callback printed to Serial directly, it could delay other software timers.
+ * Instead, it sends a notification to TaskStatusReporter.
+ */
 static void StatusTimerCallback(TimerHandle_t timerHandle)
 {
     (void)timerHandle;
-    // Keep call back short now.
-    printStatusLine();
+
+    if (statusReporterTaskHandle == nullptr)
+    {
+        return;
+    }
+
+    xTaskNotifyGive(statusReporterTaskHandle);
 }
 
-// Initialize status reporting subsystem.
-void initStatusReporter()
+/*
+ * Initialize the STATUS reporter subsystem.
+ *
+ * Creates:
+ *     - initial controllerStatus snapshot
+ *     - TaskStatusReporter
+ *     - periodic StatusTimer
+ *
+ * Returns false if any required FreeRTOS object cannot be created.
+ */
+bool initStatusReporter()
 {
+    taskENTER_CRITICAL(&controllerStatusMux);
     controllerStatus.plan_id = 0;
     controllerStatus.state = STATE_A_GREEN;
     controllerStatus.remaining_seconds = 0;
     controllerStatus.health = "OK";
+    taskEXIT_CRITICAL(&controllerStatusMux);
 
-    /*
-     * Auto-reload timer: 
-     * 
-     * Every STATUS_TIMER_PERIOD_TICK
-     * execute StatusTimerCallback().
-     */
+    BaseType_t taskCreated = xTaskCreate(
+        TaskStatusReporter,
+        "StatusReporter",
+        STATUS_REPORTER_TASK_STACK_SIZE,
+        nullptr,
+        STATUS_REPORTER_TASK_PRIORITY,
+        &statusReporterTaskHandle
+    );
+
+    if (taskCreated != pdPASS)
+    {
+        logLine("[STATUS] ERROR: Failed to create TaskStatusReporter.", pdMS_TO_TICKS(20));
+        return false;
+    }
+
     statusTimer = xTimerCreate(
-        "StatusTimer", 
+        "StatusTimer",
         STATUS_TIMER_PERIOD_TICK,
-        pdTRUE, // For Auto-reload mode
+        pdTRUE,
         nullptr,
         StatusTimerCallback
     );
 
     if (statusTimer == nullptr)
     {
-        Serial.println("[STATUS] ERROR: Failed to create StatusTimer.");
+        logLine("[STATUS] ERROR: Failed to create StatusTimer.", pdMS_TO_TICKS(20));
+        return false;
     }
+
+    logLine("[STATUS] Status reporter initialized.", pdMS_TO_TICKS(20));
+    return true;
 }
 
-
 /*
- * Update the shared status snapshot
- * 
- * Called periodically by TaskTrafficFSM.
- * 
- * The timer callback never calculates FSM state.
- * It only reports the latest snapshot.
+ * Update the shared STATUS snapshot.
+ *
+ * Called by TaskTrafficFSM after it calculates the current traffic state.
+ * The timer callback never calculates FSM timing; it only asks for the latest
+ * completed snapshot to be reported.
  */
 void updateControllerStatus(
     const SignalPlan *activePlan,
@@ -110,67 +188,79 @@ void updateControllerStatus(
         return;
     }
 
-    // The count of ticks since vTaskStartScheduler was called.
     TickType_t now = xTaskGetTickCount();
-    // How long has the current FSM state been active ?
+
+    /*
+     * How long has this FSM state been active?
+     *
+     * stateStartTick was captured when the FSM entered currentState.
+     * Tick difference gives elapsed scheduler ticks; portTICK_PERIOD_MS
+     * converts that count into milliseconds.
+     */
     uint32_t elapsedMs =
         static_cast<uint32_t>(now - stateStartTick) *
-        portTICK_PERIOD_MS; // Ticks -> Milliseconds
+        portTICK_PERIOD_MS;
 
-        /*
-        * Duration of current state.
-        *
-        * Example:
-        * A_GREEN -> green_a
-        * B_GREEN -> green_b
-        */
-        uint32_t durationMs = getStateDurationMs(
+    /*
+     * Duration expected for the current state.
+     *
+     * Examples:
+     *     STATE_A_GREEN -> activePlan->green_a
+     *     STATE_B_GREEN -> activePlan->green_b
+     */
+    uint32_t durationMs = getStateDurationMs(
         currentState,
         activePlan
-        );
+    );
 
-        uint32_t remainingMs = 0;
-        if (durationMs > elapsedMs)
-        {
-            remainingMs = durationMs - elapsedMs;
-        }
+    uint32_t remainingMs = 0;
 
-        /*
-         * Update shared snapshot.
-         */
-        controllerStatus.state = currentState;
-        controllerStatus.plan_id = activePlan->plan_id;
-        controllerStatus.remaining_seconds = remainingMs / 1000;
+    if (durationMs > elapsedMs)
+    {
+        remainingMs = durationMs - elapsedMs;
+    }
 
-        // Update Status Reporter Source
-        // Health is supplied by TaskTrafficFSM
-        if (health == nullptr)
-        {
-            controllerStatus.health = "UNKNOWN";
-        }
-        else
-        {
-            controllerStatus.health = health;
-        }
+    /*
+     * Publish one coherent snapshot.
+     *
+     * All fields are updated inside the same critical section so the reporter
+     * cannot read a half-old, half-new STATUS line.
+     */
+    taskENTER_CRITICAL(&controllerStatusMux);
+
+    controllerStatus.plan_id = activePlan->plan_id;
+    controllerStatus.state = currentState;
+    controllerStatus.remaining_seconds = remainingMs / 1000;
+
+    if (health == nullptr)
+    {
+        controllerStatus.health = "UNKNOWN";
+    }
+    else
+    {
+        controllerStatus.health = health;
+    }
+
+    taskEXIT_CRITICAL(&controllerStatusMux);
 }
 
-
-/***
- * Start STATUS timer. 
- * 
- * Transition: Dormant State -> Running State
- * 
- * After start:
- * StatusTimerCallback() executes periodically
+/*
+ * Start the periodic STATUS timer.
+ *
+ * Transition:
+ *     Dormant timer -> Running timer
+ *
+ * After this succeeds, StatusTimerCallback() runs once per
+ * STATUS_TIMER_PERIOD_TICK and wakes TaskStatusReporter.
  */
-
 void startStatusTimer()
 {
-    if(statusTimer == nullptr)
+    if (statusTimer == nullptr)
     {
-        Serial.println("[STATUS] ERROR: StatusTimer is null.");
+        logLine("[STATUS] ERROR: StatusTimer is null.", pdMS_TO_TICKS(20));
         return;
     }
+
     BaseType_t timerStarted = xTimerStart(
         statusTimer,
         0
@@ -178,10 +268,38 @@ void startStatusTimer()
 
     if (timerStarted == pdPASS)
     {
-        Serial.println("[STATUS] StatusTimer started.");
+        logLine("[STATUS] StatusTimer started.", pdMS_TO_TICKS(20));
     }
     else
     {
-        Serial.println("[STATUS] ERROR: Failed to start StatusTimer.");
+        logLine("[STATUS] ERROR: Failed to start StatusTimer.", pdMS_TO_TICKS(20));
+    }
+}
+
+/*
+ * Dedicated STATUS reporter task.
+ *
+ * It sleeps until the timer callback sends a task notification.
+ * Then it prints exactly one latest STATUS snapshot.
+ *
+ * "The timer knocks. The task answers."
+ */
+void TaskStatusReporter(void *pvParameters)
+{
+    (void)pvParameters;
+
+    logLine("[STATUS] TaskStatusReporter started.", pdMS_TO_TICKS(20));
+
+    for (;;)
+    {
+        uint32_t notificationCount = ulTaskNotifyTake(
+            pdTRUE,
+            portMAX_DELAY
+        );
+
+        if (notificationCount > 0)
+        {
+            printStatusLine();
+        }
     }
 }

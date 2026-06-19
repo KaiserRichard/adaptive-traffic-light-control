@@ -15,7 +15,7 @@ static void printBootBanner()
 {
     Serial.println();
     Serial.println("[BOOT] ATLC Phase 15 FreeRTOS Controller");
-    Serial.println("[BOOT] Phase 15.11 - Serial Logging Mutex");
+    Serial.println("[BOOT] Phase 15.12 - Task Notifications");
 }
 
 static void haltSystem()
@@ -43,8 +43,13 @@ void setup()
     setupTrafficLightPins();
     Serial.println("[BOOT] Traffic light GPIO pins initialized.");
 
-    initStatusReporter();
-    Serial.println("[BOOT] Status reporter initialized.");
+    if (!initStatusReporter())
+    {
+        logLine("[BOOT] ERROR: Failed to initialize status reporter.", pdMS_TO_TICKS(20));
+        haltSystem();
+    }
+
+    logLine("[BOOT] Status reporter initialized.", pdMS_TO_TICKS(20));
 
     if (!createApplicationQueues())
     {
@@ -130,7 +135,7 @@ void setup()
 
     startStatusTimer();
     startDiagnosticsTimer();
-    Serial.println("[BOOT] Phase 15.10 system is running.");
+    logLine("[BOOT] Phase 15.12 system is running.", pdMS_TO_TICKS(20));
 }
 
 void loop()

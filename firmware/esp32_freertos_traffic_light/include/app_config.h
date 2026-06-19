@@ -58,3 +58,11 @@ static const TickType_t DIAGNOSTICS_TIMER_PERIOD_TICK = pdMS_TO_TICKS(5000);
 static const uint32_t HOST_TIMEOUT_SECONDS = 30;
 static const uint32_t HOST_TIMEOUT_MS = HOST_TIMEOUT_SECONDS * 1000;
 
+// Phase 15.12: STATUS reporter task.
+// The software timer no longer prints STATUS directly.
+// It only notifies this task.
+static const uint32_t STATUS_REPORTER_TASK_STACK_SIZE = 3072;
+
+// Recommended priority = 1 because STATUS reporting is only monitoring work.
+static const UBaseType_t STATUS_REPORTER_TASK_PRIORITY = 1;
+
