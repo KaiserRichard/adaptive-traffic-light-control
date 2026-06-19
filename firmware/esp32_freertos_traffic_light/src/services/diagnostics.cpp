@@ -1,10 +1,8 @@
-// diagnostics.cpp
-
 #include <Arduino.h>
 
-#include "app_config.h"
-#include "diagnostics.h"
-#include "logging.h"
+#include "config/app_config.h"
+#include "services/diagnostics.h"
+#include "services/logging.h"
 
 // Task handles are stored here so the diagnostic timer can inspect task stack usage periodically.
 static TaskHandle_t uartReceiveHandle = nullptr;
@@ -90,29 +88,29 @@ void initDiagnosticsReporter(
      */
     if (uartReceiveHandle == nullptr)
     {
-        Serial.println("[DIAG] WARNING: UART task handle is null.");
+        logLine("[DIAG] WARNING: UART task handle is null.", DEBUG_LOG_WAIT_TICKS);
     }
 
     if (planParserHandle == nullptr)
     {
-        Serial.println("[DIAG] WARNING: Parser task handle is null.");
+        logLine("[DIAG] WARNING: Parser task handle is null.", DEBUG_LOG_WAIT_TICKS);
     }
 
     if (trafficFsmHandle == nullptr)
     {
-        Serial.println("[DIAG] WARNING: FSM task handle is null.");
+        logLine("[DIAG] WARNING: FSM task handle is null.", DEBUG_LOG_WAIT_TICKS);
     }
 
     diagnosticsTimer = xTimerCreate(
         "DiagnosticsTimer",
-        DIAGNOSTICS_TIMER_PERIOD_TICK,
+        DIAGNOSTICS_TIMER_PERIOD_TICKS,
         pdTRUE,
         nullptr,
         DiagnosticsTimerCallback
     );
     if(diagnosticsTimer == nullptr)
     {
-        Serial.println("[DIAG] ERROR: Failed to create DiagnosticsTimer.");
+        logLine("[DIAG] ERROR: Failed to create DiagnosticsTimer.", DEBUG_LOG_WAIT_TICKS);
     }
 }
 
@@ -120,7 +118,7 @@ void startDiagnosticsTimer()
 {
     if (diagnosticsTimer == nullptr)
     {
-        Serial.println("[DIAG] ERROR: DiagnosticsTimer is null.");
+        logLine("[DIAG] ERROR: DiagnosticsTimer is null.", DEBUG_LOG_WAIT_TICKS);
         return;
     }
 
@@ -131,10 +129,10 @@ void startDiagnosticsTimer()
 
     if (timerStarted == pdPASS)
     {
-        Serial.println("[DIAG] DiagnosticsTimer started.");
+        logLine("[DIAG] DiagnosticsTimer started.", DEBUG_LOG_WAIT_TICKS);
     }
     else
     {
-        Serial.println("[DIAG] ERROR: Failed to start DiagnosticsTimer.");
+        logLine("[DIAG] ERROR: Failed to start DiagnosticsTimer.", DEBUG_LOG_WAIT_TICKS);
     }
 }

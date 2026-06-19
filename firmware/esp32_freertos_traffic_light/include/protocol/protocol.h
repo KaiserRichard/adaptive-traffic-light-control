@@ -1,8 +1,8 @@
-// protocol.h
 #pragma once
 
 #include <Arduino.h>
-#include "messages.h"
+
+#include "messages/messages.h"
 
 void setRawMessage(RawMessage *message, const char *text);
 
@@ -25,8 +25,8 @@ bool validateSignalPlan(
 void printSignalPlan(const SignalPlan *plan);
 
 // Phase 15.6: ACK/NACK help logic that the parser task should call
-void sendAck(int planID);
+void sendAck(int planId);
 void sendNack(
-    int planID,
-    const char *reasons
+    int planId,
+    const char *reason
 );

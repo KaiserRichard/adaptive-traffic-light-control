@@ -1,14 +1,14 @@
-// messages.h
 #pragma once
 
 #include <Arduino.h>
-#include "app_config.h"
+
+#include "config/app_config.h"
 
 // RawMessage represents one raw command line.  
 // Example: PLAN,17,25,15,3,1
 struct RawMessage
 {
-    char data[SERIAL_LINE_BUFFER_SIZE];
+    char data[RAW_MESSAGE_MAX_LENGTH];
 };
 
 // Temporary structure for parsed PLAN fields.

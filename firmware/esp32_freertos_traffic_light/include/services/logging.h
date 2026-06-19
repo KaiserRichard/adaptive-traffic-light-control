@@ -1,4 +1,5 @@
-// loggin.h
+#pragma once
+
 #include <Arduino.h>
 
 // Init serial logging mutex.

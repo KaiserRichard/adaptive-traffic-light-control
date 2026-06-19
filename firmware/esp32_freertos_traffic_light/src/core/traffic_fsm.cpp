@@ -1,10 +1,8 @@
-// traffic_fsm.cpp 
-
 #include <Arduino.h>
 
-#include "app_config.h"
-#include "messages.h"
-#include "traffic_fsm.h"
+#include "config/app_config.h"
+#include "core/traffic_fsm.h"
+#include "messages/messages.h"
 
 SignalPlan getDefaultSignalPlan()
 {
@@ -33,6 +31,11 @@ void setupTrafficLightPins()
     pinMode(B_GREEN_PIN, OUTPUT);
 
     setAllLightsOff();
+}
+
+void initTrafficFsm()
+{
+    setupTrafficLightPins();
 }
 
 void setAllLightsOff()

@@ -1,6 +1,6 @@
-// logging.cpp
 #include <Arduino.h>
-#include "logging.h"
+
+#include "services/logging.h"
 
 // Serial mutex is private to this module.
 static SemaphoreHandle_t serialMutex = nullptr;

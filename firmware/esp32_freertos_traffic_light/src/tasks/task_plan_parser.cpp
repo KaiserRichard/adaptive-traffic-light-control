@@ -20,10 +20,12 @@
  */
 #include <Arduino.h>
 
-#include "messages.h"
-#include "queues.h"
-#include "protocol.h"
-#include "tasks.h"
+#include "config/app_config.h"
+#include "core/queues.h"
+#include "messages/messages.h"
+#include "protocol/protocol.h"
+#include "services/logging.h"
+#include "tasks/task_plan_parser.h"
 
 void TaskPlanParser(void *pvParameters)
 {
@@ -41,16 +43,22 @@ void TaskPlanParser(void *pvParameters)
 
         if (receiveResult != pdPASS)
         {
-            Serial.println("[PARSER] ERROR: Failed to receive raw message.");
+            logLine("[PARSER] ERROR: Failed to receive raw message.", DEBUG_LOG_WAIT_TICKS);
             continue;
         }
 
-        Serial.print("[PARSER] Received raw message: ");
-        Serial.println(receivedMessage.data);
+        char receivedLine[160];
+        snprintf(
+            receivedLine,
+            sizeof(receivedLine),
+            "[PARSER] Received raw message: %s",
+            receivedMessage.data
+        );
+        logLine(receivedLine, DEBUG_LOG_WAIT_TICKS);
 
         if (!isPlanCommand(&receivedMessage))
         {
-            Serial.println("[PARSER] Rejected: unknown command.");
+            logLine("[PARSER] Rejected: unknown command.", DEBUG_LOG_WAIT_TICKS);
             sendNack(-1, "UNKNOWN_COMMAND");
             continue;
         }
@@ -59,12 +67,12 @@ void TaskPlanParser(void *pvParameters)
 
         if (!parsePlanCommand(&receivedMessage, &fields))
         {
-            Serial.println("[PARSER] Rejected: malformed PLAN.");
+            logLine("[PARSER] Rejected: malformed PLAN.", DEBUG_LOG_WAIT_TICKS);
             sendNack(-1, "MALFORMED_PLAN");
             continue;
         }
 
-        Serial.println("[PARSER] PLAN command detected.");
+        logLine("[PARSER] PLAN command detected.", DEBUG_LOG_WAIT_TICKS);
         printParsedPlan(&fields);
 
         SignalPlan plan = makeSignalPlan(&fields);
@@ -73,8 +81,14 @@ void TaskPlanParser(void *pvParameters)
 
         if (!validateSignalPlan(&plan, &validationReason))
         {
-            Serial.print("[PARSER] Rejected SignalPlan: ");
-            Serial.println(validationReason);
+            char rejectLine[128];
+            snprintf(
+                rejectLine,
+                sizeof(rejectLine),
+                "[PARSER] Rejected SignalPlan: %s",
+                validationReason
+            );
+            logLine(rejectLine, DEBUG_LOG_WAIT_TICKS);
 
             sendNack(plan.plan_id, validationReason);
             continue;
@@ -88,13 +102,13 @@ void TaskPlanParser(void *pvParameters)
 
         if (sendResult == pdPASS)
         {
-            Serial.println("[PARSER] Valid SignalPlan sent to planQueue.");
+            logLine("[PARSER] Valid SignalPlan sent to planQueue.", DEBUG_LOG_WAIT_TICKS);
             sendAck(plan.plan_id);
         }
         else
         {
-            Serial.println("[PARSER] ERROR: planQueue full.");
+            logLine("[PARSER] ERROR: planQueue full.", DEBUG_LOG_WAIT_TICKS);
             sendNack(plan.plan_id, "PLAN_QUEUE_FULL");
         }
     }
-}   
+}

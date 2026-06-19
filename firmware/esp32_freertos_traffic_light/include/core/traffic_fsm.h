@@ -1,11 +1,14 @@
 #pragma once
 
 #include <Arduino.h>
-#include "messages.h"
+
+#include "messages/messages.h"
 
 SignalPlan getDefaultSignalPlan();
 
 uint32_t secondsToMs(int seconds);
+
+void initTrafficFsm();
 
 void setupTrafficLightPins();
 

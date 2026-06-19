@@ -1,7 +1,9 @@
-// protocol.cpp 
-#include "protocol.h"
-#include "app_config.h"
-#include "logging.h"
+#include <Arduino.h>
+
+#include "config/app_config.h"
+#include "messages/messages.h"
+#include "protocol/protocol.h"
+#include "services/logging.h"
 
 void setRawMessage(RawMessage *message, const char *text)
 {
@@ -58,16 +60,19 @@ void printParsedPlan(const ParsedPlanFields *fields)
         return;
     }
 
-    Serial.print("[PARSER] plan_id=");
-    Serial.print(fields->plan_id);
-    Serial.print(" green_a=");
-    Serial.print(fields->green_a);
-    Serial.print(" green_b=");
-    Serial.print(fields->green_b);
-    Serial.print(" yellow=");
-    Serial.print(fields->yellow);
-    Serial.print(" all_red=");
-    Serial.println(fields->all_red);
+    char line[128];
+    snprintf(
+        line,
+        sizeof(line),
+        "[PARSER] plan_id=%d green_a=%d green_b=%d yellow=%d all_red=%d",
+        fields->plan_id,
+        fields->green_a,
+        fields->green_b,
+        fields->yellow,
+        fields->all_red
+    );
+
+    logLine(line, DEBUG_LOG_WAIT_TICKS);
 }
 
 SignalPlan makeSignalPlan(const ParsedPlanFields *fields)
@@ -171,16 +176,19 @@ void printSignalPlan(const SignalPlan *plan)
         return;
     }
 
-    Serial.print("[PLAN] plan_id=");
-    Serial.print(plan->plan_id);
-    Serial.print(" green_a=");
-    Serial.print(plan->green_a);
-    Serial.print(" green_b=");
-    Serial.print(plan->green_b);
-    Serial.print(" yellow=");
-    Serial.print(plan->yellow);
-    Serial.print(" all_red=");
-    Serial.println(plan->all_red);
+    char line[128];
+    snprintf(
+        line,
+        sizeof(line),
+        "[PLAN] plan_id=%d green_a=%d green_b=%d yellow=%d all_red=%d",
+        plan->plan_id,
+        plan->green_a,
+        plan->green_b,
+        plan->yellow,
+        plan->all_red
+    );
+
+    logLine(line, DEBUG_LOG_WAIT_TICKS);
 }
 
 void sendAck(int planId)
@@ -208,16 +216,12 @@ void sendNack(int planId, const char *reason)
 
         if (reason == nullptr)
         {
-            Serial.println("UNKNONW_REASON");
+            Serial.println("UNKNOWN_REASON");
+            unlockSerial();
             return;
         }
 
-        else
-        {
-            Serial.println(reason);
-        }
+        Serial.println(reason);
         unlockSerial();
     }
 }
-
-// 

@@ -18,13 +18,14 @@
 
 #include <Arduino.h>
 
-#include "app_config.h"
-#include "messages.h"
-#include "queues.h"
-#include "protocol.h"
-#include "tasks.h"
-#include "traffic_fsm.h"
-#include "status_reporter.h"
+#include "config/app_config.h"
+#include "core/queues.h"
+#include "core/traffic_fsm.h"
+#include "messages/messages.h"
+#include "protocol/protocol.h"
+#include "services/logging.h"
+#include "services/status_reporter.h"
+#include "tasks/task_traffic_fsm.h"
 
 void TaskTrafficFSM(void *pvParameters)
 {
@@ -83,11 +84,18 @@ void TaskTrafficFSM(void *pvParameters)
     );
 
 
-    Serial.println("[FSM] Traffic FSM started.");
-    Serial.print("[FSM] Initial state: ");
-    Serial.println(trafficStateToString(currentState));
+    logLine("[FSM] Traffic FSM started.", DEBUG_LOG_WAIT_TICKS);
 
-    Serial.println("[FSM] Default active plan: ");
+    char initialStateLine[80];
+    snprintf(
+        initialStateLine,
+        sizeof(initialStateLine),
+        "[FSM] Initial state: %s",
+        trafficStateToString(currentState)
+    );
+    logLine(initialStateLine, DEBUG_LOG_WAIT_TICKS);
+
+    logLine("[FSM] Default active plan:", DEBUG_LOG_WAIT_TICKS);
     printSignalPlan(&activePlan);
 
     for (;;)
@@ -120,12 +128,12 @@ void TaskTrafficFSM(void *pvParameters)
             // This PLAN marks communication recovery.
             if(isHostInTimeoutState)
             {
-                Serial.println("[FSM] Host communication recovered");
+                logLine("[FSM] Host communication recovered", DEBUG_LOG_WAIT_TICKS);
                 isHostInTimeoutState = false;
             }
             controllerHealth = "OK";
 
-            Serial.println("[FSM] Pending SignalPlan received.");
+            logLine("[FSM] Pending SignalPlan received.", DEBUG_LOG_WAIT_TICKS);
             printSignalPlan(&pendingPlan);
         }
 
@@ -145,8 +153,8 @@ void TaskTrafficFSM(void *pvParameters)
             activePlan = fallbackPlan; // Switch to fallback plan immediately.
             hasPendingPlan = false; // Clear pending plan to avoid applying old plans at safe boundary.
 
-            Serial.println("[FSM] WARNING: Host communication timeout detected.");
-            Serial.println("[FSM] Switching to fallback plan.");
+            logLine("[FSM] WARNING: Host communication timeout detected.", DEBUG_LOG_WAIT_TICKS);
+            logLine("[FSM] Switching to fallback plan.", DEBUG_LOG_WAIT_TICKS);
             printSignalPlan(&activePlan);
         }
 
@@ -181,14 +189,20 @@ void TaskTrafficFSM(void *pvParameters)
                 activePlan = pendingPlan;
                 hasPendingPlan = false;
 
-                Serial.println("[FSM] Pending SignalPlan applied at safe boundary.");
+                logLine("[FSM] Pending SignalPlan applied at safe boundary.", DEBUG_LOG_WAIT_TICKS);
                 printSignalPlan(&activePlan); // pendingPlan now becomes activePlan
             }
 
             applyTrafficOutputs(currentState);
 
-            Serial.print("[FSM] Transition to ");
-            Serial.println(trafficStateToString(currentState));
+            char transitionLine[80];
+            snprintf(
+                transitionLine,
+                sizeof(transitionLine),
+                "[FSM] Transition to %s",
+                trafficStateToString(currentState)
+            );
+            logLine(transitionLine, DEBUG_LOG_WAIT_TICKS);
         }
 
         /*
@@ -205,6 +219,6 @@ void TaskTrafficFSM(void *pvParameters)
             controllerHealth
         );
 
-        vTaskDelay(FSM_UPDATE_PERIOD_TICK);
+        vTaskDelay(FSM_TICK_PERIOD_TICKS);
     }
 }

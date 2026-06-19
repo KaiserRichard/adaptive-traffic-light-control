@@ -1,6 +1,6 @@
-// diagnostic.h
-#include <Arduino.h>
 #pragma once
+
+#include <Arduino.h>
 
 /*
  * Phase 15.10:

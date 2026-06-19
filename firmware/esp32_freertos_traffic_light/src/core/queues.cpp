@@ -1,11 +1,13 @@
-// queues.cpp 
-#include "queues.h"
-#include "app_config.h"
+#include <Arduino.h>
+
+#include "config/app_config.h"
+#include "core/queues.h"
+#include "messages/messages.h"
 
 QueueHandle_t rawMessageQueue = nullptr;
 QueueHandle_t planQueue = nullptr;
 
-bool createApplicationQueues()
+bool initQueues()
 {
     rawMessageQueue = xQueueCreate(
         RAW_MESSAGE_QUEUE_LENGTH,

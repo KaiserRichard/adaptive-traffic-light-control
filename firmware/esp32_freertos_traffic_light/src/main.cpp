@@ -1,74 +1,50 @@
-/*
- * ATLC Phase 15 — FreeRTOS-Based Embedded Controller and Edge Deployment Upgrade
- */
-
 #include <Arduino.h>
-#include "app_config.h"
-#include "queues.h"
-#include "tasks.h"
-#include "traffic_fsm.h"
-#include "status_reporter.h"
-#include "diagnostics.h"
-#include "logging.h"
 
-static void printBootBanner()
-{
-    Serial.println();
-    Serial.println("[BOOT] ATLC Phase 15 FreeRTOS Controller");
-    Serial.println("[BOOT] Phase 15.12 - Task Notifications");
-}
+#include "app/app_startup.h"
+#include "config/app_config.h"
 
-static void haltSystem()
-{
-    Serial.println("[BOOT] System halted.");
+#include "core/queues.h"
+#include "core/traffic_fsm.h"
 
-    while (true)
-    {
-        delay(1000);
-    }
-}
+#include "drivers/uart_rx.h"
+
+#include "services/diagnostics.h"
+#include "services/logging.h"
+#include "services/status_reporter.h"
+
+#include "tasks/task_plan_parser.h"
+#include "tasks/task_traffic_fsm.h"
+#include "tasks/task_uart_receive.h"
 
 void setup()
 {
     Serial.begin(SERIAL_BAUD_RATE);
     delay(1000);
 
-    if (!initLogging())
-    {
-        haltSystem();
-    }
-
     printBootBanner();
 
-    setupTrafficLightPins();
-    Serial.println("[BOOT] Traffic light GPIO pins initialized.");
-
-    if (!initStatusReporter())
+    if (!initLogging())
     {
-        logLine("[BOOT] ERROR: Failed to initialize status reporter.", pdMS_TO_TICKS(20));
-        haltSystem();
+        haltSystem("Failed to initialize logging service.");
     }
 
-    logLine("[BOOT] Status reporter initialized.", pdMS_TO_TICKS(20));
+    logLine("[BOOT] Logging service initialized.", DEBUG_LOG_WAIT_TICKS);
 
-    if (!createApplicationQueues())
+    if (!initQueues())
     {
-        Serial.println("[BOOT] ERROR: Failed to create application queues.");
-        haltSystem();
+        haltSystem("Failed to initialize FreeRTOS queues.");
     }
 
-    Serial.println("[BOOT] Application queues created.");
+    logLine("[BOOT] FreeRTOS queues initialized.", DEBUG_LOG_WAIT_TICKS);
 
-    /*
-     * Phase 15.10:
-     * Store task handles so diagnostics can inspect each task's stack high-water mark later.
-     */
+    initTrafficFsm();
+    logLine("[BOOT] Traffic FSM initialized.", DEBUG_LOG_WAIT_TICKS);
+
     TaskHandle_t uartReceiveTaskHandle = nullptr;
     TaskHandle_t planParserTaskHandle = nullptr;
     TaskHandle_t trafficFsmTaskHandle = nullptr;
 
-
-    BaseType_t uartReceiveCreated = xTaskCreate(
+    BaseType_t uartTaskCreated = xTaskCreate(
         TaskUARTReceive,
         "UARTReceive",
         UART_RECEIVE_TASK_STACK_SIZE,
@@ -77,68 +53,73 @@ void setup()
         &uartReceiveTaskHandle
     );
 
-    if (uartReceiveCreated != pdPASS)
+    if (uartTaskCreated != pdPASS)
     {
-        Serial.println("[BOOT] ERROR: Failed to create TaskUARTReceive.");
-        haltSystem();
+        haltSystem("Failed to create TaskUARTReceive.");
     }
 
-    Serial.println("[BOOT] TaskUARTReceive created.");
-
-    BaseType_t parserCreated = xTaskCreate(
+    BaseType_t parserTaskCreated = xTaskCreate(
         TaskPlanParser,
         "PlanParser",
-        PARSER_TASK_STACK_SIZE,
+        PLAN_PARSER_TASK_STACK_SIZE,
         nullptr,
-        PARSER_TASK_PRIORITY,
+        PLAN_PARSER_TASK_PRIORITY,
         &planParserTaskHandle
     );
 
-    if (parserCreated != pdPASS)
+    if (parserTaskCreated != pdPASS)
     {
-        Serial.println("[BOOT] ERROR: Failed to create TaskPlanParser.");
-        haltSystem();
+        haltSystem("Failed to create TaskPlanParser.");
     }
 
-    Serial.println("[BOOT] TaskPlanParser created.");
-
-    BaseType_t fsmCreated = xTaskCreate(
+    BaseType_t fsmTaskCreated = xTaskCreate(
         TaskTrafficFSM,
         "TrafficFSM",
-        FSM_TASK_STACK_SIZE,
+        TRAFFIC_FSM_TASK_STACK_SIZE,
         nullptr,
-        FSM_TASK_PRIORITY,
+        TRAFFIC_FSM_TASK_PRIORITY,
         &trafficFsmTaskHandle
     );
 
-    if (fsmCreated != pdPASS)
+    if (fsmTaskCreated != pdPASS)
     {
-        Serial.println("[BOOT] ERROR: Failed to create TaskTrafficFSM.");
-        haltSystem();
+        haltSystem("Failed to create TaskTrafficFSM.");
     }
 
-    Serial.println("[BOOT] TaskTrafficFSM created.");
+    logLine("[BOOT] FreeRTOS tasks created.", DEBUG_LOG_WAIT_TICKS);
 
-    /**
-     * Start diagnostics after all tasks are created.
-     * 
-     * Diagnostics need valid task handles to measure task stack high-water marks.
+    /*
+     * Initialize UART RX driver after TaskUARTReceive exists.
+     * The callback needs the task handle so it can notify the task.
      */
+    initUartRxDriver(uartReceiveTaskHandle);
+    logLine("[BOOT] UART RX event driver initialized.", DEBUG_LOG_WAIT_TICKS);
+
+    if (!initStatusReporter())
+    {
+        haltSystem("Failed to initialize status reporter.");
+    }
+
+    startStatusTimer();
+    logLine("[BOOT] Status reporter started.", DEBUG_LOG_WAIT_TICKS);
 
     initDiagnosticsReporter(
         uartReceiveTaskHandle,
         planParserTaskHandle,
         trafficFsmTaskHandle
     );
-    
-    Serial.println("[BOOT] Diagnostics reporter initialized.");
 
-    startStatusTimer();
     startDiagnosticsTimer();
-    logLine("[BOOT] Phase 15.12 system is running.", pdMS_TO_TICKS(20));
+    logLine("[BOOT] Diagnostics reporter started.", DEBUG_LOG_WAIT_TICKS);
+
+    logLine("[BOOT] Phase 15.13 system is running.", DEBUG_LOG_WAIT_TICKS);
 }
 
 void loop()
 {
+    /*
+     * FreeRTOS tasks own the application behavior.
+     * Arduino loop() remains intentionally minimal.
+     */
     vTaskDelay(pdMS_TO_TICKS(1000));
 }

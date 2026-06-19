@@ -1,11 +1,10 @@
-// status_reporter.cpp
 #include <Arduino.h>
 
-#include "app_config.h"
-#include "logging.h"
-#include "messages.h"
-#include "status_reporter.h"
-#include "traffic_fsm.h"
+#include "config/app_config.h"
+#include "core/traffic_fsm.h"
+#include "messages/messages.h"
+#include "services/logging.h"
+#include "services/status_reporter.h"
 
 /*
  * STATUS REPORTER
@@ -153,7 +152,7 @@ bool initStatusReporter()
 
     statusTimer = xTimerCreate(
         "StatusTimer",
-        STATUS_TIMER_PERIOD_TICK,
+        STATUS_TIMER_PERIOD_TICKS,
         pdTRUE,
         nullptr,
         StatusTimerCallback
@@ -251,7 +250,7 @@ void updateControllerStatus(
  *     Dormant timer -> Running timer
  *
  * After this succeeds, StatusTimerCallback() runs once per
- * STATUS_TIMER_PERIOD_TICK and wakes TaskStatusReporter.
+ * STATUS_TIMER_PERIOD_TICKS and wakes TaskStatusReporter.
  */
 void startStatusTimer()
 {
