@@ -1,0 +1,87 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage[vietnamese]{babel}
+\IfFontExistsTF{Times New Roman}
+  {\setmainfont{Times New Roman}}
+  {\setmainfont{TeX Gyre Termes}}
+
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{amsmath}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{ragged2e}
+\usepackage{listings}
+\usepackage{cite}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+\renewcommand{\refname}{Tài liệu tham khảo}
+
+\setlength{\parindent}{1.2cm}
+\setlength{\parskip}{0.25em}
+\emergencystretch=2em
+\setlist[itemize]{topsep=0.25em,itemsep=0.15em,leftmargin=1.2cm}
+\setlist[enumerate]{topsep=0.25em,itemsep=0.15em,leftmargin=1.2cm}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+
+\captionsetup{
+  font=small,
+  labelfont=bf,
+  justification=centering
+}
+
+\lstdefinestyle{codeblock}{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible
+}
+\lstset{style=codeblock}
+
+\newcommand{\safeincludegraphics}[2][]{%
+  \IfFileExists{#2}{\includegraphics[#1]{#2}}{%
+    \fbox{\parbox{0.85\linewidth}{Không tìm thấy hình: \texttt{#2}}}%
+  }%
+}
+
+\newcommand{\projectname}{ATLC}
+\newcommand{\codebasis}{857423f}
+
+\begin{document}
+
+\pagenumbering{roman}
+\tableofcontents
+\clearpage
+
+\pagenumbering{arabic}
+
+\input{chapters/00_loi_mo_dau}
+\input{chapters/01_bai_toan_yeu_cau}
+\input{chapters/02_kien_truc_he_thong}
+\input{chapters/03_bo_dieu_khien_nhung}
+\input{chapters/04_pipeline_thi_giac_may_tinh}
+\input{chapters/05_runtime_bao_mat_kiem_thu}
+\input{chapters/06_ket_qua_danh_gia}
+\input{chapters/07_ket_luan_huong_phat_trien}
+\input{chapters/08_phu_luc}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}

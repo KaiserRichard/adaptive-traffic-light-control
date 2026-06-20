@@ -1,0 +1,61 @@
+\section{Kiến trúc hệ thống với trọng tâm nhúng}
+
+\subsection{Tổng quan}
+
+Kiến trúc \projectname{} được chia thành hai tầng. Tầng host chạy trên PC hoặc Raspberry Pi, chịu trách nhiệm xử lý ảnh và tính toán kế hoạch điều khiển. Tầng MCU chạy trên ESP32, chịu trách nhiệm nhận kế hoạch, kiểm tra hợp lệ và điều khiển đèn bằng FSM cục bộ.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.88\linewidth]{figures/atlc_block_diagram.png}
+  \caption{Sơ đồ khối tổng thể ATLC, thể hiện camera/video, pipeline AI, scheduler, dashboard và MCU/controller.}
+  \label{fig:atlc-block}
+\end{figure}
+
+Điểm quan trọng của kiến trúc này là host không điều khiển trực tiếp GPIO theo từng frame. Host chỉ gửi kế hoạch thời gian mức cao. MCU mới là thành phần thực thi tín hiệu thời gian thực. Điều này giúp hệ thống tránh phụ thuộc vào FPS của YOLO, tránh làm lệch timing khi host lag và giữ phần điều khiển đèn nằm trên một bộ điều khiển có hành vi dự đoán được.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.88\linewidth]{figures/host_mcu_split.png}
+  \caption{Phân tầng host/Raspberry Pi xử lý AI và ESP32/MCU thực thi FSM điều khiển đèn.}
+  \label{fig:host-mcu}
+\end{figure}
+
+\subsection{Luồng dữ liệu end-to-end}
+
+Luồng xử lý của hệ thống bắt đầu từ frame camera và kết thúc ở đầu ra đèn giao thông. Máy tính biên đọc frame, chạy detector YOLO, chuẩn hóa nhãn lớp, gán phương tiện vào ROI, tính mật độ, sinh kế hoạch thời gian, sau đó gửi kế hoạch qua UART. MCU nhận kế hoạch, xác thực định dạng và miền giá trị, phản hồi ACK hoặc NACK, rồi chạy FSM theo kế hoạch đang hoạt động.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.86\linewidth]{figures/atlc_end_to_end_flow.png}
+  \caption{Luồng xử lý từ video đầu vào đến timing plan và output hệ thống.}
+  \label{fig:end-to-end}
+\end{figure}
+
+\subsection{Tổ chức module phần mềm}
+
+Phía host được chia theo pipeline: detector, ROI, counting, density, scheduler, runtime controller, UART sender và evidence logger. Phía firmware được chia theo trách nhiệm: cấu hình, message, queue, protocol, task, service và driver UART RX. Cách chia này làm rõ quyền sở hữu dữ liệu và giúp mỗi module có thể được kiểm thử riêng.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.92\linewidth]{figures/code_workflow_modules.png}
+  \caption{Tổ chức module code theo detector, ROI, density, scheduler, communication và evidence.}
+  \label{fig:code-workflow}
+\end{figure}
+
+\subsection{Vai trò của Raspberry Pi}
+
+Raspberry Pi được định hướng làm máy tính biên khi chuyển từ môi trường phát triển trên PC sang mô hình gần triển khai thực tế. Raspberry Pi không thay thế MCU. Nó thay thế PC ở tầng xử lý ảnh, còn MCU vẫn giữ vai trò điều khiển đèn thời gian thực.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.78\linewidth]{figures/raspberry_pi_host_role.png}
+  \caption{Raspberry Pi đóng vai trò edge host chạy AI pipeline và gửi plan xuống MCU.}
+  \label{fig:raspi-role}
+\end{figure}
+
+\subsection{Lý do chọn kiến trúc hai tầng}
+
+Nếu host vừa chạy YOLO vừa điều khiển trực tiếp đèn, thời gian đèn sẽ bị ảnh hưởng bởi tải suy luận, ghi video, hiển thị GUI hoặc lỗi camera. Trong khi đó, vi điều khiển có thể chạy vòng điều khiển nhỏ, ổn định và độc lập hơn. Vì vậy, thiết kế hai tầng phù hợp với bài toán Vi xử lý: dùng MCU làm bộ thực thi cục bộ, còn AI chỉ cung cấp kế hoạch điều khiển mức cao.
+
+Kiến trúc này cũng làm cho hệ thống dễ kiểm thử hơn. Trước khi có phần cứng thật, nhóm có thể dùng fake MCU để kiểm thử UART, ACK, timeout và format bản tin. Khi phần cứng sẵn sàng, cùng một giao thức có thể được dùng cho ESP32 hoặc STM32.
+

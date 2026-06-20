@@ -1,0 +1,102 @@
+\section{Pipeline thị giác máy tính và lập kế hoạch}
+
+\subsection{Vị trí của AI trong hệ thống}
+
+AI không trực tiếp điều khiển đèn. Vai trò của AI là chuyển ảnh giao thông thành tín hiệu định lượng để bộ lập kế hoạch tạo thời gian xanh. Vì vậy, pipeline thị giác máy tính được đặt sau phần điều khiển nhúng trong báo cáo này, nhưng vẫn là nguồn dữ liệu đầu vào quan trọng cho host.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.86\linewidth]{figures/atlc_five_stage_pipeline.png}
+  \caption{Pipeline nhiều tầng từ phát hiện phương tiện, ROI/counting, density, scheduler đến thực thi.}
+  \label{fig:five-stage}
+\end{figure}
+
+\subsection{Phát hiện phương tiện bằng YOLO}
+
+Hệ thống dùng detector YOLO cục bộ thông qua Ultralytics. Mục tiêu là chuẩn bị cho triển khai edge, tránh phụ thuộc hoàn toàn vào hosted inference. Module \texttt{LocalYoloDetector} ẩn chi tiết output của Ultralytics và trả về danh sách detection thống nhất gồm bounding box, confidence và class name \cite{ultralytics_predict}.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.78\linewidth]{figures/bounding_box.png}
+  \caption{Ví dụ bounding box, class label và confidence score.}
+  \label{fig:bounding-box}
+\end{figure}
+
+Các nhãn lớp được chuẩn hóa về schema của dự án, ví dụ \texttt{motorcycle} và \texttt{scooter} có thể quy về \texttt{motorbike}; \texttt{suv}, \texttt{taxi}, \texttt{van} có thể quy về \texttt{car}. Việc chuẩn hóa này giúp phần density và scheduler không phụ thuộc vào tên lớp thô của từng model.
+
+\subsection{ROI và đếm theo hướng}
+
+ROI được lưu trong file JSON để có thể thay đổi theo cảnh quay mà không sửa mã nguồn. Mỗi detection được gán vào hướng A hoặc hướng B bằng tâm bounding box và phép kiểm tra điểm nằm trong polygon. Nếu hai ROI chồng lấn, hệ thống dùng khoảng cách tới tâm ROI để chọn hướng gần hơn.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.78\linewidth]{figures/roi_example.png}
+  \caption{Minh họa vùng quan tâm dùng để tách xe theo hướng đường.}
+  \label{fig:roi}
+\end{figure}
+
+Thiết kế này có ba ưu điểm. Thứ nhất, ROI có thể được cấu hình lại khi đổi camera hoặc đổi video. Thứ hai, detector và ROI tách nhau, nên thay model không làm thay đổi logic đếm hướng. Thứ ba, kết quả đếm theo hướng là đầu vào rõ ràng cho phần mật độ.
+
+\subsection{Mật độ thô, PCE và EMA}
+
+Phase 3 của dự án tách rõ ba mức tín hiệu:
+
+\begin{itemize}
+  \item mật độ thô: số lượng detection trong từng hướng;
+  \item mật độ PCE: tổng số phương tiện có trọng số theo loại xe;
+  \item mật độ PCE đã làm mượt: tín hiệu chính đưa vào scheduler.
+\end{itemize}
+
+Mật độ PCE được tính theo công thức:
+
+\begin{equation}
+D_i = \sum_{c \in C} n_{i,c} w_c
+\end{equation}
+
+Trong đó \(D_i\) là mật độ hướng \(i\), \(n_{i,c}\) là số phương tiện lớp \(c\) ở hướng đó, còn \(w_c\) là trọng số PCE. Cấu hình hiện tại dùng các trọng số:
+
+\begin{center}
+\begin{tabular}{lccccc}
+\toprule
+Lớp & bicycle & motorbike & car & rickshaw & bus/truck \\
+\midrule
+Trọng số & 0.3 & 0.5 & 1.0 & 1.2 & 2.5 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+PCE được dùng vì một xe buýt hoặc xe tải ảnh hưởng tới dòng giao thông nhiều hơn một xe máy. Cách tiếp cận này phù hợp với hướng nghiên cứu về ước lượng mật độ có xét loại phương tiện trong hệ thống đèn giao thông thích nghi \cite{raza2025edge,nguyen_yolov8_density}.
+
+Do detection theo từng frame có nhiễu, hệ thống dùng EMA:
+
+\begin{equation}
+\hat{D}_t = \alpha D_t + (1-\alpha)\hat{D}_{t-1}
+\end{equation}
+
+Với cấu hình mặc định \(\alpha=0.30\), tín hiệu vẫn phản ứng với thay đổi giao thông nhưng không dao động quá mạnh theo lỗi phát hiện ngắn hạn.
+
+\subsection{Scheduler dựa trên mật độ}
+
+Scheduler hiện tại cố ý giữ dạng rule-based để dễ giải thích, dễ kiểm thử và phù hợp mục tiêu môn học. Hệ thống tính tỉ lệ mật độ:
+
+\begin{equation}
+r_A = \frac{\hat{D}_A}{\hat{D}_A + \hat{D}_B + \epsilon}, \quad
+r_B = \frac{\hat{D}_B}{\hat{D}_A + \hat{D}_B + \epsilon}
+\end{equation}
+
+Sau đó chia tổng ngân sách đèn xanh \(2G_{base}\) theo tỉ lệ và clamp vào miền an toàn:
+
+\begin{equation}
+G_A = clamp(2G_{base}r_A, G_{min}, G_{max})
+\end{equation}
+
+\begin{equation}
+G_B = clamp(2G_{base}r_B, G_{min}, G_{max})
+\end{equation}
+
+Trong cấu hình hiện tại, \(G_{base}=20\), \(G_{min}=10\), \(G_{max}=45\), đèn vàng cố định 3 giây và all-red cố định 1 giây. Đây là lựa chọn thận trọng: phần AI chỉ đề xuất thời gian xanh, còn các khoảng chuyển pha an toàn không bị làm động ở giai đoạn thử nghiệm.
+
+\subsection{Giảm tải suy luận}
+
+Phase 10 bổ sung cấu hình \texttt{DETECT\_EVERY\_N\_FRAMES}. Khi \(N=1\), YOLO chạy trên mọi frame. Khi \(N=2\) hoặc \(3\), hệ thống đọc camera liên tục nhưng chỉ chạy detector theo chu kỳ, các frame còn lại dùng detection gần nhất. Cách này giảm tải suy luận trên thiết bị biên, đặc biệt khi triển khai trên Raspberry Pi, nhưng vẫn cần benchmark thực tế cho từng camera và model \cite{opencv_videocapture}.
+

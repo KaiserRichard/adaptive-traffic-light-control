@@ -1,0 +1,63 @@
+\section{Runtime, bảo mật và kiểm thử giao tiếp}
+
+\subsection{Tách raw plan và active plan}
+
+Một lỗi thiết kế dễ gặp là coi kế hoạch scheduler sinh ra ở từng frame là kế hoạch đang thực thi. Điều này làm đèn có vẻ ``nhảy'' liên tục vì mật độ và output YOLO thay đổi theo frame. Phase 8 sửa vấn đề này bằng cách tách ba khái niệm:
+
+\begin{itemize}
+  \item \texttt{raw\_signal\_plan}: đề xuất mới nhất từ scheduler;
+  \item \texttt{pending\_plan}: kế hoạch đang chờ áp dụng;
+  \item \texttt{active\_plan}: kế hoạch thật sự đang chạy trong runtime controller và MCU.
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.88\linewidth]{figures/raw_signal_plan_vs_active_plan.png}
+  \caption{So sánh raw signal plan và active plan để chứng minh runtime controller không đổi đèn tùy tiện theo từng frame.}
+  \label{fig:raw-active}
+\end{figure}
+
+Thiết kế này đồng bộ với firmware: cả host runtime controller và MCU FSM đều áp dụng kế hoạch mới tại biên chu kỳ an toàn. Nhờ vậy, dashboard/video overlay và đèn thật có cùng khái niệm active plan.
+
+\subsection{Timeline pha đèn}
+
+Runtime evidence ghi lại pha đang hoạt động và thời gian xanh theo từng thời điểm. Hình \ref{fig:phase-timeline} cho thấy hệ thống chuyển pha theo chu kỳ thay vì thay đổi ngẫu nhiên theo frame.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.88\linewidth]{figures/runtime_phase_timeline.png}
+  \caption{Timeline các pha đèn trong quá trình chạy thử.}
+  \label{fig:phase-timeline}
+\end{figure}
+
+\subsection{Fake MCU testing}
+
+Trước khi nối phần cứng thật, fake MCU giúp kiểm thử giao tiếp host-MCU. Fake MCU nhận PLAN, parse bản tin, trả ACK và mô phỏng timeout. Nhờ vậy, lỗi framing, lỗi chờ ACK, lỗi cổng serial hoặc lỗi logic gửi lại kế hoạch được phát hiện sớm hơn.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.82\linewidth]{figures/fake_mcu_testing.png}
+  \caption{Fake MCU giúp kiểm thử PLAN/ACK/timeout trước khi nối phần cứng thật.}
+  \label{fig:fake-mcu}
+\end{figure}
+
+\subsection{Lớp bảo mật thí nghiệm}
+
+Phase 14 bổ sung lớp thí nghiệm bảo mật cho bản tin điều khiển. Các nguy cơ được xét gồm sửa thời gian xanh, phát lại bản tin cũ, giả mạo lệnh điều khiển và sửa log sau thí nghiệm. Lớp bảo mật sử dụng HMAC-SHA256 để xác thực bản tin PLAN, dùng \texttt{plan\_id}, nonce và timestamp để giảm replay, đồng thời dùng chuỗi băm để tạo audit log có khả năng phát hiện sửa đổi \cite{rfc2104_hmac}.
+
+Phạm vi hiện tại cần được nói rõ: đây là lớp thí nghiệm phần mềm, chưa phải cơ chế bảo mật đã được tích hợp hoàn chỉnh vào firmware MCU. Hướng phát triển hợp lý là đưa HMAC vào \texttt{UartPlanSender}, bổ sung kiểm tra MAC phía MCU, xác thực ACK và lưu replay-state bền vững hơn.
+
+\subsection{An toàn hệ thống}
+
+Với hệ thống giao thông, an toàn không chỉ nằm ở model AI. Những điểm an toàn quan trọng trong thiết kế hiện tại gồm:
+
+\begin{itemize}
+  \item MCU luôn có default plan trước khi nhận bất kỳ lệnh nào.
+  \item Plan mới chỉ được áp dụng tại biên an toàn.
+  \item Host timeout chuyển sang fallback plan.
+  \item ACK/NACK phân biệt kế hoạch hợp lệ và không hợp lệ.
+  \item Serial output được bảo vệ để dòng protocol không bị trộn.
+\end{itemize}
+
+Các cơ chế này không thay thế kiểm định phần cứng thực tế, nhưng là nền tảng đúng để đi tới thử nghiệm hardware-in-the-loop.
+

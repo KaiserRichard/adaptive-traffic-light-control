@@ -1,0 +1,53 @@
+\section{Bài toán và yêu cầu hệ thống}
+
+\subsection{Bối cảnh}
+
+Bài toán đặt ra là xây dựng một mô hình điều khiển đèn giao thông có khả năng thích nghi với tình trạng giao thông hiện thời. Hệ thống cần nhận biết số lượng và loại phương tiện trên từng hướng, chuyển thông tin đó thành mật độ giao thông, sau đó tính thời gian đèn xanh phù hợp trong giới hạn an toàn.
+
+Trong phạm vi mô hình thử nghiệm, hệ thống không hướng tới việc thay thế người vận hành giao thông. Mục tiêu phù hợp hơn là chứng minh một vòng lặp kỹ thuật hoàn chỉnh:
+
+\begin{center}
+\begin{tabularx}{0.95\linewidth}{>{\bfseries}l X}
+\toprule
+Khâu & Ý nghĩa trong hệ thống \\
+\midrule
+Cảm nhận & Camera hoặc video cung cấp ảnh giao thông đầu vào. \\
+Phân tích & Mô hình YOLO phát hiện phương tiện, sau đó hệ thống đếm theo hướng. \\
+Ra quyết định & Scheduler chuyển mật độ thành kế hoạch thời gian đèn. \\
+Thực thi & MCU chạy FSM cục bộ và điều khiển đèn theo kế hoạch đã được xác thực. \\
+Giám sát & Log, STATUS, DIAG và hình evidence giúp kiểm tra trạng thái runtime. \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Nhóm người dùng và nhu cầu}
+
+Hai nhóm người dùng chính là người tham gia giao thông và đơn vị vận hành giao thông. Người tham gia giao thông cần giảm thời gian chờ không cần thiết và giảm tình trạng một hướng bị ùn ứ trong khi hướng khác vắng xe. Đơn vị vận hành cần dữ liệu quan sát, trạng thái hệ thống, khả năng kiểm thử và cơ chế dự phòng khi phần xử lý phía host không còn gửi kế hoạch hợp lệ.
+
+\subsection{Yêu cầu chức năng}
+
+Các yêu cầu chức năng được rút gọn từ tài liệu thiết kế ban đầu và đối chiếu với phần đã triển khai trong repo:
+
+\begin{longtable}{>{\bfseries}p{2.2cm}p{10.8cm}}
+\toprule
+Mã & Nội dung yêu cầu \\
+\midrule
+FR1 & Phát hiện phương tiện trong ảnh giao thông bằng detector cục bộ, ưu tiên hướng triển khai edge thay vì phụ thuộc hoàn toàn vào dịch vụ đám mây. \\
+FR2 & Chia phương tiện theo hai hướng đường bằng vùng quan tâm lưu trong JSON, không hard-code trực tiếp vào mã xử lý. \\
+FR3 & Đếm phương tiện theo lớp, tính mật độ thô và mật độ có trọng số PCE. \\
+FR4 & Làm mượt tín hiệu mật độ bằng EMA để tránh kế hoạch đèn dao động mạnh theo từng khung hình. \\
+FR5 & Sinh kế hoạch thời gian gồm \texttt{green\_a}, \texttt{green\_b}, \texttt{yellow}, \texttt{all\_red} trong giới hạn an toàn. \\
+FR6 & Gửi kế hoạch xuống MCU qua UART bằng bản tin có định dạng rõ ràng và chờ phản hồi ACK/NACK. \\
+FR7 & MCU tự chạy FSM điều khiển đèn, không phụ thuộc vào việc host gửi lệnh liên tục từng khung hình. \\
+FR8 & MCU có cơ chế dự phòng khi host im lặng quá thời gian cho phép. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Yêu cầu phi chức năng}
+
+Hệ thống cần có tính mô-đun, dễ kiểm thử, dễ thay thế detector, dễ cấu hình ROI và không trộn logic thị giác máy tính với logic điều khiển GPIO. Với phần nhúng, yêu cầu quan trọng là FSM phải tiếp tục chạy ổn định ngay cả khi UART không có dữ liệu mới. Với phần báo cáo và thí nghiệm, mọi kết luận hiệu năng phải đi kèm commit, cấu hình, lệnh chạy và bằng chứng kết quả.
+
+\subsection{Phạm vi và giới hạn}
+
+Phiên bản hiện tại đã chứng minh được pipeline phần mềm, giao tiếp UART, FSM FreeRTOS và evidence runtime. Tuy nhiên, các kết quả về giảm thời gian chờ hoặc giảm ùn tắc trong thế giới thực chưa được xem là kết luận cuối cùng, vì cần thí nghiệm phần cứng ngoài hiện trường hoặc mô phỏng giao thông có kịch bản đối chứng. Lớp bảo mật HMAC cũng mới ở mức thí nghiệm phần mềm, chưa tích hợp đầy đủ vào firmware MCU.
+

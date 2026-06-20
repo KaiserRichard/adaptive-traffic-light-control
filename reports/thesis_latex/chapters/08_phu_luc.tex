@@ -1,0 +1,44 @@
+\appendix
+\section{Phụ lục: lệnh chạy và cấu hình quan trọng}
+
+\subsection{Lệnh chạy host pipeline}
+
+\begin{lstlisting}
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 -m pc_app.main
+\end{lstlisting}
+
+\subsection{Biến môi trường chính}
+
+\begin{lstlisting}
+DETECTOR_BACKEND=yolo
+YOLO_MODEL_PATH=./pc_app/models/local/yolo26n.pt
+YOLO_IMGSZ=640
+CONFIDENCE_THRESHOLD=0.30
+ROI_CONFIG_PATH=./pc_app/configs/roi_example.json
+DENSITY_SMOOTHING_ALPHA=0.30
+ENABLE_UART=false
+UART_BAUD=115200
+DETECT_EVERY_N_FRAMES=1
+\end{lstlisting}
+
+\subsection{Lệnh build firmware}
+
+\begin{lstlisting}
+cd firmware/esp32_freertos_traffic_light
+pio run
+pio run --target upload
+pio device monitor -b 115200
+\end{lstlisting}
+
+\subsection{Bản tin UART mẫu}
+
+\begin{lstlisting}
+PLAN,17,25,15,3,1
+ACK,17
+STATUS,17,A_GREEN,12,OK
+NACK,18,GREEN_A_OUT_OF_RANGE
+\end{lstlisting}
+

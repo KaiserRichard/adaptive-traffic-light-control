@@ -1,0 +1,93 @@
+\section{Kết quả triển khai và đánh giá}
+
+\subsection{Cơ sở mã nguồn}
+
+Báo cáo này được viết dựa trên trạng thái dự án tại commit \texttt{\codebasis{}} cho phần code hệ thống, nhánh phát triển Phase 15 FreeRTOS controller. Cây báo cáo LaTeX được tạo riêng trong \texttt{reports/thesis\_latex/} và không sửa mã nguồn runtime.
+
+\subsection{Kết quả phần nhúng}
+
+Các kết quả chính của phần MCU gồm:
+
+\begin{itemize}
+  \item firmware ESP32 được refactor thành các nhóm module cấu hình, message, queue, driver, protocol, service và task;
+  \item UART RX callback chỉ đánh thức task, không xử lý logic dài trong callback;
+  \item \texttt{rawMessageQueue} và \texttt{planQueue} tách dữ liệu thô khỏi kế hoạch đã validate;
+  \item \texttt{TaskTrafficFSM} chạy local FSM và kiểm tra queue không chặn;
+  \item kế hoạch mới được áp dụng tại biên an toàn;
+  \item watchdog phát hiện host timeout và chuyển sang fallback plan;
+  \item STATUS dùng task notification; Serial output dùng mutex.
+\end{itemize}
+
+Lệnh build đã dùng cho firmware:
+
+\begin{lstlisting}
+cd firmware/esp32_freertos_traffic_light
+pio run
+\end{lstlisting}
+
+Kết quả mong đợi khi test serial:
+
+\begin{lstlisting}
+PLAN,17,25,15,3,1
+ACK,17
+STATUS,17,A_GREEN,12,OK
+DIAG,heap=...,uart_stack=...,parser_stack=...,fsm_stack=...
+\end{lstlisting}
+
+\subsection{Kết quả pipeline và benchmark runtime}
+
+Từ summary runtime Phase 13, bộ dữ liệu evidence có 34 mẫu runtime, FPS trung bình khoảng 35.00 trong cấu hình thí nghiệm đã ghi. Số xe trung bình theo hướng là 4.76 ở hướng A và 2.32 ở hướng B. Các hình dưới đây được dùng như bằng chứng pipeline, không phải kết luận rằng hệ thống đã giảm ùn tắc ngoài thực tế.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.86\linewidth]{figures/direction_counts.png}
+  \caption{Số lượng phương tiện theo hướng trong log runtime.}
+  \label{fig:direction-counts}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.86\linewidth]{figures/green_times.png}
+  \caption{Thời gian xanh được scheduler tạo ra theo mật độ từng hướng.}
+  \label{fig:green-times}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.86\linewidth]{figures/runtime_fps.png}
+  \caption{FPS runtime trong phiên chạy thử dùng để tạo evidence.}
+  \label{fig:runtime-fps}
+\end{figure}
+
+Tài liệu benchmark cục bộ cho YOLO26n trên PC ghi nhận detector-only khoảng 11--13 FPS; full pipeline khi tắt hiển thị và không lưu video khoảng 10--12 FPS; khi lưu video khoảng 7--8.5 FPS; khi bật cả hiển thị và lưu video khoảng 3--5 FPS. Kết luận kỹ thuật là phần ROI, density, EMA và scheduler nhẹ hơn nhiều so với YOLO inference, ghi video và GUI.
+
+\subsection{Ma trận kiểm thử}
+
+\small
+\begin{longtable}{>{\bfseries}p{2.7cm}p{5.2cm}p{4.8cm}}
+\toprule
+Nhóm kiểm thử & Lệnh hoặc phương pháp & Dấu hiệu đạt \\
+\midrule
+ROI & \texttt{experiments.test\_roi} & Detection được chia đúng vào hướng A/B hoặc outside. \\
+Density & \texttt{experiments.test\_density} & Raw density, PCE density và EMA có output hợp lý. \\
+Scheduler & \texttt{test\_scheduler.py} & Thời gian xanh nằm trong giới hạn min/max. \\
+Pipeline host & \texttt{pc\_app.main} & Video/camera chạy, overlay hiển thị detection, ROI, density và runtime. \\
+UART sender & Fake MCU hoặc MCU thật & Host gửi PLAN và nhận ACK đúng \texttt{plan\_id}. \\
+Firmware & \texttt{pio run} & Build ESP32 thành công. \\
+FSM & Serial monitor & Đèn chuyển theo thứ tự A green, A yellow, all-red, B green, B yellow, all-red. \\
+Watchdog & Dừng gửi PLAN & STATUS chuyển sang \texttt{HOST\_TIMEOUT}, fallback plan được dùng. \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsection{Những giới hạn hiện tại}
+
+Các giới hạn chính gồm:
+
+\begin{itemize}
+  \item Hệ thống chưa có thí nghiệm giao thông thực ngoài hiện trường.
+  \item Kết quả giảm thời gian chờ chưa được đo bằng mô phỏng đối chứng cố định/thích nghi.
+  \item HMAC chưa tích hợp đầy đủ vào UART runtime và firmware.
+  \item DIAG vẫn là telemetry nhẹ in từ timer callback, nên có thể refactor theo mẫu task notification nếu firmware lớn hơn.
+  \item Raspberry Pi camera và phần cứng đèn thật cần một vòng kiểm thử tích hợp riêng.
+\end{itemize}
