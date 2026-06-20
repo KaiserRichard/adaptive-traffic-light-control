@@ -60,8 +60,27 @@
   }%
 }
 
+\newcommand{\placeholderfigure}[3]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{#1}{%
+      \includegraphics[width=0.86\linewidth]{#1}%
+    }{%
+      \fbox{%
+        \begin{minipage}[c][3.8cm][c]{0.86\linewidth}
+          \centering
+          \textbf{Placeholder hình minh họa}\\[0.4em]
+          File cần bổ sung: \texttt{\detokenize{#1}}\\[0.3em]
+          Xem prompt đề xuất trong \texttt{figures/PLACEHOLDER\_IMAGE\_PROMPTS.md}.
+        \end{minipage}%
+      }%
+    }%
+    \caption{#2}
+    \label{#3}
+  \end{figure}
+}
+
 \newcommand{\projectname}{ATLC}
-\newcommand{\codebasis}{857423f}
 
 \begin{document}
 

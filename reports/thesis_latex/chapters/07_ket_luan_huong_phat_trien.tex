@@ -15,11 +15,10 @@ Các bước tiếp theo nên được thực hiện theo thứ tự:
 \begin{enumerate}
   \item Kiểm thử mạch đèn thật với ESP32, xác nhận GPIO, LED, nguồn và điện trở.
   \item Chạy hardware-in-the-loop đầy đủ: YOLO count \(\rightarrow\) signal plan \(\rightarrow\) UART \(\rightarrow\) ESP32 \(\rightarrow\) đèn thật.
-  \item Chuẩn hóa thí nghiệm benchmark: ghi rõ phần cứng, model, video, config, commit, FPS, độ trễ UART, số lần timeout và số lần queue overflow.
+  \item Chuẩn hóa thí nghiệm benchmark: ghi rõ phần cứng, model, video, cấu hình, FPS, độ trễ UART, số lần timeout và số lần queue overflow.
   \item Tích hợp bảo mật vào runtime thật: HMAC cho PLAN, kiểm tra MAC phía MCU, chống replay và xác thực ACK.
   \item Tối ưu triển khai Raspberry Pi: camera thật, ROI camera thật, frame skipping, ONNX/NCNN nếu PyTorch không đủ FPS.
   \item Bổ sung mô phỏng hoặc dữ liệu đối chứng để đo thời gian chờ, hàng chờ và hiệu quả so với fixed-time controller.
 \end{enumerate}
 
 Khi các bước này hoàn tất, báo cáo có thể nâng cấp từ mức mô hình thử nghiệm sang mức đánh giá hệ thống nhúng AI có dữ liệu định lượng đầy đủ.
-

@@ -50,8 +50,8 @@ xelatex main.tex
 
 Upload the whole `reports/thesis_latex` folder to Overleaf and set the compiler to XeLaTeX.
 
-## Source Basis
+The figure folder is intentionally lightweight. Missing technical illustrations are represented by placeholder boxes in the PDF. To replace a placeholder, upload a PNG with the exact filename listed in `figures/PLACEHOLDER_IMAGE_PROMPTS.md`.
 
-System-code basis: commit `857423f` from the Phase 15 FreeRTOS controller branch.
+## Scope
 
 This report folder should not modify `pc_app/` or `firmware/`.

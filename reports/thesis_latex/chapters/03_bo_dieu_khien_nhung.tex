@@ -1,12 +1,38 @@
 \section{Bộ điều khiển nhúng và giao tiếp UART}
 
-\subsection{Nhiệm vụ của MCU}
+\subsection{Vai trò của ESP32}
 
-MCU là phần trọng tâm của báo cáo Vi xử lý. Trong thiết kế hiện tại, ESP32 không nhận lệnh bật tắt đèn theo từng frame. Thay vào đó, nó nhận một kế hoạch thời gian đã được host tính toán, kiểm tra kế hoạch đó, rồi tự chạy máy trạng thái điều khiển đèn. Như vậy, ngay cả khi host xử lý chậm, FPS giảm hoặc UART tạm thời im lặng, MCU vẫn có thể tiếp tục vận hành chu kỳ đèn hiện tại.
+ESP32 là bộ điều khiển thực thi của hệ thống. Host có thể thay đổi model, ngưỡng nhận dạng hoặc nguồn video, nhưng đèn thật không được phụ thuộc trực tiếp vào tốc độ xử lý ảnh. Vì vậy firmware nhận bản tin kế hoạch mức cao, kiểm tra hợp lệ, lưu kế hoạch chờ và chạy FSM cục bộ để điều khiển LED. Đây là phần thể hiện rõ nhất nội dung Vi xử lý trong đề tài: cấu hình chân, task, queue, timer, mutex, trạng thái, watchdog và giao thức serial.
 
-\subsection{Giao thức UART ứng dụng}
+\subsection{Cấu hình phần cứng}
 
-Bản tin điều khiển hiện tại là chuỗi văn bản theo định dạng:
+Bảng \ref{tab:gpio-map} trình bày ánh xạ GPIO trong firmware. Hai hướng A và B được mô phỏng bằng sáu LED đỏ-vàng-xanh. Việc ánh xạ bằng hằng số trong \texttt{app\_config.h} giúp thay chân phần cứng mà không làm thay đổi logic FSM.
+
+\begin{table}[H]
+\centering
+\caption{Ánh xạ GPIO điều khiển đèn.}
+\label{tab:gpio-map}
+\begin{tabular}{>{\bfseries}lcc}
+\toprule
+Tín hiệu & Chân ESP32 & Vai trò \\
+\midrule
+A đỏ & 25 & Dừng hướng A \\
+A vàng & 26 & Chuyển pha hướng A \\
+A xanh & 27 & Cho phép hướng A đi \\
+B đỏ & 14 & Dừng hướng B \\
+B vàng & 12 & Chuyển pha hướng B \\
+B xanh & 13 & Cho phép hướng B đi \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Giá trị mặc định của kế hoạch an toàn là \(G_A=20\) s, \(G_B=20\) s, vàng 3 s và all-red 1 s. Miền kiểm tra trong firmware giới hạn xanh 10--45 s, vàng cố định 3 s và all-red cố định 1 s. Các giới hạn này làm cho MCU không nhận kế hoạch quá ngắn hoặc quá dài dù host gửi sai.
+
+\placeholderfigure{figures/esp32_gpio_traffic_light_mapping.png}{Sơ đồ đấu nối ESP32 với sáu đèn LED mô phỏng hai hướng giao thông.}{fig:placeholder-gpio}
+
+\subsection{Giao thức UART mức ứng dụng}
+
+Bản tin điều khiển dùng định dạng văn bản một dòng:
 
 \begin{lstlisting}
 PLAN,<plan_id>,<green_a>,<green_b>,<yellow>,<all_red>
@@ -18,133 +44,142 @@ Ví dụ:
 PLAN,17,25,15,3,1
 \end{lstlisting}
 
-Nếu kế hoạch hợp lệ, MCU trả về:
+Nếu hợp lệ, MCU phản hồi:
 
 \begin{lstlisting}
 ACK,17
 \end{lstlisting}
 
-Nếu kế hoạch sai định dạng hoặc vượt miền giá trị, MCU trả về NACK kèm lý do, ví dụ:
+Nếu sai định dạng hoặc ngoài miền giá trị, MCU phản hồi NACK kèm lý do:
 
 \begin{lstlisting}
 NACK,18,GREEN_A_OUT_OF_RANGE
 \end{lstlisting}
 
+UART phù hợp với nguyên mẫu vì đơn giản, có sẵn trên ESP32, dễ debug bằng Serial Monitor và đủ băng thông cho bản tin thời gian nhỏ. Trong code host, PySerial đóng vai trò mở cổng, gửi dòng PLAN, đọc ACK/NACK và đo độ trễ phản hồi \cite{pyserial_api,pena_uart}. Trong firmware, chỉ parser mới hiểu cú pháp PLAN; các task khác nhận dữ liệu đã được đóng gói thành struct.
+
+\subsection{Kiến trúc FreeRTOS}
+
+Firmware được tổ chức theo kiểu nhiều task nhỏ, mỗi task sở hữu một trách nhiệm rõ ràng. Queue dùng để truyền dữ liệu có nội dung; task notification dùng để đánh thức task khi có sự kiện; timer dùng để phát nhịp báo cáo; mutex dùng để bảo vệ Serial output. Cách dùng này phù hợp với mô hình FreeRTOS về queue, timer và direct-to-task notification \cite{barry_freertos,freertos_queues,freertos_timers,freertos_task_notifications}.
+
+\placeholderfigure{figures/freertos_task_queue_architecture.png}{Cấu trúc FreeRTOS trên ESP32: callback UART, task nhận dữ liệu, task parser, queue kế hoạch, FSM, STATUS reporter, timer và mutex Serial.}{fig:placeholder-freertos}
+
+\small
+\begin{longtable}{>{\bfseries}p{3.5cm}p{1.7cm}p{1.7cm}p{6.0cm}}
+\caption{Task và đối tượng FreeRTOS chính.}
+\label{tab:freertos-tasks}\\
+\toprule
+Thành phần & Stack & Ưu tiên & Trách nhiệm \\
+\midrule
+\endfirsthead
+\toprule
+Thành phần & Stack & Ưu tiên & Trách nhiệm \\
+\midrule
+\endhead
+\texttt{TaskUARTReceive} & 4096 & 3 & Ngủ chờ notification, đọc byte từ Serial, ghép dòng, gửi \texttt{RawMessage} vào queue thô. \\
+\texttt{TaskPlanParser} & 4096 & 2 & Nhận \texttt{RawMessage}, kiểm tra cú pháp PLAN, validate miền giá trị, gửi \texttt{SignalPlan} vào queue kế hoạch. \\
+\texttt{TaskTrafficFSM} & 4096 & 2 & Chạy FSM đèn, kiểm tra \texttt{planQueue} không chặn, áp dụng kế hoạch tại biên an toàn, xử lý host timeout. \\
+\texttt{TaskStatusReporter} & 3072 & 1 & Ngủ chờ notification từ timer, lấy snapshot trạng thái và in một dòng STATUS. \\
+\texttt{StatusTimer} & -- & -- & Định kỳ đánh thức \texttt{TaskStatusReporter}; không tự format hoặc in Serial. \\
+\texttt{DiagnosticsTimer} & -- & -- & Phát thông tin heap và stack high-water mark phục vụ chẩn đoán. \\
+\texttt{Serial mutex} & -- & -- & Đảm bảo ACK, NACK, STATUS, DIAG và log debug không bị trộn dòng. \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+\subsection{Đường đi của bản tin PLAN trong firmware}
+
+Luồng nhận UART được thiết kế theo nguyên tắc deferred processing. Callback UART không parse lệnh, không cập nhật FSM và không ghi log dài. Callback chỉ đánh thức \texttt{TaskUARTReceive}. Task này mới đọc dữ liệu serial, tạo \texttt{RawMessage} và chuyển cho parser. Nhờ vậy ngữ cảnh callback rất ngắn, tránh đưa logic ứng dụng vào nơi khó kiểm soát thời gian.
+
+\placeholderfigure{figures/uart_rx_deferred_processing.png}{Luồng xử lý UART kiểu deferred processing: callback chỉ notify, task nhận UART mới đọc byte và đưa dữ liệu vào queue.}{fig:placeholder-uart-deferred}
+
+\begin{longtable}{>{\bfseries}p{1.3cm}p{5.2cm}p{6.5cm}}
+\caption{Các bước xử lý bản tin PLAN trong firmware.}
+\label{tab:plan-path}\\
+\toprule
+Bước & Thành phần & Xử lý \\
+\midrule
+\endfirsthead
+\toprule
+Bước & Thành phần & Xử lý \\
+\midrule
+\endhead
+1 & UART RX callback & Được gọi khi dòng serial idle; gửi task notification cho \texttt{TaskUARTReceive}. \\
+2 & \texttt{TaskUARTReceive} & Đọc \texttt{Serial.available()}, gom byte đến ký tự xuống dòng, tạo \texttt{RawMessage}. \\
+3 & \texttt{rawMessageQueue} & Lưu bản tin thô theo copy, tách đọc serial khỏi parse protocol. \\
+4 & \texttt{TaskPlanParser} & Kiểm tra prefix \texttt{PLAN,}, dùng \texttt{sscanf} parse 5 trường số. \\
+5 & \texttt{validateSignalPlan} & Kiểm tra \texttt{plan\_id}, xanh, vàng và all-red trong miền cấu hình. \\
+6 & \texttt{planQueue} & Chỉ nhận \texttt{SignalPlan} đã hợp lệ; parser trả ACK khi gửi queue thành công. \\
+7 & \texttt{TaskTrafficFSM} & Nhận kế hoạch không chặn, lưu thành \texttt{pendingPlan}, không đổi active plan ngay giữa chu kỳ. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Máy trạng thái đèn giao thông}
+
+FSM cục bộ gồm sáu trạng thái: A xanh, A vàng, all-red sau A, B xanh, B vàng và all-red sau B. Mỗi trạng thái tương ứng với một mẫu xuất GPIO. Bảng \ref{tab:fsm-output} mô tả đầu ra đèn ở từng trạng thái.
+
 \begin{figure}[H]
   \centering
-  \safeincludegraphics[width=0.78\linewidth]{figures/uart_protocol.png}
-  \caption{Giao thức UART mức ứng dụng giữa host và MCU, gồm bản tin PLAN và phản hồi ACK.}
-  \label{fig:uart-protocol}
+  \safeincludegraphics[width=0.84\linewidth]{figures/mcu_local_fsm.png}
+  \caption{MCU chạy finite-state machine cục bộ để điều khiển đèn giao thông theo timing plan.}
+  \label{fig:mcu-fsm}
 \end{figure}
-
-UART được chọn vì phù hợp cho nguyên mẫu nhúng: đơn giản, có sẵn trên hầu hết vi điều khiển, dễ debug bằng serial monitor và đủ cho lượng dữ liệu nhỏ của bản tin kế hoạch đèn. PySerial phía host chịu trách nhiệm mở cổng serial, gửi chuỗi PLAN, chờ ACK và đo độ trễ phản hồi \cite{pyserial_api,pena_uart}.
-
-\subsection{Cấu trúc FreeRTOS trên ESP32}
-
-Firmware ESP32 được chuyển từ kiểu vòng lặp Arduino đơn giản sang kiến trúc FreeRTOS. Các task chính gồm:
 
 \begin{table}[H]
 \centering
-\caption{Các task và đối tượng FreeRTOS chính trong firmware ESP32.}
+\caption{Đầu ra GPIO theo trạng thái FSM.}
+\label{tab:fsm-output}
 \small
-\begin{tabularx}{\linewidth}{>{\bfseries}p{3.8cm}Y}
+\begin{tabularx}{\linewidth}{>{\bfseries}p{3.4cm}YY}
 \toprule
-Thành phần & Trách nhiệm \\
+Trạng thái & Hướng A & Hướng B \\
 \midrule
-\texttt{TaskUARTReceive} & Đọc byte từ Serial, ghép thành dòng lệnh hoàn chỉnh và gửi \texttt{RawMessage} vào \texttt{rawMessageQueue}. \\
-\texttt{TaskPlanParser} & Nhận \texttt{RawMessage}, kiểm tra lệnh \texttt{PLAN}, parse trường dữ liệu, kiểm tra miền giá trị và gửi \texttt{SignalPlan} vào \texttt{planQueue}. \\
-\texttt{TaskTrafficFSM} & Chạy FSM đèn giao thông cục bộ, nhận kế hoạch hợp lệ, lưu pending plan, áp dụng tại biên an toàn và điều khiển GPIO. \\
-\texttt{TaskStatusReporter} & In dòng \texttt{STATUS} sau khi được software timer đánh thức bằng task notification. \\
-\texttt{StatusTimer} & Định kỳ yêu cầu phát STATUS nhưng không trực tiếp format hoặc in Serial. \\
-\texttt{DiagnosticsTimer} & Định kỳ phát dòng \texttt{DIAG} gồm heap còn lại và high-water mark stack của các task. \\
+\texttt{A\_GREEN} & Xanh bật & Đỏ bật \\
+\texttt{A\_YELLOW} & Vàng bật & Đỏ bật \\
+\texttt{ALL\_RED\_AFTER\_A} & Đỏ bật & Đỏ bật \\
+\texttt{B\_GREEN} & Đỏ bật & Xanh bật \\
+\texttt{B\_YELLOW} & Đỏ bật & Vàng bật \\
+\texttt{ALL\_RED\_AFTER\_B} & Đỏ bật & Đỏ bật \\
 \bottomrule
 \end{tabularx}
 \normalsize
 \end{table}
 
-Thiết kế này sử dụng queue để truyền dữ liệu giữa các task và task notification để gửi sự kiện đánh thức task. Đây là hai cơ chế khác nhau: queue mang dữ liệu, còn notification chỉ báo có sự kiện xảy ra. Cách dùng này phù hợp với hướng dẫn FreeRTOS về queue, software timer và direct-to-task notification \cite{barry_freertos,freertos_task_notifications,freertos_queues,freertos_timers}.
-
-\subsection{Luồng nhận UART kiểu deferred processing}
-
-Trong Phase 15.13, firmware dùng callback nhận UART để đánh thức \texttt{TaskUARTReceive}. Callback không parse lệnh, không cập nhật FSM và không in log dài. Nó chỉ gọi notification cho task nhận UART. Công việc nặng hơn được đưa về task bình thường.
-
-\begin{center}
-\begin{tabularx}{0.95\linewidth}{>{\bfseries}l X}
-\toprule
-Bước & Mô tả \\
-\midrule
-1 & UART RX event callback được gọi khi có dữ liệu serial. \\
-2 & Callback gửi notification tới \texttt{TaskUARTReceive}. \\
-3 & \texttt{TaskUARTReceive} thức dậy, đọc Serial và tạo \texttt{RawMessage}. \\
-4 & \texttt{TaskPlanParser} parse và validate bản tin. \\
-5 & \texttt{TaskTrafficFSM} nhận \texttt{SignalPlan} qua queue và điều khiển đèn. \\
-\bottomrule
-\end{tabularx}
-\end{center}
-
-Mẫu thiết kế này làm callback ngắn, giảm nguy cơ làm nghẽn ngữ cảnh sự kiện và giữ logic ứng dụng ở task có thể debug được.
-
-\subsection{Máy trạng thái đèn giao thông}
-
-FSM cục bộ trên MCU gồm sáu trạng thái:
-
-\begin{lstlisting}
-STATE_A_GREEN
-STATE_A_YELLOW
-STATE_ALL_RED_AFTER_A
-STATE_B_GREEN
-STATE_B_YELLOW
-STATE_ALL_RED_AFTER_B
-\end{lstlisting}
-
-Mỗi trạng thái tương ứng với một cấu hình GPIO đỏ, vàng, xanh cho hai hướng. Ví dụ, \texttt{STATE\_A\_GREEN} bật xanh hướng A và đỏ hướng B; \texttt{STATE\_ALL\_RED\_AFTER\_A} bật đỏ cả hai hướng để tạo thời gian giải phóng giao lộ.
-
-\begin{figure}[H]
-  \centering
-  \safeincludegraphics[width=0.82\linewidth]{figures/mcu_local_fsm.png}
-  \caption{MCU chạy finite-state machine cục bộ để điều khiển LED/đèn giao thông theo timing plan.}
-  \label{fig:mcu-fsm}
-\end{figure}
-
-Chi tiết quan trọng là \texttt{TaskTrafficFSM} không block vô hạn trên \texttt{planQueue}. Task chỉ kiểm tra queue không chặn; nếu không có plan mới, nó tiếp tục cập nhật trạng thái đèn. Nhờ vậy, bộ điều khiển không bị dừng chỉ vì host chưa gửi kế hoạch mới.
+\texttt{TaskTrafficFSM} không chờ \texttt{planQueue} bằng \texttt{portMAX\_DELAY}. Task chỉ kiểm tra queue với timeout bằng 0, rồi tiếp tục cập nhật thời gian trạng thái. Đây là chi tiết quan trọng: nếu không có kế hoạch mới, FSM vẫn chạy. Queue chỉ bổ sung kế hoạch khi có dữ liệu hợp lệ, không được quyền làm dừng điều khiển đèn.
 
 \subsection{Áp dụng kế hoạch tại biên an toàn}
 
-Một kế hoạch hợp lệ không được áp dụng ngay giữa chu kỳ. Nếu đang ở giữa pha xanh mà thay đổi trực tiếp thời gian còn lại, đèn có thể nhảy trạng thái khó dự đoán. Vì vậy firmware lưu kế hoạch mới thành \texttt{pendingPlan} và chỉ áp dụng khi FSM quay lại \texttt{STATE\_A\_GREEN}, tức là bắt đầu một chu kỳ mới.
+ACK không có nghĩa là đèn đổi ngay. ACK chỉ xác nhận bản tin đã được parse, validate và đưa vào queue kế hoạch. Khi FSM nhận kế hoạch, nó lưu vào \texttt{pendingPlan}. Kế hoạch này chỉ trở thành \texttt{activePlan} khi FSM quay về trạng thái \texttt{A\_GREEN}, tức bắt đầu một chu kỳ mới. Cơ chế này tránh trường hợp đang giữa pha xanh mà thời lượng bị thay đổi đột ngột.
 
-Ý nghĩa của ACK vì vậy cần được hiểu đúng. ACK chỉ có nghĩa là kế hoạch đã được parse, validate và đưa vào queue thành công. ACK không có nghĩa là đèn đã lập tức đổi sang kế hoạch mới.
+\placeholderfigure{figures/safe_plan_apply_timeline.png}{Timeline áp dụng kế hoạch an toàn: PLAN mới được lưu thành pending plan và chỉ chuyển thành active plan ở đầu chu kỳ.}{fig:placeholder-safe-apply}
 
-\subsection{Watchdog và phương án dự phòng}
+\subsection{Watchdog và trạng thái dự phòng}
 
-MCU lưu thời điểm nhận kế hoạch hợp lệ cuối cùng. Nếu host im lặng quá ngưỡng timeout đã cấu hình, bộ điều khiển chuyển sang trạng thái \texttt{HOST\_TIMEOUT} và dùng kế hoạch dự phòng:
+MCU lưu thời điểm nhận kế hoạch hợp lệ gần nhất. Nếu khoảng im lặng của host vượt ngưỡng 30 giây, FSM đặt \texttt{health=HOST\_TIMEOUT}, bỏ kế hoạch chờ cũ và chuyển sang kế hoạch mặc định. Đây là lựa chọn đúng cho điều khiển nhúng: dữ liệu AI quá cũ không nên tiếp tục được coi là tình trạng giao thông hiện tại.
 
-\begin{lstlisting}
-plan_id = 0
-green_a = 20
-green_b = 20
-yellow = 3
-all_red = 1
-\end{lstlisting}
+\begin{table}[H]
+\centering
+\caption{Chính sách an toàn khi host lỗi hoặc bản tin sai.}
+\label{tab:safety-policy}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{3.8cm}YY}
+\toprule
+Tình huống & Phản ứng firmware & Lý do \\
+\midrule
+Sai prefix lệnh & NACK \texttt{UNKNOWN\_COMMAND} & Không để lệnh lạ đi vào parser kế hoạch. \\
+Sai số trường & NACK \texttt{MALFORMED\_PLAN} & Tránh đọc thiếu hoặc lệch trường timing. \\
+Xanh ngoài miền & NACK tương ứng & Giữ thời gian xanh trong khoảng 10--45 s. \\
+Vàng/all-red sai miền & NACK tương ứng & Giữ khoảng chuyển pha cố định trong nguyên mẫu. \\
+Host timeout & Dùng default plan & Không tiếp tục tin vào dữ liệu đã cũ. \\
+Serial đang bận & Log telemetry có thể bỏ qua & Không để in log làm kẹt điều khiển. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
 
-Khác với kế hoạch bình thường, kế hoạch dự phòng được áp dụng ngay vì đây là điều kiện an toàn. Khi host gửi lại kế hoạch hợp lệ, trạng thái sức khỏe trở về \texttt{OK} và kế hoạch mới lại được áp dụng theo biên an toàn.
+\subsection{STATUS, DIAG và mutex Serial}
 
-\subsection{Bảo vệ Serial bằng mutex}
-
-Nhiều task có thể in ra Serial: parser gửi ACK/NACK, FSM in log, STATUS in telemetry, DIAG in chẩn đoán. Nếu không bảo vệ Serial, các dòng máy đọc được có thể bị xen kẽ, ví dụ ACK và STATUS trộn vào nhau. Firmware dùng mutex để đảm bảo một dòng protocol hoàn chỉnh được in như một thao tác nguyên tử \cite{freertos_mutexes}.
-
-Chính sách logging được chia theo mức quan trọng:
-
-\begin{itemize}
-  \item ACK/NACK là protocol-critical, cần in nguyên dòng với bounded wait.
-  \item STATUS/DIAG là telemetry định kỳ, có thể best-effort để không chặn điều khiển.
-  \item Log debug cho người đọc không được làm ảnh hưởng đến FSM.
-\end{itemize}
-
-\subsection{STATUS bằng task notification}
-
-Ở Phase 15.12, việc in STATUS được chuyển ra khỏi software timer callback. Timer callback chỉ gửi notification tới \texttt{TaskStatusReporter}; task này lấy snapshot trạng thái mới nhất rồi in dòng STATUS. Đây là một quyết định đúng trong hệ nhúng vì callback timer chạy trong timer service task, không nên làm công việc format chuỗi hoặc in Serial dài.
-
-Snapshot trạng thái gồm:
+STATUS là bản tin máy đọc được:
 
 \begin{lstlisting}
 STATUS,<plan_id>,<state>,<remaining_seconds>,<health>
@@ -156,4 +191,8 @@ Ví dụ:
 STATUS,17,A_GREEN,12,OK
 \end{lstlisting}
 
-Điểm còn cần cải thiện là DIAG hiện vẫn được in trực tiếp trong callback timer theo kiểu best-effort. Với phạm vi hiện tại, DIAG nhẹ và phục vụ chẩn đoán; nếu firmware mở rộng, có thể áp dụng cùng mẫu deferred processing như STATUS.
+Trong firmware, timer không trực tiếp in STATUS. Timer chỉ gửi notification tới \texttt{TaskStatusReporter}. Task này lấy snapshot trạng thái đã được FSM cập nhật, format dòng STATUS rồi in qua mutex Serial. Snapshot được bảo vệ bằng critical section ngắn để tránh đọc nửa cũ nửa mới trên ESP32 hai nhân. Thiết kế này tách rõ điều khiển và giám sát: FSM sở hữu trạng thái thật, reporter chỉ công bố trạng thái.
+
+\placeholderfigure{figures/status_notification_flow.png}{Luồng STATUS bằng task notification: software timer chỉ đánh thức task reporter, còn task reporter mới format và in STATUS.}{fig:placeholder-status}
+
+Serial mutex giải quyết một lỗi thực tế trong firmware đa task: nhiều task cùng in Serial có thể làm ACK, NACK, STATUS và DIAG xen vào nhau. Firmware xây dựng cả dòng trước, sau đó khóa mutex và in nguyên dòng. ACK/NACK dùng bounded wait vì là protocol-critical; telemetry như STATUS/DIAG có thể dùng best-effort để không cản trở FSM.
