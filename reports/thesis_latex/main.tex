@@ -23,8 +23,10 @@
 \usepackage{xcolor}
 \usepackage{ragged2e}
 \usepackage{listings}
+\usepackage{tikz}
 \usepackage{cite}
 \usepackage[hidelinks]{hyperref}
+\usetikzlibrary{arrows.meta,positioning}
 
 \graphicspath{{figures/}}
 
@@ -39,6 +41,8 @@
 \setlist[itemize]{topsep=0.25em,itemsep=0.15em,leftmargin=1.2cm}
 \setlist[enumerate]{topsep=0.25em,itemsep=0.15em,leftmargin=1.2cm}
 \newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcolumntype{B}[1]{>{\bfseries\RaggedRight\arraybackslash}p{#1}}
 
 \captionsetup{
   font=small,

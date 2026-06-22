@@ -2,14 +2,16 @@
 
 \subsection{Vị trí của AI trong hệ thống}
 
-AI trong hệ thống không trực tiếp điều khiển đèn. Vai trò của AI là chuyển ảnh giao thông thành dữ liệu có cấu trúc: phương tiện nào xuất hiện, ở hướng nào, thuộc lớp nào và tạo ra mật độ tương ứng ra sao. Dữ liệu này đi qua bộ lập kế hoạch để tạo thời gian xanh; ESP32 mới là nơi thực thi chu kỳ đèn. Vì vậy phần thị giác máy tính được trình bày sau phần nhúng, nhưng vẫn là nguồn dữ liệu quan trọng của hệ thống thích nghi.
+AI trong hệ thống không trực tiếp điều khiển đèn. Vai trò của AI là chuyển ảnh giao thông thành dữ liệu có cấu trúc: phương tiện nào xuất hiện, ở hướng nào, thuộc lớp nào và tạo ra mật độ tương ứng ra sao. Dữ liệu này đi qua các lớp chuyển đổi trung gian trước khi trở thành timing plan; ESP32 mới là nơi thực thi chu kỳ đèn. Cách tổ chức này làm giảm rủi ro khi detector dao động theo từng frame, vì mỗi tầng chỉ xuất ra một dạng dữ liệu có ý nghĩa điều khiển rõ ràng.
 
 \begin{figure}[H]
   \centering
   \safeincludegraphics[width=0.88\linewidth]{figures/atlc_five_stage_pipeline.png}
-  \caption{Pipeline nhiều tầng từ phát hiện phương tiện, ROI/counting, density, scheduler đến thực thi.}
+  \caption{Pipeline năm tầng của ATLC. Hình nhấn mạnh rằng kết quả nhận dạng phải đi qua ROI, density, scheduler và UART trước khi MCU thực thi FSM, thay vì cho AI điều khiển đèn trực tiếp.}
   \label{fig:five-stage}
 \end{figure}
+
+Vì vậy, lỗi ở một tầng không nên lan truyền không kiểm soát sang tầng sau. Ví dụ, YOLO chỉ tạo detection; ROI mới quyết định detection thuộc hướng nào; density mới chuyển count thành tín hiệu định lượng; scheduler mới tạo timing plan; còn MCU chỉ nhận kế hoạch đã được kiểm tra miền giá trị. Cách phân tầng này là lý do hệ thống có thể thay detector hoặc tinh chỉnh ROI mà không phải viết lại firmware.
 
 \subsection{Backend detector và chuẩn hóa output}
 
