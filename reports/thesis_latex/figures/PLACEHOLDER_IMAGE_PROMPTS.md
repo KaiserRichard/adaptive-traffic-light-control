@@ -2,12 +2,104 @@
 
 Save each generated image as a PNG with the exact filename shown here, then upload it into `reports/thesis_latex/figures/` or the Overleaf `figures/` folder. The LaTeX report will automatically replace the placeholder box when the file exists.
 
+## General Style Rules
+
+Use the same visual style for all system diagrams:
+
+- flat vector block diagram, clean engineering report style
+- light pastel background, soft colored blocks, dark thin arrows
+- large readable English text, at least 28-34 pt equivalent in a 16:9 image
+- no Vietnamese text
+- no tiny bullet text; use short phrases only
+- no hand-drawn sketch effect
+- no decorative blobs, stickers, shadows, or cartoon elements
+- keep generous spacing between blocks
+- export as a sharp PNG, 16:9 landscape, at least 2400 x 1350 px
+
+## atlc_block_diagram.png
+
+Prompt:
+
+```text
+Create a clean 16:9 flat vector block diagram for a university engineering report about an Adaptive Traffic Light Control (ATLC) system. Use a consistent pastel technical diagram style: light mint background, soft colored rectangular blocks, dark thin arrows, no hand-drawn effect, no decorative stickers, no Vietnamese text.
+
+Make all text large and readable, at least 28-34 pt equivalent. Avoid tiny bullet lists. Use short English labels only.
+
+Diagram title: "ATLC System Block Diagram"
+
+Show the system as a true block diagram with five main left-to-right blocks:
+1. "Camera / Video Input"
+2. "Edge Host (PC / Raspberry Pi)"
+3. "UART Link"
+4. "MCU Controller (ESP32)"
+5. "Traffic Light Output"
+
+Inside the Edge Host block, include four smaller internal sub-blocks connected top-to-bottom:
+"YOLO Vehicle Detection" -> "ROI & Direction Counting" -> "PCE Density Estimation" -> "Signal Scheduler"
+
+Inside the MCU Controller block, include three smaller internal sub-blocks:
+"PLAN Validation" -> "Local FSM" -> "GPIO Driver"
+
+Show a small monitoring/logging block connected to the Edge Host labeled "Dashboard & Runtime Logs".
+Show an arrow from the Scheduler to UART labeled "PLAN".
+Show a return arrow from MCU to Host labeled "ACK / STATUS".
+Show an arrow from MCU GPIO Driver to Traffic Light Output.
+
+At the bottom, add one large readable note in English:
+"AI estimates traffic demand; the MCU performs real-time signal execution."
+
+The diagram should look similar to a textbook computer organization block diagram: clean boxes, clear arrows, large readable labels, and consistent colors.
+```
+
+## host_mcu_split.png
+
+Prompt:
+
+```text
+Create a clean 16:9 flat vector architecture diagram for a university embedded systems report. The image must be entirely in English. Use the same visual style as the ATLC block diagram: light pastel background, soft colored blocks, dark thin arrows, large readable text, no hand-drawn effect, no Vietnamese text, no decorative icons.
+
+Make all text large and readable, at least 28-34 pt equivalent. Use short labels, not long bullet paragraphs.
+
+Diagram title: "Host-MCU Responsibility Split"
+
+Use a two-column layout:
+
+Left column title: "Host Layer (PC / Raspberry Pi)"
+Inside it, show stacked sub-blocks:
+"Video Capture"
+"YOLO Detection"
+"Class Normalization"
+"ROI Assignment"
+"PCE Density + EMA"
+"Signal Timing Plan"
+"UART Sender"
+
+Right column title: "MCU Layer (ESP32)"
+Inside it, show stacked sub-blocks:
+"UART Receiver"
+"PLAN Format Check"
+"Timing Range Validation"
+"ACK / NACK Response"
+"Local Traffic FSM"
+"GPIO Output"
+"Watchdog Fallback"
+
+Between columns, show two thick arrows:
+Host to MCU: "PLAN over UART"
+MCU to Host: "ACK / STATUS over UART"
+
+At the bottom of the left column, add a small label: "High-level perception and planning".
+At the bottom of the right column, add a small label: "Low-level real-time execution".
+
+Use blue tones for the Host column and orange tones for the MCU column. Keep spacing generous and text very legible.
+```
+
 ## bounding_box.png
 
 Prompt:
 
 ```text
-Create a clean technical computer vision illustration for an adaptive traffic light control report. Show a real-looking urban traffic camera frame with cars, motorbikes, a bus, and a truck. Overlay several YOLO-style bounding boxes with class labels and confidence scores such as "car 0.91", "motorbike 0.86", "bus 0.88". Use professional colors, thin rectangular boxes, readable labels, and no decorative elements. The image should look like an annotated detection output, not a presentation slide.
+Create a clean technical computer vision illustration for an adaptive traffic light control report. Show a real-looking urban traffic camera frame with cars, motorbikes, a bus, and a truck. Overlay several YOLO-style bounding boxes with large readable class labels and confidence scores such as "car 0.91", "motorbike 0.86", "bus 0.88". Use professional colors, thin rectangular boxes, readable labels, and no decorative elements. The image should look like an annotated detection output, not a presentation slide. Make label text large enough to read in a printed A4 report.
 ```
 
 ## roi_example.png
@@ -15,7 +107,7 @@ Create a clean technical computer vision illustration for an adaptive traffic li
 Prompt:
 
 ```text
-Create a technical traffic-camera illustration showing a road intersection or multi-lane road from an elevated fixed camera. Draw two semi-transparent polygon regions of interest labeled "Direction A ROI" and "Direction B ROI". Include a few vehicles inside and outside the polygons. The style should be realistic and suitable for a university engineering report. Use thin green and blue polygon outlines, clear labels, and no cartoon style.
+Create a technical traffic-camera illustration showing a road intersection or multi-lane road from an elevated fixed camera. Draw two semi-transparent polygon regions of interest labeled "Direction A ROI" and "Direction B ROI". Include a few vehicles inside and outside the polygons. The style should be realistic and suitable for a university engineering report. Use thin green and blue polygon outlines, large readable labels, and no cartoon style. Make the ROI labels large enough to read in a printed A4 report.
 ```
 
 ## esp32_gpio_traffic_light_mapping.png
