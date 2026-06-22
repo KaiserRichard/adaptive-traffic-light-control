@@ -1,3 +1,10 @@
+\section*{Tóm tắt}
+\addcontentsline{toc}{section}{Tóm tắt}
+
+\projectname{} là nguyên mẫu hệ thống đèn giao thông thích nghi, được xây dựng để hỗ trợ giám sát và đề xuất thời gian đèn dựa trên tình trạng giao thông quan sát từ video. Hệ thống không đặt AI vào vai trò bật tắt đèn trực tiếp. Thay vào đó, tầng host dùng thị giác máy tính để phát hiện phương tiện, chia phương tiện theo hướng đường, ước lượng mật độ và lập kế hoạch thời gian xanh; tầng ESP32 nhận kế hoạch qua UART, kiểm tra miền giá trị và thực thi chu kỳ đèn bằng máy trạng thái hữu hạn cục bộ.
+
+Ý tưởng chính của đề tài là giảm sự phụ thuộc vào chu kỳ đèn cố định trong các kịch bản mà lưu lượng hai hướng thay đổi rõ rệt. Khi một hướng đông xe hơn hướng còn lại, hệ thống có thể tạo khuyến nghị thời gian xanh hợp lý hơn cho hướng đó, đồng thời vẫn giữ các ràng buộc an toàn như vàng, all-red, watchdog và kế hoạch dự phòng. Vì vậy, đóng góp của báo cáo nằm ở vòng lặp hệ thống hoàn chỉnh: cảm nhận giao thông, chuyển đổi thành mật độ, lập kế hoạch, truyền xuống MCU, thực thi ổn định và ghi bằng chứng kiểm thử.
+
 \section*{Lời mở đầu}
 \addcontentsline{toc}{section}{Lời mở đầu}
 
@@ -8,4 +15,3 @@ Báo cáo này trình bày quá trình xây dựng mô hình thử nghiệm \pro
 Vì đây là báo cáo môn Vi xử lý, trọng tâm được đặt trước hết vào phần điều khiển nhúng: phân chia trách nhiệm giữa host và MCU, giao thức UART, hàng đợi FreeRTOS, task, mutex, task notification, watchdog và máy trạng thái đèn giao thông. Phần trí tuệ nhân tạo được trình bày sau với vai trò tạo dữ liệu điều khiển mức cao. Cách phân bổ này phản ánh đúng bản chất của dự án: đây là một hệ thống nhúng có AI hỗ trợ, không phải chỉ là một bài toán nhận diện đối tượng.
 
 Báo cáo không khẳng định các mức giảm ùn tắc nếu chưa có thí nghiệm đối chứng đầy đủ. Các kết quả được trình bày chủ yếu là kết quả triển khai phần mềm, kiểm thử pipeline, kiểm thử runtime, benchmark FPS và bằng chứng cho việc bộ điều khiển không đổi đèn tùy tiện theo từng khung hình.
-

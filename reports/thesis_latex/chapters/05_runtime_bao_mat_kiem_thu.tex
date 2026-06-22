@@ -57,17 +57,17 @@ Gửi lặp không cần thiết & Kế hoạch không đổi đáng kể & Host
 
 Bản tin PLAN có ảnh hưởng trực tiếp tới thời gian đèn xanh. Dù nguyên mẫu dùng mô hình LED và UART cục bộ, báo cáo vẫn cần xét các rủi ro nếu hệ thống được mở rộng ra triển khai thật. Các tài sản cần bảo vệ gồm: nội dung kế hoạch, thứ tự kế hoạch, tính mới của kế hoạch, phản hồi ACK/NACK và log thí nghiệm.
 
-\begin{longtable}{>{\bfseries}p{2.6cm}p{4.3cm}p{6.0cm}}
+\begin{table}[H]
+\centering
 \caption{Mô hình đe dọa bảo mật runtime.}
-\label{tab:security-threats}\\
+\label{tab:security-threats}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{R{2.9cm}R{3.6cm}Y}
 \toprule
-Đe dọa & Tác động & Cơ chế phòng vệ trong thiết kế thí nghiệm \\
+\textbf{Đe dọa} & \textbf{Tác động} & \textbf{Cơ chế phòng vệ trong thiết kế thí nghiệm} \\
 \midrule
-\endfirsthead
-\toprule
-Đe dọa & Tác động & Cơ chế phòng vệ trong thiết kế thí nghiệm \\
-\midrule
-\endhead
 Sửa nội dung PLAN & Thay đổi thời gian xanh, gây lệch điều khiển & HMAC-SHA256 trên payload chuẩn hóa. \\
 Giả mạo lệnh & Host giả gửi kế hoạch không được sinh từ runtime & Khóa bí mật dùng chung cho MAC; bản tin thiếu MAC bị từ chối. \\
 Replay & Phát lại kế hoạch cũ nhưng MAC vẫn hợp lệ & Kiểm tra \texttt{plan\_id}, \texttt{timestamp} và \texttt{nonce}. \\
@@ -75,7 +75,9 @@ Trễ dữ liệu & Kế hoạch phản ánh tình trạng giao thông quá cũ 
 Sửa log sau thí nghiệm & Làm sai bằng chứng đánh giá & Audit log dạng chuỗi băm SHA-256. \\
 Trộn dòng Serial & ACK/STATUS bị lẫn, host đọc sai & Mutex Serial và format một dòng trước khi in. \\
 \bottomrule
-\end{longtable}
+\end{tabularx}
+\normalsize
+\end{table}
 
 \subsection{Xác thực PLAN bằng HMAC-SHA256}
 
@@ -111,17 +113,17 @@ Nếu một dòng log ở giữa bị sửa, \texttt{current\_hash} của dòng 
 
 \subsection{Kịch bản đánh giá bảo mật}
 
-\begin{longtable}{>{\bfseries}p{3.2cm}p{4.2cm}p{5.2cm}}
+\begin{table}[H]
+\centering
 \caption{Kịch bản đánh giá lớp bảo mật thí nghiệm.}
-\label{tab:security-tests}\\
+\label{tab:security-tests}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{R{3.1cm}R{4.0cm}Y}
 \toprule
-Kịch bản & Dữ liệu kiểm thử & Kết quả mong đợi \\
+\textbf{Kịch bản} & \textbf{Dữ liệu kiểm thử} & \textbf{Kết quả mong đợi} \\
 \midrule
-\endfirsthead
-\toprule
-Kịch bản & Dữ liệu kiểm thử & Kết quả mong đợi \\
-\midrule
-\endhead
 PLAN hợp lệ & Payload đủ trường, MAC đúng, timestamp mới, nonce mới & \texttt{accepted=True}, lý do \texttt{OK}. \\
 Sửa thời gian xanh & Thay \texttt{green\_a} sau khi tính MAC & Từ chối với \texttt{INVALID\_MAC}. \\
 Phát lại plan cũ & Gửi lại \texttt{plan\_id} đã được chấp nhận & Từ chối với \texttt{REPLAY\_OR\_OLD\_PLAN\_ID}. \\
@@ -129,7 +131,9 @@ Nonce lặp & Dùng lại nonce đã ghi nhận & Từ chối với \texttt{REPL
 Timestamp quá cũ & Đưa timestamp ngoài cửa sổ cho phép & Từ chối với \texttt{TIMESTAMP\_OUT\_OF\_WINDOW}. \\
 Sửa audit log & Chỉnh payload trong một dòng JSONL & Hàm verify báo chuỗi băm bị phá vỡ. \\
 \bottomrule
-\end{longtable}
+\end{tabularx}
+\normalsize
+\end{table}
 
 \subsection{Giới hạn triển khai bảo mật}
 

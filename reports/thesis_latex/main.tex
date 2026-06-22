@@ -22,6 +22,7 @@
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage{ragged2e}
+\usepackage{xurl}
 \usepackage{listings}
 \usepackage{tikz}
 \usepackage{cite}
@@ -41,6 +42,8 @@
 \setlist[itemize]{topsep=0.25em,itemsep=0.15em,leftmargin=1.2cm}
 \setlist[enumerate]{topsep=0.25em,itemsep=0.15em,leftmargin=1.2cm}
 \newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\newcolumntype{R}[1]{>{\RaggedRight\arraybackslash}p{#1}}
 \newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
 \newcolumntype{B}[1]{>{\bfseries\RaggedRight\arraybackslash}p{#1}}
 
