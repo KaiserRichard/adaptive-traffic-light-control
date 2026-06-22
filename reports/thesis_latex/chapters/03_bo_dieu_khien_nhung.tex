@@ -28,7 +28,59 @@ B xanh & 13 & Cho phép hướng B đi \\
 
 Giá trị mặc định của kế hoạch an toàn là \(G_A=20\) s, \(G_B=20\) s, vàng 3 s và all-red 1 s. Miền kiểm tra trong firmware giới hạn xanh 10--45 s, vàng cố định 3 s và all-red cố định 1 s. Các giới hạn này làm cho MCU không nhận kế hoạch quá ngắn hoặc quá dài dù host gửi sai.
 
-\placeholderfigure{figures/esp32_gpio_traffic_light_mapping.png}{Sơ đồ đấu nối ESP32 với sáu đèn LED mô phỏng hai hướng giao thông.}{fig:placeholder-gpio}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[
+  board/.style={
+    draw,
+    rounded corners=4pt,
+    minimum width=3.0cm,
+    minimum height=5.0cm,
+    align=center,
+    fill=blue!5,
+    font=\small
+  },
+  led/.style={
+    circle,
+    draw,
+    minimum size=0.42cm,
+    inner sep=0pt
+  },
+  wire/.style={-{Latex[length=2mm]}, thick},
+  label/.style={font=\scriptsize, align=center}
+]
+  \node[board] (esp) at (0,0) {\textbf{ESP32}\\FreeRTOS\\GPIO output};
+
+  \node[label] (aLabel) at (-4.7,2.35) {\textbf{Hướng A}};
+  \node[led, fill=red!70]    (ar) at (-4.6,1.45) {};
+  \node[led, fill=yellow!75] (ay) at (-4.6,0.45) {};
+  \node[led, fill=green!65]  (ag) at (-4.6,-0.55) {};
+  \node[label, anchor=east] at (-5.05,1.45) {A đỏ\\GPIO 25};
+  \node[label, anchor=east] at (-5.05,0.45) {A vàng\\GPIO 26};
+  \node[label, anchor=east] at (-5.05,-0.55) {A xanh\\GPIO 27};
+
+  \node[label] (bLabel) at (4.7,2.35) {\textbf{Hướng B}};
+  \node[led, fill=red!70]    (br) at (4.6,1.45) {};
+  \node[led, fill=yellow!75] (by) at (4.6,0.45) {};
+  \node[led, fill=green!65]  (bg) at (4.6,-0.55) {};
+  \node[label, anchor=west] at (5.05,1.45) {B đỏ\\GPIO 14};
+  \node[label, anchor=west] at (5.05,0.45) {B vàng\\GPIO 12};
+  \node[label, anchor=west] at (5.05,-0.55) {B xanh\\GPIO 13};
+
+  \draw[wire] (esp.west) ++(0,1.15) -- (ar);
+  \draw[wire] (esp.west) ++(0,0.15) -- (ay);
+  \draw[wire] (esp.west) ++(0,-0.85) -- (ag);
+  \draw[wire] (esp.east) ++(0,1.15) -- (br);
+  \draw[wire] (esp.east) ++(0,0.15) -- (by);
+  \draw[wire] (esp.east) ++(0,-0.85) -- (bg);
+
+  \node[label, text width=10.5cm] at (0,-3.0) {
+    Firmware chỉ điều khiển các chân GPIO theo trạng thái FSM hợp lệ; mapping chân được cấu hình trong \texttt{app\_config.h}.
+  };
+\end{tikzpicture}
+\caption{Sơ đồ ánh xạ ESP32 GPIO tới sáu LED mô phỏng hai hướng giao thông.}
+\label{fig:gpio-mapping}
+\end{figure}
 
 \subsection{Giao thức UART mức ứng dụng}
 
