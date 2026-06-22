@@ -31,51 +31,63 @@ Giá trị mặc định của kế hoạch an toàn là \(G_A=20\) s, \(G_B=20\
 \begin{figure}[H]
 \centering
 \begin{tikzpicture}[
-  board/.style={
+  controller/.style={
     draw,
     rounded corners=4pt,
-    minimum width=3.0cm,
-    minimum height=5.0cm,
+    minimum width=3.2cm,
+    minimum height=3.7cm,
     align=center,
-    fill=blue!5,
+    fill=blue!6,
+    draw=blue!55!black,
     font=\small
+  },
+  lane/.style={
+    draw,
+    rounded corners=3pt,
+    fill=gray!4,
+    minimum width=3.45cm,
+    minimum height=0.62cm,
+    text width=3.1cm,
+    align=left,
+    inner sep=4pt,
+    font=\footnotesize
   },
   led/.style={
     circle,
     draw,
-    minimum size=0.42cm,
+    minimum size=0.30cm,
     inner sep=0pt
   },
-  wire/.style={-{Latex[length=2mm]}, thick},
-  label/.style={font=\scriptsize, align=center}
+  wire/.style={-{Latex[length=2mm]}, thick, draw=gray!70!black},
+  group/.style={font=\bfseries\small}
 ]
-  \node[board] (esp) at (0,0) {\textbf{ESP32}\\FreeRTOS\\GPIO output};
+  \node[controller] (esp) at (0,0) {\textbf{ESP32}\\[0.25em]FreeRTOS controller\\[0.25em]\texttt{gpio\_driver}};
 
-  \node[label] (aLabel) at (-4.7,2.35) {\textbf{Hướng A}};
-  \node[led, fill=red!70]    (ar) at (-4.6,1.45) {};
-  \node[led, fill=yellow!75] (ay) at (-4.6,0.45) {};
-  \node[led, fill=green!65]  (ag) at (-4.6,-0.55) {};
-  \node[label, anchor=east] at (-5.05,1.45) {A đỏ\\GPIO 25};
-  \node[label, anchor=east] at (-5.05,0.45) {A vàng\\GPIO 26};
-  \node[label, anchor=east] at (-5.05,-0.55) {A xanh\\GPIO 27};
+  \node[group] at (-4.4,2.05) {Hướng A};
+  \node[lane] (ar) at (-4.35,1.20) {\hspace{0.42cm}\textbf{A đỏ}\hfill GPIO 25};
+  \node[lane] (ay) at (-4.35,0.25) {\hspace{0.42cm}\textbf{A vàng}\hfill GPIO 26};
+  \node[lane] (ag) at (-4.35,-0.70) {\hspace{0.42cm}\textbf{A xanh}\hfill GPIO 27};
+  \node[led, fill=red!70] at (-5.78,1.20) {};
+  \node[led, fill=yellow!75] at (-5.78,0.25) {};
+  \node[led, fill=green!65] at (-5.78,-0.70) {};
 
-  \node[label] (bLabel) at (4.7,2.35) {\textbf{Hướng B}};
-  \node[led, fill=red!70]    (br) at (4.6,1.45) {};
-  \node[led, fill=yellow!75] (by) at (4.6,0.45) {};
-  \node[led, fill=green!65]  (bg) at (4.6,-0.55) {};
-  \node[label, anchor=west] at (5.05,1.45) {B đỏ\\GPIO 14};
-  \node[label, anchor=west] at (5.05,0.45) {B vàng\\GPIO 12};
-  \node[label, anchor=west] at (5.05,-0.55) {B xanh\\GPIO 13};
+  \node[group] at (4.4,2.05) {Hướng B};
+  \node[lane] (br) at (4.35,1.20) {\hspace{0.42cm}\textbf{B đỏ}\hfill GPIO 14};
+  \node[lane] (by) at (4.35,0.25) {\hspace{0.42cm}\textbf{B vàng}\hfill GPIO 12};
+  \node[lane] (bg) at (4.35,-0.70) {\hspace{0.42cm}\textbf{B xanh}\hfill GPIO 13};
+  \node[led, fill=red!70] at (2.92,1.20) {};
+  \node[led, fill=yellow!75] at (2.92,0.25) {};
+  \node[led, fill=green!65] at (2.92,-0.70) {};
 
-  \draw[wire] (esp.west) ++(0,1.15) -- (ar);
-  \draw[wire] (esp.west) ++(0,0.15) -- (ay);
-  \draw[wire] (esp.west) ++(0,-0.85) -- (ag);
-  \draw[wire] (esp.east) ++(0,1.15) -- (br);
-  \draw[wire] (esp.east) ++(0,0.15) -- (by);
-  \draw[wire] (esp.east) ++(0,-0.85) -- (bg);
+  \draw[wire] (esp.west) ++(0,0.92) -- (ar.east);
+  \draw[wire] (esp.west) ++(0,0.00) -- (ay.east);
+  \draw[wire] (esp.west) ++(0,-0.92) -- (ag.east);
+  \draw[wire] (esp.east) ++(0,0.92) -- (br.west);
+  \draw[wire] (esp.east) ++(0,0.00) -- (by.west);
+  \draw[wire] (esp.east) ++(0,-0.92) -- (bg.west);
 
-  \node[label, text width=10.5cm] at (0,-3.0) {
-    Firmware chỉ điều khiển các chân GPIO theo trạng thái FSM hợp lệ; mapping chân được cấu hình trong \texttt{app\_config.h}.
+  \node[align=center, font=\footnotesize, text width=10.8cm] at (0,-2.55) {
+    FSM chỉ chọn một tổ hợp GPIO hợp lệ tại mỗi trạng thái; thay đổi chân nằm trong \texttt{app\_config.h}, không nằm trong logic chuyển pha.
   };
 \end{tikzpicture}
 \caption{Sơ đồ ánh xạ ESP32 GPIO tới sáu LED mô phỏng hai hướng giao thông.}
