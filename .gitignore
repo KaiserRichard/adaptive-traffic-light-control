@@ -235,6 +235,7 @@ pc_app/models/local/*.pt
 pc_app/models/local/*.onnx
 pc_app/models/local/*.ncnn
 pc_app/models/local/*_ncnn_model/
+deployment/onnx/*.onnx
 
 # Benchmark outputs
 outputs/benchmarks/**/*.mp4
