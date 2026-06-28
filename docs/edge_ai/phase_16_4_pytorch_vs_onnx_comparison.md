@@ -59,7 +59,7 @@ Smoke test:
   --pt-model yolo_research/outputs/runs/atlc_yolo26n_custom/weights/best.pt \
   --onnx-model deployment/onnx/atlc_yolo26n_custom.onnx \
   --image yolo_research/datasets/atlc_2000/images/test/09150440_jpg.rf.DvAoBPo7uxkzXD4hgu8H.jpg \
-  --output /tmp/atlc_phase16_4_comparison.jpg \
+  --output /tmp/atlc_phase16_4_comparison_fixed.jpg \
   --imgsz 640 \
   --conf 0.25 \
   --providers CPUExecutionProvider \

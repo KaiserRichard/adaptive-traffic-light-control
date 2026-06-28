@@ -4,13 +4,6 @@ Record PyTorch vs ONNX Runtime image comparison results here after running `depl
 
 ## Fix Summary
 
-Initial Phase 16.4 result:
-
-```text
-PyTorch detections: 7
-ONNX detections:    2
-```
-
 Visual inspection showed that ONNX missed several obvious motorbikes. The root cause was preprocessing mismatch:
 
 ```text
@@ -30,7 +23,7 @@ The ONNX model output contract remains unchanged:
 [1, 300, 6] = x1, y1, x2, y2, confidence, class_id
 ```
 
-## Result Table
+## Before Letterbox Fix
 
 | Field | Value |
 | --- | --- |
@@ -39,8 +32,26 @@ The ONNX model output contract remains unchanged:
 | ONNX model | `deployment/onnx/atlc_yolo26n_custom.onnx` |
 | Provider | `CPUExecutionProvider` |
 | Runs | `5` |
-| PyTorch average time | `0.1303 s` |
-| ONNX average time | `0.0634 s` |
+| Confidence threshold | `0.25` |
+| PyTorch average time | `0.1048 s` |
+| ONNX average time | `0.0403 s` |
+| PyTorch detections | `7` |
+| ONNX detections | `2` |
+| Result | Not accepted |
+| Notes | Direct resize caused visible mismatch. ONNX missed several obvious motorbikes. |
+
+## After Letterbox Fix
+
+| Field | Value |
+| --- | --- |
+| Input image | `yolo_research/datasets/atlc_2000/images/test/09150440_jpg.rf.DvAoBPo7uxkzXD4hgu8H.jpg` |
+| PyTorch model | `yolo_research/outputs/runs/atlc_yolo26n_custom/weights/best.pt` |
+| ONNX model | `deployment/onnx/atlc_yolo26n_custom.onnx` |
+| Provider | `CPUExecutionProvider` |
+| Runs | `5` |
+| Confidence threshold | `0.25` |
+| PyTorch average time | `0.2153 s` |
+| ONNX average time | `0.0671 s` |
 | PyTorch detections | `7` |
 | ONNX detections | `6` |
 | Result | Improved; accepted for Phase 16.4 with visual review note |
@@ -51,8 +62,8 @@ The ONNX model output contract remains unchanged:
 | Field | Value |
 | --- | --- |
 | Confidence threshold | `0.15` |
-| PyTorch average time | `0.0910 s` |
-| ONNX average time | `0.0422 s` |
+| PyTorch average time | `0.0907 s` |
+| ONNX average time | `0.0462 s` |
 | PyTorch detections | `7` |
 | ONNX detections | `7` |
 | Result | PASS |

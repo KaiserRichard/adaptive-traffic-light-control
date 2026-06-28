@@ -38,8 +38,8 @@ from infer_onnx_image import (
     create_session,
     draw_detections,
     filter_detections,
+    letterbox_image,
     parse_providers,
-    preprocess_image,
     run_inference,
     validate_model_io,
 )
@@ -178,9 +178,9 @@ def process_video(
         if not ok:
             break
 
-        input_tensor = preprocess_image(frame_bgr, imgsz)
+        input_tensor, ratio, pad_x, pad_y = letterbox_image(frame_bgr, imgsz)
         output = run_inference(session, input_name, input_tensor)
-        detections = filter_detections(output, conf_threshold, frame_bgr.shape[:2], imgsz)
+        detections = filter_detections(output, conf_threshold, frame_bgr.shape[:2], ratio, pad_x, pad_y)
         annotated = draw_detections(frame_bgr, detections)
         writer.write(annotated)
         frames_processed += 1
@@ -219,7 +219,7 @@ def main() -> None:
         writer = create_video_writer(output_path, width, height, input_fps)
 
         session = create_session(model_path, providers)
-        first_input_tensor = preprocess_image(__read_first_frame_for_validation(capture), args.imgsz)
+        first_input_tensor, _, _, _ = letterbox_image(__read_first_frame_for_validation(capture), args.imgsz)
         input_name, _ = validate_model_io(session, first_input_tensor)
         capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
 

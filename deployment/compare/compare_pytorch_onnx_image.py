@@ -44,9 +44,9 @@ from infer_onnx_image import (  # noqa: E402
     create_session,
     draw_detections,
     filter_detections,
+    letterbox_image,
     load_image,
     parse_providers,
-    preprocess_image,
     run_inference,
     validate_model_io,
 )
@@ -211,9 +211,9 @@ def run_onnx_comparison(
 
     for run_index in range(runs):
         started_at = time.perf_counter()
-        input_tensor = preprocess_image(image_bgr, imgsz)
+        input_tensor, ratio, pad_x, pad_y = letterbox_image(image_bgr, imgsz)
         output = run_inference(session, input_name, input_tensor)
-        detections_for_run = filter_detections(output, conf, image_bgr.shape[:2], imgsz)
+        detections_for_run = filter_detections(output, conf, image_bgr.shape[:2], ratio, pad_x, pad_y)
         total_time += time.perf_counter() - started_at
 
         if run_index == runs - 1:
@@ -335,7 +335,7 @@ def main() -> None:
 
     pytorch_model = YOLO(str(pt_model_path))
     onnx_session = create_session(onnx_model_path, providers)
-    input_tensor = preprocess_image(image_bgr, args.imgsz)
+    input_tensor, _, _, _ = letterbox_image(image_bgr, args.imgsz)
     input_name, _ = validate_model_io(onnx_session, input_tensor)
 
     pytorch_detections, pytorch_avg = run_pytorch_comparison(

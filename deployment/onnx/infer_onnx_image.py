@@ -266,7 +266,14 @@ def run_inference(session: ort.InferenceSession, input_name: str, input_tensor: 
     return output
 
 
-def scale_box_to_original(box: np.ndarray, original_width: int, original_height: int, imgsz: int) -> tuple[int, int, int, int]:
+def scale_box_to_original(
+    box: np.ndarray,
+    original_width: int,
+    original_height: int,
+    ratio: float,
+    pad_x: int,
+    pad_y: int,
+) -> tuple[int, int, int, int]:
     """
     Restore one letterboxed detection box back to the source image.
 
@@ -277,7 +284,6 @@ def scale_box_to_original(box: np.ndarray, original_width: int, original_height:
         must remove the padding before dividing by the resize ratio.
     """
 
-    ratio, pad_x, pad_y, _, _ = letterbox_geometry(original_width, original_height, imgsz)
     x1 = int(round((float(box[0]) - pad_x) / ratio))
     y1 = int(round((float(box[1]) - pad_y) / ratio))
     x2 = int(round((float(box[2]) - pad_x) / ratio))
@@ -290,7 +296,14 @@ def scale_box_to_original(box: np.ndarray, original_width: int, original_height:
     return x1, y1, x2, y2
 
 
-def filter_detections(output: np.ndarray, conf_threshold: float, original_shape: tuple[int, int], imgsz: int) -> list[dict]:
+def filter_detections(
+    output: np.ndarray,
+    conf_threshold: float,
+    original_shape: tuple[int, int],
+    ratio: float,
+    pad_x: int,
+    pad_y: int,
+) -> list[dict]:
     """
     Convert the verified [1, 300, 6] output tensor into drawable detections.
 
@@ -301,8 +314,9 @@ def filter_detections(output: np.ndarray, conf_threshold: float, original_shape:
             x1, y1, x2, y2, confidence, class_id
 
         Because the model already returns decoded detections, this function
-        only filters by confidence, scales boxes to the original image, and
-        rejects invalid boxes. It does not implement a generic YOLO head decoder.
+        only filters by confidence, removes letterbox padding, scales boxes to
+        the original image, and rejects invalid boxes. It does not implement a
+        generic YOLO head decoder.
     """
 
     original_height, original_width = original_shape
@@ -316,7 +330,14 @@ def filter_detections(output: np.ndarray, conf_threshold: float, original_shape:
         if confidence < conf_threshold:
             continue
 
-        x1, y1, x2, y2 = scale_box_to_original(detection[:4], original_width, original_height, imgsz)
+        x1, y1, x2, y2 = scale_box_to_original(
+            detection[:4],
+            original_width,
+            original_height,
+            ratio,
+            pad_x,
+            pad_y,
+        )
         if x2 <= x1 or y2 <= y1:
             continue
 
@@ -426,11 +447,11 @@ def main() -> None:
     providers = parse_providers(args.providers)
 
     image_bgr = load_image(image_path)
-    input_tensor = preprocess_image(image_bgr, args.imgsz)
+    input_tensor, ratio, pad_x, pad_y = letterbox_image(image_bgr, args.imgsz)
     session = create_session(model_path, providers)
     input_name, _ = validate_model_io(session, input_tensor)
     output = run_inference(session, input_name, input_tensor)
-    detections = filter_detections(output, args.conf, image_bgr.shape[:2], args.imgsz)
+    detections = filter_detections(output, args.conf, image_bgr.shape[:2], ratio, pad_x, pad_y)
     annotated = draw_detections(image_bgr, detections)
     save_image(output_path, annotated)
 
