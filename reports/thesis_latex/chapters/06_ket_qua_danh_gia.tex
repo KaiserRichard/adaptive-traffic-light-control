@@ -1,0 +1,147 @@
+\section{Kết quả triển khai và đánh giá}
+
+\subsection{Phạm vi đánh giá}
+
+Đánh giá trong báo cáo tập trung vào ba câu hỏi: firmware ESP32 có giữ được cấu trúc điều khiển nhúng đúng hay không; pipeline host có tạo được kế hoạch thời gian từ video hay không; và dữ liệu runtime có đủ để kiểm tra lại hành vi hệ thống hay không. Các kết quả dưới đây là kết quả nguyên mẫu phòng thí nghiệm, không phải kết luận cuối về mức giảm ùn tắc ngoài thực địa.
+
+\subsection{Kết quả phần nhúng}
+
+Kết quả phần nhúng được đánh giá theo các thuộc tính điều khiển thay vì liệt kê log console. Bảng \ref{tab:embedded-results} cho thấy firmware đã đạt được các yêu cầu chính của một bộ điều khiển ESP32 có FreeRTOS.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả triển khai phần nhúng.}
+\label{tab:embedded-results}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{\linewidth}{R{3.0cm}Y Y}
+\toprule
+\textbf{Thuộc tính} & \textbf{Cách triển khai} & \textbf{Ý nghĩa kỹ thuật} \\
+\midrule
+Tách ngữ cảnh UART & Callback chỉ notify; \texttt{TaskUARTReceive} đọc byte và tạo \texttt{RawMessage}. & Callback ngắn, tránh xử lý logic dài trong ngữ cảnh sự kiện. \\
+Tách parse và điều khiển & \texttt{rawMessageQueue} nối receiver với parser; \texttt{planQueue} nối parser với FSM. & Dữ liệu thô không đi thẳng vào FSM. \\
+Kiểm tra miền giá trị & Parser kiểm tra \texttt{plan\_id}, xanh, vàng và all-red. & Bản tin sai không được dùng để điều khiển GPIO. \\
+FSM cục bộ & Sáu trạng thái đèn chạy theo tick 50 ms. & Đèn vẫn chạy khi không có PLAN mới. \\
+Áp dụng an toàn & Kế hoạch mới chỉ áp dụng ở đầu chu kỳ. & Tránh đổi thời lượng đèn giữa pha. \\
+Watchdog host & Timeout 30 s chuyển sang default plan. & Dữ liệu AI quá cũ không tiếp tục chi phối đèn. \\
+STATUS định kỳ & Timer notify task reporter, task in STATUS. & Giám sát không làm nặng timer callback. \\
+Serial mutex & In nguyên dòng qua mutex. & ACK/NACK/STATUS không bị trộn dòng. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+Kết quả này cho thấy firmware không còn là một vòng lặp Arduino đơn giản. Nó đã có phân tách trách nhiệm giữa driver sự kiện, task nhận dữ liệu, task parser, task điều khiển, dịch vụ logging và dịch vụ trạng thái. Đây là nền tảng đúng để mở rộng sang phần cứng thật hoặc tích hợp bảo mật UART sau này.
+
+\subsection{Kết quả pipeline host}
+
+Pipeline host đã thực hiện được chuỗi xử lý từ frame đầu vào tới kế hoạch thời gian: detector, ROI, đếm theo lớp, mật độ PCE, EMA, scheduler, runtime controller và UART sender. Hệ thống cũng có cơ chế giảm tải suy luận bằng cách chạy detector theo chu kỳ frame, giúp tách tốc độ đọc video khỏi tốc độ inference.
+
+\begin{table}[H]
+\centering
+\caption{Tóm tắt dữ liệu runtime đã ghi nhận.}
+\label{tab:runtime-summary}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{4.0cm}Y}
+\toprule
+Chỉ số & Giá trị ghi nhận trong bộ evidence hiện có \\
+\midrule
+Số mẫu runtime & 34 mẫu \\
+FPS trung bình & khoảng 35 FPS trong phiên evidence đã lưu \\
+Số xe trung bình hướng A & khoảng 4.76 xe/mẫu \\
+Số xe trung bình hướng B & khoảng 2.32 xe/mẫu \\
+Dạng evidence & CSV/JSONL runtime log và biểu đồ từ dữ liệu đã ghi \\
+Diễn giải & Bằng chứng pipeline chạy được end-to-end; chưa phải kết luận giảm ùn tắc ngoài thực địa. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.84\linewidth]{figures/direction_counts.png}
+  \caption{Số lượng phương tiện theo hướng trong log runtime.}
+  \label{fig:direction-counts}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.84\linewidth]{figures/green_times.png}
+  \caption{Thời gian xanh được scheduler tạo ra theo mật độ từng hướng.}
+  \label{fig:green-times}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.84\linewidth]{figures/runtime_fps.png}
+  \caption{FPS runtime trong phiên chạy thử dùng để tạo evidence.}
+  \label{fig:runtime-fps}
+\end{figure}
+
+Các hình trên được giữ lại vì dung lượng nhỏ và có giá trị chứng minh pipeline. Những hình bảo mật chi tiết và ảnh chụp terminal được giữ ở repo gốc, không đưa vào folder Overleaf chính để tránh tăng thời gian biên dịch.
+
+\subsection{Kết quả huấn luyện detector}
+
+Workflow huấn luyện YOLO tùy biến đã tạo model cho bốn lớp giao thông chính. Bảng \ref{tab:yolo-result} tóm tắt cấu hình và chỉ số cuối. Các chỉ số này giúp giải thích vì sao dự án không chỉ dựa vào model tổng quát, nhưng phần đánh giá chính của đề tài vẫn là vòng lặp từ detector tới MCU.
+
+\begin{table}[H]
+\centering
+\caption{Kết quả huấn luyện detector tùy biến.}
+\label{tab:yolo-result}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{4.2cm}Y}
+\toprule
+Hạng mục & Giá trị \\
+\midrule
+Model nền & \texttt{yolo26n.pt} \\
+Cấu hình & 50 epoch, ảnh 640 px, batch 16 \\
+Lớp & car, motorbike, truck, bus \\
+Precision cuối & khoảng 0.820 \\
+Recall cuối & khoảng 0.808 \\
+mAP50 cuối & khoảng 0.871 \\
+mAP50--95 cuối & khoảng 0.657 \\
+Diễn giải & Model tùy biến cải thiện độ phù hợp miền giao thông; FPS vẫn cần tối ưu bằng triển khai edge và benchmark riêng. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Ma trận kiểm thử}
+
+\begin{table}[H]
+\centering
+\caption{Ma trận kiểm thử hệ thống.}
+\label{tab:test-matrix}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{\linewidth}{R{2.9cm}Y Y}
+\toprule
+\textbf{Nhóm kiểm thử} & \textbf{Phương pháp} & \textbf{Dấu hiệu đạt} \\
+\midrule
+ROI & Test bằng polygon và bbox cố định & Detection được chia đúng vào hướng A/B hoặc outside. \\
+Density & Test raw count, PCE và EMA & Output thay đổi đúng theo số lượng/lớp phương tiện. \\
+Scheduler & Test mật độ lệch về từng hướng & Thời gian xanh nằm trong miền 10--45 s và tăng theo hướng đông hơn. \\
+Runtime controller & So sánh raw plan và active plan & Active plan chỉ đổi tại biên chu kỳ. \\
+UART sender & Fake MCU hoặc Serial monitor & PLAN nhận ACK đúng \texttt{plan\_id}; lỗi nhận NACK/timeout. \\
+Firmware parser & Gửi PLAN hợp lệ và lỗi & Parser ACK/NACK đúng lý do. \\
+FSM & Quan sát LED hoặc serial status & Thứ tự pha đúng A xanh, A vàng, all-red, B xanh, B vàng, all-red. \\
+Watchdog & Dừng gửi PLAN & STATUS chuyển \texttt{HOST\_TIMEOUT}, default plan được dùng. \\
+Bảo mật phần mềm & Test HMAC/replay/audit log & MAC sai bị từ chối; replay bị từ chối; sửa log bị phát hiện. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Giới hạn hiện tại}
+
+Các giới hạn chính của nguyên mẫu gồm:
+
+\begin{itemize}
+  \item Chưa có thí nghiệm giao thông thật hoặc mô phỏng đối chứng đủ lớn để kết luận mức giảm thời gian chờ.
+  \item Camera Raspberry Pi và phần cứng đèn thật cần một vòng kiểm thử tích hợp riêng.
+  \item HMAC và replay protection hiện nằm ở lớp thí nghiệm phần mềm, chưa tích hợp đầy đủ vào firmware UART.
+  \item Kết quả YOLO còn cần báo cáo chi tiết theo từng lớp, đặc biệt là motorbike trong cảnh đông và bị che khuất.
+  \item DIAG hiện phù hợp cho chẩn đoán nhẹ; nếu firmware mở rộng, nên đưa DIAG về cùng mẫu deferred reporting như STATUS.
+\end{itemize}

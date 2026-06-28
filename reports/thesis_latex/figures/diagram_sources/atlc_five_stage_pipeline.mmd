@@ -1,0 +1,31 @@
+flowchart LR
+  V["1. Vision Pipeline<br/><br/>YOLO detection<br/>ROI assignment<br/>Direction counting"]
+
+  D["2. Density Estimation<br/><br/>Raw count<br/>PCE weighting<br/>EMA smoothing"]
+
+  S["3. Adaptive Scheduler<br/><br/>Density ratio<br/>Green-time allocation<br/>Safety clamp"]
+
+  U["4. Communication<br/><br/>PLAN message<br/>ACK / STATUS<br/>UART serial link"]
+
+  E["5. MCU Execution<br/><br/>PLAN validation<br/>Local FSM<br/>GPIO traffic lights"]
+
+  SAFE["Safety Boundary<br/><br/>AI proposes timing.<br/>MCU owns real-time execution."]
+
+  V --> D --> S --> U --> E
+  S --> SAFE
+  E --> SAFE
+
+  classDef vision fill:#eaf4ff,stroke:#1e4e8c,stroke-width:2px,color:#0b1f44;
+  classDef density fill:#edf8ee,stroke:#2e7d32,stroke-width:2px,color:#123524;
+  classDef schedule fill:#fff8e1,stroke:#ef8f00,stroke-width:2px,color:#4a2c00;
+  classDef comm fill:#f4f4f5,stroke:#52525b,stroke-width:2px,color:#27272a;
+  classDef mcu fill:#fff0f0,stroke:#c62828,stroke-width:2px,color:#4a0d0d;
+  classDef safe fill:#eef6ff,stroke:#1565c0,stroke-width:2px,color:#0b2c5f;
+
+  class V vision;
+  class D density;
+  class S schedule;
+  class U comm;
+  class E mcu;
+  class SAFE safe;
+

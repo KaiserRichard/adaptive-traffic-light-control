@@ -1,0 +1,140 @@
+\section{Runtime, bảo mật và kiểm thử giao tiếp}
+
+\subsection{Tách kế hoạch thô và kế hoạch đang thực thi}
+
+Một lỗi thiết kế dễ gặp trong hệ thống đèn thích nghi là coi kế hoạch scheduler tạo ra ở từng frame là kế hoạch đang thực thi. Khi detector dao động, kế hoạch thô cũng dao động; nếu đưa trực tiếp xuống đèn, hệ thống sẽ có hành vi không ổn định. Vì vậy runtime phía host tách ba khái niệm:
+
+\begin{table}[H]
+\centering
+\caption{Ba mức kế hoạch trong runtime controller.}
+\label{tab:plan-levels}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{3.8cm}YY}
+\toprule
+Khái niệm & Nguồn gốc & Ý nghĩa điều khiển \\
+\midrule
+\texttt{raw\_signal\_plan} & Scheduler tính từ frame hiện tại & Đề xuất mới nhất, có thể dao động theo detector. \\
+\texttt{pending\_plan} & Runtime lưu từ raw plan & Kế hoạch đang chờ biên chu kỳ an toàn. \\
+\texttt{active\_plan} & Runtime/FSM đang chạy & Kế hoạch thật sự dùng cho overlay và gửi xuống MCU. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.86\linewidth]{figures/raw_signal_plan_vs_active_plan.png}
+  \caption{So sánh raw signal plan và active plan để chứng minh runtime controller không đổi đèn tùy tiện theo từng frame.}
+  \label{fig:raw-active}
+\end{figure}
+
+Thiết kế này đồng bộ với firmware: host chỉ gửi kế hoạch đang hoạt động hoặc kế hoạch đủ điều kiện gửi, còn MCU vẫn quyết định thời điểm áp dụng bằng FSM cục bộ. Nhờ vậy video overlay, UART và đèn thật cùng dùng một khái niệm về kế hoạch đang chạy.
+
+\subsection{Kiểm thử giao tiếp bằng fake MCU}
+
+Fake MCU là công cụ kiểm thử trước khi nối ESP32 thật. Công cụ này nhận PLAN, parse trường dữ liệu, trả ACK/NACK và mô phỏng timeout. Lợi ích kỹ thuật là tách lỗi của host khỏi lỗi phần cứng. Nếu host không nhận được ACK từ fake MCU, nguyên nhân nhiều khả năng nằm ở serialize, timeout hoặc logic gửi lại, chưa cần kiểm tra dây nối và driver USB.
+
+\begin{table}[H]
+\centering
+\caption{Nhóm kiểm thử giao tiếp host--MCU.}
+\label{tab:fake-mcu-tests}
+\small
+\begin{tabularx}{\linewidth}{>{\bfseries}p{3.0cm}YY}
+\toprule
+Kiểm thử & Cách kích hoạt & Dấu hiệu đạt \\
+\midrule
+PLAN hợp lệ & Gửi \texttt{PLAN,17,25,15,3,1} & Nhận \texttt{ACK,17}. \\
+Sai định dạng & Thiếu trường hoặc sai prefix & Nhận NACK, host không cập nhật trạng thái thành công. \\
+Timeout ACK & Không có phản hồi trong cửa sổ cấu hình & Host ghi lỗi timeout, không coi kế hoạch là đã gửi. \\
+Gửi lặp không cần thiết & Kế hoạch không đổi đáng kể & Host không gửi dồn dập từng frame. \\
+Đổi chu kỳ & Runtime bắt đầu chu kỳ mới & Host có thể gửi lại active plan để đồng bộ MCU. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Mô hình đe dọa cho bản tin điều khiển}
+
+Bản tin PLAN có ảnh hưởng trực tiếp tới thời gian đèn xanh. Dù nguyên mẫu dùng mô hình LED và UART cục bộ, báo cáo vẫn cần xét các rủi ro nếu hệ thống được mở rộng ra triển khai thật. Các tài sản cần bảo vệ gồm: nội dung kế hoạch, thứ tự kế hoạch, tính mới của kế hoạch, phản hồi ACK/NACK và log thí nghiệm.
+
+\begin{table}[H]
+\centering
+\caption{Mô hình đe dọa bảo mật runtime.}
+\label{tab:security-threats}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{R{2.9cm}R{3.6cm}Y}
+\toprule
+\textbf{Đe dọa} & \textbf{Tác động} & \textbf{Cơ chế phòng vệ trong thiết kế thí nghiệm} \\
+\midrule
+Sửa nội dung PLAN & Thay đổi thời gian xanh, gây lệch điều khiển & HMAC-SHA256 trên payload chuẩn hóa. \\
+Giả mạo lệnh & Host giả gửi kế hoạch không được sinh từ runtime & Khóa bí mật dùng chung cho MAC; bản tin thiếu MAC bị từ chối. \\
+Replay & Phát lại kế hoạch cũ nhưng MAC vẫn hợp lệ & Kiểm tra \texttt{plan\_id}, \texttt{timestamp} và \texttt{nonce}. \\
+Trễ dữ liệu & Kế hoạch phản ánh tình trạng giao thông quá cũ & Cửa sổ thời gian tối đa và watchdog host timeout. \\
+Sửa log sau thí nghiệm & Làm sai bằng chứng đánh giá & Audit log dạng chuỗi băm SHA-256. \\
+Trộn dòng Serial & ACK/STATUS bị lẫn, host đọc sai & Mutex Serial và format một dòng trước khi in. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Xác thực PLAN bằng HMAC-SHA256}
+
+Module bảo mật phần mềm tạo bản tin PLAN có các trường timing, \texttt{plan\_id}, \texttt{timestamp}, \texttt{nonce} và \texttt{mac}. Trước khi tính MAC, payload được chuẩn hóa bằng JSON có thứ tự khóa cố định. Điều này bảo đảm bên gửi và bên kiểm tra tính HMAC trên cùng biểu diễn dữ liệu.
+
+\begin{equation}
+MAC = HMAC_{SHA256}(K, canonical(PLAN))
+\end{equation}
+
+Trong đó \(K\) là khóa bí mật dùng chung. Nếu attacker đổi \texttt{green\_a}, \texttt{green\_b} hoặc \texttt{plan\_id}, giá trị MAC không còn khớp. HMAC phù hợp với lớp thí nghiệm vì dễ triển khai, chi phí thấp và là cơ chế chuẩn cho xác thực thông điệp dựa trên hàm băm khóa \cite{rfc2104_hmac,fips1804_sha256}. Với kênh truyền rộng hơn UART cục bộ, có thể bổ sung mã hóa xác thực như AES-GCM hoặc cơ chế trao khóa bằng RSA-OAEP, nhưng đó là mở rộng bảo vệ kênh, không thay thế nhu cầu kiểm tra thời gian và FSM phía MCU \cite{nist_sp800_38d,rfc8017_pkcs1}.
+
+\subsection{Chống phát lại}
+
+MAC chỉ chứng minh bản tin chưa bị sửa và được tạo bởi bên có khóa; MAC không tự chứng minh bản tin là mới. Vì vậy module kiểm tra thêm ba điều kiện:
+
+\begin{enumerate}
+  \item \texttt{timestamp} phải nằm trong cửa sổ thời gian cho phép.
+  \item \texttt{plan\_id} phải lớn hơn kế hoạch hợp lệ đã chấp nhận trước đó.
+  \item \texttt{nonce} chưa từng xuất hiện trong replay state.
+\end{enumerate}
+
+Thứ tự kiểm tra này giúp phân biệt lỗi rõ ràng: thiếu trường, thiếu MAC, timestamp ngoài cửa sổ, MAC sai, plan cũ hoặc nonce lặp. Kết quả trả về không chỉ là đúng/sai mà có lý do cụ thể như \texttt{INVALID\_MAC}, \texttt{REPLAY\_OR\_OLD\_PLAN\_ID} hoặc \texttt{REPLAYED\_NONCE}. Đây là điểm quan trọng khi viết test và khi phân tích log.
+
+\subsection{Audit log dạng chuỗi băm}
+
+Để phát hiện sửa log sau khi chạy thử, mỗi sự kiện bảo mật được ghi theo JSONL và liên kết với sự kiện trước bằng SHA-256:
+
+\begin{equation}
+h_i = SHA256(timestamp_i, event_i, payload_i, h_{i-1})
+\end{equation}
+
+Nếu một dòng log ở giữa bị sửa, \texttt{current\_hash} của dòng đó không còn khớp. Nếu attacker sửa cả hash của dòng đó, dòng kế tiếp sẽ có \texttt{previous\_hash} không khớp. Vì vậy chuỗi băm không làm log bí mật, nhưng làm cho việc sửa log sau thí nghiệm có thể bị phát hiện.
+
+\subsection{Kịch bản đánh giá bảo mật}
+
+\begin{table}[H]
+\centering
+\caption{Kịch bản đánh giá lớp bảo mật thí nghiệm.}
+\label{tab:security-tests}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{R{3.1cm}R{4.0cm}Y}
+\toprule
+\textbf{Kịch bản} & \textbf{Dữ liệu kiểm thử} & \textbf{Kết quả mong đợi} \\
+\midrule
+PLAN hợp lệ & Payload đủ trường, MAC đúng, timestamp mới, nonce mới & \texttt{accepted=True}, lý do \texttt{OK}. \\
+Sửa thời gian xanh & Thay \texttt{green\_a} sau khi tính MAC & Từ chối với \texttt{INVALID\_MAC}. \\
+Phát lại plan cũ & Gửi lại \texttt{plan\_id} đã được chấp nhận & Từ chối với \texttt{REPLAY\_OR\_OLD\_PLAN\_ID}. \\
+Nonce lặp & Dùng lại nonce đã ghi nhận & Từ chối với \texttt{REPLAYED\_NONCE}. \\
+Timestamp quá cũ & Đưa timestamp ngoài cửa sổ cho phép & Từ chối với \texttt{TIMESTAMP\_OUT\_OF\_WINDOW}. \\
+Sửa audit log & Chỉnh payload trong một dòng JSONL & Hàm verify báo chuỗi băm bị phá vỡ. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Giới hạn triển khai bảo mật}
+
+Phần bảo mật hiện là lớp thí nghiệm phần mềm. Firmware ESP32 trong nguyên mẫu chính vẫn nhận PLAN dạng văn bản đơn giản để tập trung vào FreeRTOS, parser, FSM, STATUS và watchdog. Do đó không được trình bày HMAC như một cơ chế đã hoàn thiện trên MCU. Đường phát triển hợp lý là chuyển \texttt{secure\_plan\_to\_uart\_line} thành format truyền thật, bổ sung bộ kiểm tra MAC phía ESP32, xác thực ACK, lưu replay state bền vững và đánh giá chi phí CPU/RAM của mật mã trên vi điều khiển.

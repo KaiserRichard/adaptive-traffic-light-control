@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">FreeRTOS status reporting flow</title>
+  <desc id="desc">Vector diagram showing how ESP32 FreeRTOS tasks publish STATUS safely.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#263238"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#1565c0"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#ef6c00"/>
+    </marker>
+    <style>
+      .title { font-family: Arial, Helvetica, sans-serif; font-size: 38px; font-weight: 700; fill: #111827; }
+      .box-title { font-family: Arial, Helvetica, sans-serif; font-size: 22px; font-weight: 700; fill: #111827; }
+      .text { font-family: Arial, Helvetica, sans-serif; font-size: 19px; fill: #263238; }
+      .code { font-family: Menlo, Consolas, monospace; font-size: 18px; fill: #111827; }
+      .box { stroke-width: 2.4; rx: 14; ry: 14; }
+      .arrow { stroke: #263238; stroke-width: 3.6; fill: none; marker-end: url(#arrow); }
+      .read { stroke: #1565c0; stroke-width: 3.2; fill: none; stroke-dasharray: 9 8; marker-end: url(#arrowBlue); }
+      .notify { stroke: #ef6c00; stroke-width: 3.2; fill: none; stroke-dasharray: 9 8; marker-end: url(#arrowOrange); }
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#ffffff"/>
+  <text class="title" x="800" y="58" text-anchor="middle">FreeRTOS Status Reporting Flow</text>
+  <text class="text" x="800" y="95" text-anchor="middle" font-weight="700" fill="#0d47a1">Timer callback only sends a task notification; it does not print to Serial.</text>
+
+  <rect class="box" x="55" y="165" width="305" height="260" fill="#edf8ee" stroke="#2e7d32"/>
+  <rect x="55" y="165" width="305" height="58" rx="14" fill="#e3f1df"/>
+  <text class="box-title" x="207.5" y="201" text-anchor="middle">TaskTrafficFSM</text>
+  <text class="text" x="85" y="262">- Runs traffic-light FSM</text>
+  <text class="text" x="85" y="300">- Updates phase timing</text>
+  <text class="text" x="85" y="338">- Computes remaining time</text>
+  <text class="text" x="85" y="376">- Writes ControllerStatus</text>
+
+  <rect class="box" x="460" y="175" width="330" height="240" fill="#eef6ff" stroke="#1565c0"/>
+  <rect x="460" y="175" width="330" height="58" rx="14" fill="#dcecff"/>
+  <text class="box-title" x="625" y="211" text-anchor="middle">ControllerStatus</text>
+  <text class="text" x="500" y="275">plan_id</text><text class="code" x="645" y="275">uint32_t</text>
+  <text class="text" x="500" y="315">state</text><text class="code" x="645" y="315">TrafficState</text>
+  <text class="text" x="500" y="355">remaining_seconds</text><text class="code" x="690" y="355">uint16_t</text>
+  <text class="text" x="500" y="395">health</text><text class="code" x="645" y="395">HealthStatus</text>
+
+  <rect class="box" x="900" y="155" width="330" height="330" fill="#edf8ee" stroke="#2e7d32"/>
+  <rect x="900" y="155" width="330" height="58" rx="14" fill="#e3f1df"/>
+  <text class="box-title" x="1065" y="191" text-anchor="middle">TaskStatusReporter</text>
+  <text class="text" x="935" y="260">1. Wake by notification</text>
+  <text class="text" x="935" y="305">2. Copy status snapshot</text>
+  <text class="text" x="935" y="350">3. Build STATUS line</text>
+  <text class="code" x="935" y="385">STATUS,&lt;id&gt;,&lt;state&gt;,&lt;t&gt;,&lt;health&gt;</text>
+  <text class="text" x="935" y="435">4. Print with mutex</text>
+
+  <rect class="box" x="1320" y="175" width="245" height="260" fill="#fff0f0" stroke="#c62828"/>
+  <rect x="1320" y="175" width="245" height="58" rx="14" fill="#ffe0e0"/>
+  <text class="box-title" x="1442.5" y="211" text-anchor="middle">Serial Output</text>
+  <text class="text" x="1350" y="278">Printed lines:</text>
+  <text class="text" x="1370" y="315">- STATUS</text>
+  <text class="text" x="1370" y="352">- ACK / NACK</text>
+  <text class="text" x="1370" y="389">- DIAG</text>
+
+  <rect class="box" x="90" y="575" width="335" height="230" fill="#fff8e1" stroke="#ef8f00"/>
+  <rect x="90" y="575" width="335" height="58" rx="14" fill="#ffefcc"/>
+  <text class="box-title" x="257.5" y="611" text-anchor="middle">StatusTimer Callback</text>
+  <text class="text" x="125" y="672" font-weight="700" fill="#c62828">Does not:</text>
+  <text class="text" x="145" y="708">- read Serial</text>
+  <text class="text" x="145" y="744">- format messages</text>
+  <text class="text" x="145" y="780">- print logs</text>
+  <text class="text" x="300" y="672" font-weight="700" fill="#2e7d32">Only:</text>
+  <text class="text" x="300" y="708">notify reporter</text>
+
+  <rect class="box" x="950" y="600" width="250" height="160" fill="#fff0f0" stroke="#c62828"/>
+  <rect x="950" y="600" width="250" height="58" rx="14" fill="#ffe0e0"/>
+  <text class="box-title" x="1075" y="636" text-anchor="middle">SerialMutex</text>
+  <text class="text" x="985" y="695">Exclusive access</text>
+  <text class="text" x="985" y="730">to UART TX</text>
+
+  <rect class="box" x="1275" y="620" width="285" height="160" fill="#f8fbff" stroke="#78909c" stroke-dasharray="8 6"/>
+  <text class="box-title" x="1417.5" y="658" text-anchor="middle" fill="#0d47a1">Engineering Point</text>
+  <text class="text" x="1305" y="702">- Callback stays lightweight</text>
+  <text class="text" x="1305" y="738">- Serial lines are serialized</text>
+  <text class="text" x="1305" y="774">- STATUS uses a snapshot</text>
+
+  <path class="arrow" d="M360 295 L460 295"/>
+  <text class="text" x="410" y="274" text-anchor="middle">update</text>
+  <path class="read" d="M790 318 L900 318"/>
+  <text class="text" x="845" y="296" text-anchor="middle" fill="#1565c0">read copy</text>
+  <path class="notify" d="M425 690 C620 690 690 500 900 430"/>
+  <text class="text" x="610" y="645" text-anchor="middle" fill="#ef6c00">task notification</text>
+  <path class="arrow" d="M1065 485 L1065 600"/>
+  <path class="arrow" d="M1230 320 L1320 320"/>
+  <text class="text" x="1275" y="298" text-anchor="middle">print</text>
+  <path class="arrow" d="M1200 680 L1442 680 L1442 435"/>
+  <text class="text" x="1322" y="658" text-anchor="middle">protected access</text>
+
+  <rect x="115" y="835" width="1370" height="45" rx="10" fill="#eef6ff" stroke="#1565c0" stroke-width="2"/>
+  <text class="text" x="800" y="864" text-anchor="middle" font-weight="700" fill="#0d47a1">The FSM is the single writer of controller state; the reporter formats and transmits STATUS safely.</text>
+</svg>
+

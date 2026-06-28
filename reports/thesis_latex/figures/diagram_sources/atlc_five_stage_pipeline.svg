@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" role="img" aria-labelledby="title desc">
+  <title id="title">ATLC five-stage runtime pipeline</title>
+  <desc id="desc">Vector diagram showing the five runtime stages from vision pipeline to MCU execution.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#263238"/>
+    </marker>
+    <style>
+      .title { font-family: Arial, Helvetica, sans-serif; font-size: 42px; font-weight: 700; fill: #111827; }
+      .stage-title { font-family: Arial, Helvetica, sans-serif; font-size: 24px; font-weight: 700; fill: #111827; }
+      .text { font-family: Arial, Helvetica, sans-serif; font-size: 21px; fill: #263238; }
+      .small { font-family: Arial, Helvetica, sans-serif; font-size: 19px; fill: #263238; }
+      .box { stroke-width: 2.6; rx: 16; ry: 16; }
+      .arrow { stroke: #263238; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1600" height="760" fill="#ffffff"/>
+  <text class="title" x="800" y="66" text-anchor="middle">ATLC Five-Stage Runtime Pipeline</text>
+
+  <rect class="box" x="60" y="150" width="255" height="330" fill="#eaf4ff" stroke="#1e4e8c"/>
+  <text class="stage-title" x="187.5" y="205" text-anchor="middle">1. Vision Pipeline</text>
+  <text class="text" x="95" y="275">YOLO detection</text>
+  <text class="text" x="95" y="325">ROI assignment</text>
+  <text class="text" x="95" y="375">Direction counting</text>
+
+  <rect class="box" x="365" y="150" width="255" height="330" fill="#edf8ee" stroke="#2e7d32"/>
+  <text class="stage-title" x="492.5" y="205" text-anchor="middle">2. Density Estimation</text>
+  <text class="text" x="400" y="275">Raw count</text>
+  <text class="text" x="400" y="325">PCE weighting</text>
+  <text class="text" x="400" y="375">EMA smoothing</text>
+
+  <rect class="box" x="670" y="150" width="255" height="330" fill="#fff8e1" stroke="#ef8f00"/>
+  <text class="stage-title" x="797.5" y="205" text-anchor="middle">3. Adaptive Scheduler</text>
+  <text class="text" x="705" y="275">Density ratio</text>
+  <text class="text" x="705" y="325">Green-time allocation</text>
+  <text class="text" x="705" y="375">Safety clamp</text>
+
+  <rect class="box" x="975" y="150" width="255" height="330" fill="#f4f4f5" stroke="#52525b"/>
+  <text class="stage-title" x="1102.5" y="205" text-anchor="middle">4. Communication</text>
+  <text class="text" x="1010" y="275">PLAN message</text>
+  <text class="text" x="1010" y="325">ACK / STATUS</text>
+  <text class="text" x="1010" y="375">UART serial link</text>
+
+  <rect class="box" x="1280" y="150" width="255" height="330" fill="#fff0f0" stroke="#c62828"/>
+  <text class="stage-title" x="1407.5" y="205" text-anchor="middle">5. MCU Execution</text>
+  <text class="text" x="1315" y="275">PLAN validation</text>
+  <text class="text" x="1315" y="325">Local FSM</text>
+  <text class="text" x="1315" y="375">GPIO traffic lights</text>
+
+  <path class="arrow" d="M315 315 L365 315"/>
+  <path class="arrow" d="M620 315 L670 315"/>
+  <path class="arrow" d="M925 315 L975 315"/>
+  <path class="arrow" d="M1230 315 L1280 315"/>
+
+  <rect x="300" y="570" width="1000" height="95" rx="16" fill="#eef6ff" stroke="#1565c0" stroke-width="2.5"/>
+  <text class="stage-title" x="800" y="610" text-anchor="middle" fill="#0b2c5f">Safety Boundary</text>
+  <text class="small" x="800" y="646" text-anchor="middle">AI proposes timing; the MCU validates plans and owns real-time execution.</text>
+  <path class="arrow" d="M797.5 480 L797.5 570"/>
+  <path class="arrow" d="M1407.5 480 L1300 595"/>
+</svg>
+

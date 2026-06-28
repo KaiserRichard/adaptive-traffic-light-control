@@ -1,0 +1,33 @@
+flowchart LR
+  FSM["TaskTrafficFSM<br/>(high priority)<br/><br/>- Runs traffic-light FSM<br/>- Updates phase timing<br/>- Writes ControllerStatus"]
+
+  SNAP["ControllerStatus<br/>(shared snapshot)<br/><br/>plan_id<br/>state<br/>remaining_seconds<br/>health<br/>last_update_tick"]
+
+  TIMER["StatusTimer Callback<br/>(timer service context)<br/><br/>Does not:<br/>- read Serial<br/>- format messages<br/>- print logs<br/><br/>Only:<br/>notify reporter"]
+
+  REPORT["TaskStatusReporter<br/>(medium priority)<br/><br/>1. Wake by notification<br/>2. Copy status snapshot<br/>3. Build STATUS line<br/>4. Print with mutex"]
+
+  MUTEX["SerialMutex<br/><br/>exclusive UART TX access"]
+
+  UART["Serial Output<br/>(UART TX)<br/><br/>STATUS<br/>ACK / NACK<br/>DIAG<br/>debug logs"]
+
+  NOTE["Engineering Point<br/><br/>Timer callback stays lightweight.<br/>Serial output is serialized.<br/>STATUS reflects a copied snapshot."]
+
+  FSM -- "update" --> SNAP
+  SNAP -. "read copy" .-> REPORT
+  TIMER -. "task notification" .-> REPORT
+  REPORT --> MUTEX --> UART
+  REPORT --> NOTE
+
+  classDef task fill:#edf8ee,stroke:#2e7d32,stroke-width:2px,color:#123524;
+  classDef data fill:#eef6ff,stroke:#1565c0,stroke-width:2px,color:#0b2c5f;
+  classDef timer fill:#fff8e1,stroke:#ef8f00,stroke-width:2px,color:#4a2c00;
+  classDef mutex fill:#fff0f0,stroke:#c62828,stroke-width:2px,color:#4a0d0d;
+  classDef note fill:#f8fbff,stroke:#78909c,stroke-width:2px,color:#263238;
+
+  class FSM,REPORT task;
+  class SNAP data;
+  class TIMER timer;
+  class MUTEX,UART mutex;
+  class NOTE note;
+

@@ -1,0 +1,152 @@
+\appendix
+\section{Phụ lục: lệnh chạy và bằng chứng phụ trợ}
+
+Phụ lục này không thay thế phần kết quả chính của báo cáo. Mục tiêu của nó là ghi lại các lệnh tái lập, cấu hình quan trọng và bằng chứng phụ trợ để người đọc kiểm tra rằng nguyên mẫu có thể chạy theo từng lớp: host pipeline, giao tiếp UART mô phỏng, firmware ESP32 và lớp bảo mật phần mềm. Vì phần cứng đèn thật chưa phải trọng tâm của bản nộp này, các mục dưới đây ưu tiên kiểm thử phần mềm và nguyên mẫu LED/Serial.
+
+\subsection{Lệnh chạy host pipeline}
+
+\begin{lstlisting}
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 -m pc_app.main
+\end{lstlisting}
+
+Khi chạy ở chế độ benchmark, nên tắt cửa sổ hiển thị và tắt ghi video để đo phần pipeline xử lý chính. Khi cần evidence cho báo cáo, bật ghi video hoặc xuất log, nhưng không dùng kết quả FPS đó để so sánh tốc độ detector thuần vì chi phí \texttt{VideoWriter} và GUI có thể lớn hơn phần scheduler.
+
+\begin{lstlisting}
+SHOW_WINDOW=false
+SAVE_OUTPUT_VIDEO=false
+python3 -m pc_app.main
+
+SHOW_WINDOW=false
+SAVE_OUTPUT_VIDEO=true
+python3 -m pc_app.main
+\end{lstlisting}
+
+\subsection{Biến môi trường chính}
+
+\begin{lstlisting}
+DETECTOR_BACKEND=yolo
+YOLO_MODEL_PATH=./pc_app/models/local/yolo26n.pt
+YOLO_IMGSZ=640
+CONFIDENCE_THRESHOLD=0.30
+ROI_CONFIG_PATH=./pc_app/configs/roi_example.json
+DENSITY_SMOOTHING_ALPHA=0.30
+ENABLE_UART=false
+UART_BAUD=115200
+DETECT_EVERY_N_FRAMES=1
+\end{lstlisting}
+
+Các biến trên tách cấu hình khỏi mã nguồn. Điều này quan trọng khi chuyển từ PC sang Raspberry Pi: model, ngưỡng nhận dạng, ROI, UART port và chế độ xuất evidence có thể thay đổi mà không làm thay đổi thuật toán đếm xe hoặc firmware.
+
+\subsection{Kiểm thử phần mềm trước khi có phần cứng}
+
+Trước khi nối ESP32 thật, nhóm có thể kiểm tra giao thức bằng fake MCU. Đây là bước có giá trị vì nó tách lỗi serialize/timeout của host khỏi lỗi dây nối, driver USB hoặc firmware.
+
+\begin{lstlisting}
+python3 -m experiments.fake_mcu
+\end{lstlisting}
+
+Trong terminal fake MCU, gửi:
+
+\begin{lstlisting}
+PLAN,1,10,5,3,1
+\end{lstlisting}
+
+Kết quả mong đợi:
+
+\begin{lstlisting}
+ACK,1
+\end{lstlisting}
+
+Khi có ESP32, cùng format PLAN được kiểm tra qua cổng serial thật:
+
+\begin{lstlisting}
+python3 -m experiments.test_uart_sender \
+  --port /dev/cu.usbserial-XXXX \
+  --plan-id 1 --green-a 10 --green-b 5 --yellow 3 --all-red 1
+\end{lstlisting}
+
+\begin{table}[H]
+\centering
+\caption{Các mức kiểm thử có thể thực hiện trước khi hoàn thiện phần cứng.}
+\label{tab:appendix-software-tests}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\linewidth}{R{3.2cm}Y}
+\toprule
+\textbf{Mức kiểm thử} & \textbf{Ý nghĩa đối với nguyên mẫu ATLC} \\
+\midrule
+Detector benchmark & Đo riêng tốc độ YOLO để biết nút thắt nằm ở suy luận, không gộp với vẽ khung hình hoặc ghi video. \\
+Full pipeline runtime & Kiểm tra luồng frame \(\rightarrow\) detection \(\rightarrow\) ROI \(\rightarrow\) density \(\rightarrow\) scheduler \(\rightarrow\) log/output. \\
+Fake MCU & Kiểm tra định dạng PLAN/ACK/NACK và timeout ở mức phần mềm, chưa cần ESP32 thật. \\
+Serial sender & Khi có board, gửi một PLAN tối giản để kiểm tra dây nối, baud rate và phản hồi ACK. \\
+Security simulation & Kiểm tra HMAC, replay protection và audit log ở mức phần mềm, chưa trình bày như cơ chế đã nạp hoàn chỉnh lên MCU. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Raspberry Pi như host biên}
+
+Trong thiết kế triển khai, Raspberry Pi không thay thế ESP32. Raspberry Pi đóng vai trò host biên: đọc camera, chạy detector, tính mật độ và gửi kế hoạch xuống MCU. ESP32 vẫn là thành phần thực thi đèn. Cách chia này làm rõ rằng đề tài không chỉ là một script AI trên PC, mà là một nguyên mẫu gồm vi xử lý biên và vi điều khiển.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.86\linewidth]{figures/raspberry_pi_host_role.png}
+  \caption{Raspberry Pi đóng vai trò host biên chạy pipeline thị giác máy tính và gửi timing plan xuống ESP32 qua UART.}
+  \label{fig:appendix-raspi-host}
+\end{figure}
+
+\subsection{Lệnh build firmware}
+
+\begin{lstlisting}
+cd firmware/esp32_freertos_traffic_light
+pio run
+pio run --target upload
+pio device monitor -b 115200
+\end{lstlisting}
+
+Bản tin UART mẫu:
+
+\begin{lstlisting}
+PLAN,17,25,15,3,1
+ACK,17
+STATUS,17,A_GREEN,12,OK
+NACK,18,GREEN_A_OUT_OF_RANGE
+\end{lstlisting}
+
+\subsection{Bối cảnh FreeRTOS cần nhấn mạnh khi bảo vệ}
+
+FreeRTOS được dùng vì firmware cần nhiều luồng trách nhiệm nhưng vẫn phải kiểm soát tài nguyên hạn chế. Queue phù hợp để chuyển dữ liệu có nội dung như raw message và signal plan. Task notification phù hợp để đánh thức task khi chỉ cần báo sự kiện. Mutex phù hợp với Serial output vì đây là tài nguyên dùng chung và lỗi trộn dòng có thể làm host đọc sai giao thức.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.90\linewidth]{figures/resource_management_tradeoff.png}
+  \caption{Trade-off quản lý tài nguyên RTOS: ATLC chọn queue cho dữ liệu, task notification cho sự kiện và mutex cho Serial output dùng chung.}
+  \label{fig:appendix-resource-tradeoff}
+\end{figure}
+
+Trong firmware, không phải mọi dòng log có cùng mức quan trọng. ACK/NACK là một phần của giao thức, nên cần in nguyên dòng và không bị trộn. STATUS/DIAG phục vụ quan sát runtime nên có thể theo chu kỳ và ưu tiên thấp hơn. Debug log chỉ hỗ trợ người phát triển, không được làm chậm FSM. Phân loại này giúp báo cáo giải thích vì sao \texttt{SerialMutex} tồn tại nhưng không biến mọi log thành đoạn chờ dài.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.90\linewidth]{figures/logging_reliability_classes.png}
+  \caption{Phân loại độ tin cậy của output Serial: ACK/NACK là protocol output quan trọng, STATUS/DIAG là telemetry định kỳ, debug log là thông tin hỗ trợ.}
+  \label{fig:appendix-logging-reliability}
+\end{figure}
+
+\subsection{Bằng chứng bảo mật phần mềm}
+
+Lớp bảo mật trong báo cáo là lớp thí nghiệm phần mềm. Nó không được trình bày như firmware bảo mật hoàn chỉnh trên ESP32, nhưng có giá trị vì chỉ ra các rủi ro thật của hệ thống có bản tin điều khiển: giả mạo PLAN, sửa nội dung PLAN, phát lại bản tin cũ và sửa audit log. Những rủi ro này xuất hiện ngay cả khi nguyên mẫu hiện chỉ chạy bằng LED và UART cục bộ.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.86\linewidth]{figures/fig_atlc_security_threat_model.png}
+  \caption{Threat model phần mềm cho ATLC, tập trung vào PLAN message, replay attack, giả mạo lệnh và chỉnh sửa audit log.}
+  \label{fig:appendix-security-threat-model}
+\end{figure}
+
+Điểm cần nhấn mạnh khi bảo vệ là: bảo mật không được dùng để phóng đại mức hoàn thiện của prototype. Báo cáo chỉ khẳng định nhóm đã mô phỏng được các tình huống tấn công và có hướng kiểm tra HMAC/replay/audit log. Bước tiếp theo mới là chuyển format bảo mật đó vào firmware và đo chi phí CPU/RAM trên MCU.

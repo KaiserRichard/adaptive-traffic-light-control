@@ -1,0 +1,106 @@
+\section{Bài toán và yêu cầu hệ thống}
+
+\subsection{Bối cảnh}
+
+Ở nhiều nút giao, mật độ phương tiện không cân bằng giữa các hướng và thay đổi theo giờ cao điểm, thời tiết, sự kiện hoặc tình huống bất thường. Đèn giao thông theo chu kỳ cố định có ưu điểm là đơn giản và ổn định, nhưng không phản ánh trực tiếp tình trạng giao thông đang xảy ra. Khi một hướng đang ùn lại nhưng vẫn nhận thời gian xanh bằng hoặc ngắn hơn hướng ít xe, thời gian chờ tăng không cần thiết và năng lực khai thác mặt đường bị giảm.
+
+Bài toán của đề tài là xây dựng một nguyên mẫu hỗ trợ điều khiển đèn giao thông thích nghi. Camera hoặc video cung cấp dữ liệu giao thông; mô hình phát hiện phương tiện chuyển ảnh thành số liệu đếm; ROI tách phương tiện theo hướng; khối density và scheduler tạo kế hoạch thời gian; cuối cùng bộ điều khiển nhúng thực thi chu kỳ đèn theo kế hoạch đã được kiểm tra. Trọng tâm của báo cáo là vòng lặp vi xử lý: nhận bản tin điều khiển, xác thực miền giá trị, chạy máy trạng thái cục bộ, điều khiển chân GPIO, phát trạng thái vận hành và duy trì phương án dự phòng khi host không còn gửi kế hoạch hợp lệ.
+
+Hệ thống không được thiết kế như một mô hình AI tự động thay thế người vận hành hoặc điều khiển đèn trực tiếp theo từng khung hình. AI chỉ tạo tín hiệu đầu vào cho bộ lập kế hoạch. Quyết định cuối cùng được chuyển thành bản tin thời gian mức cao, còn ESP32 chịu trách nhiệm giữ hành vi thời gian thực ổn định. Cách phân vai này phù hợp với yêu cầu của môn Vi xử lý: phần nhúng phải có tính tự chủ, có trạng thái rõ ràng và vẫn vận hành được khi tầng xử lý ảnh gặp trễ.
+
+\subsection{Mục đích sử dụng của nguyên mẫu}
+
+Nguyên mẫu \projectname{} hướng tới ba mục đích. Thứ nhất, hệ thống cung cấp một pipeline quan sát giao thông có thể giải thích được: từ khung hình đầu vào đến detection, ROI, số lượng phương tiện, mật độ và kế hoạch thời gian. Thứ hai, hệ thống minh họa cách một khuyến nghị từ tầng xử lý ảnh được chuyển thành bản tin điều khiển có kiểm tra miền giá trị trước khi đi vào vi điều khiển. Thứ ba, hệ thống tạo log, STATUS và biểu đồ runtime để người phát triển hoặc người giám sát có thể kiểm tra lại vì sao một kế hoạch đèn được đề xuất.
+
+Vì vậy, ATLC trong phạm vi báo cáo là hệ thống hỗ trợ ra quyết định và mô hình thực thi nhúng ở mức phòng thí nghiệm. Phần dashboard, log và evidence giúp quan sát; phần ESP32/FreeRTOS cho thấy kế hoạch có thể được thực thi ổn định trên phần cứng; còn con người vẫn giữ vai trò giám sát, hiệu chỉnh cấu hình và đánh giá trước khi triển khai ngoài thực địa.
+
+\subsection{Mục tiêu kỹ thuật}
+
+Mục tiêu của nguyên mẫu được chia thành năm nhóm. Các mục tiêu về giảm thời gian chờ là chỉ tiêu để đánh giá trong thí nghiệm có đối chứng, không phải kết luận đã kiểm chứng trong giao thông thực tế.
+
+\begin{table}[H]
+\centering
+\caption{Nhóm mục tiêu kỹ thuật của hệ thống ATLC.}
+\label{tab:technical-goals}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{\linewidth}{C{1.2cm}Y}
+\toprule
+\textbf{Mã} & \textbf{Nội dung} \\
+\midrule
+C11 & Hệ thống hướng tới giảm thời gian chờ trung bình khoảng 15--20\% so với phương án cố định trong kịch bản thử nghiệm có cùng đầu vào. \\
+C12 & Kế hoạch điều khiển phải được cập nhật theo chu kỳ cấu hình được, ví dụ theo số khung hình hoặc theo thời gian, nhưng không làm đèn đổi trạng thái trực tiếp theo từng frame. \\
+C21 & Khi phát hiện điều kiện bất thường, hệ thống cần phát cảnh báo trong vòng tối đa 3 giây ở tầng giám sát. \\
+C22 & Khi dữ liệu camera hoặc kết quả xử lý không còn phản ánh tình trạng hiện tại, cảnh báo cần xuất hiện trong vòng tối đa 5 giây. \\
+C23 & Khi host ngừng gửi kế hoạch hợp lệ, MCU phải chuyển sang kế hoạch an toàn trong thời gian giới hạn bởi watchdog. \\
+C31 & Người vận hành có thể chuyển giữa chế độ cố định, thích nghi và kiểm thử thông qua cấu hình hoặc giao diện điều khiển, không cần sửa logic lõi. \\
+C32 & Sau khi nhận lệnh cấu hình hợp lệ, hệ thống cần phản hồi trạng thái trong vòng vài giây để người vận hành biết lệnh đã được nhận. \\
+C41 & Hệ thống cần ghi dữ liệu vận hành định kỳ gồm thời điểm, mật độ, kế hoạch thời gian và trạng thái runtime. \\
+C42 & Mỗi bản ghi kết quả cần đủ thông tin để truy vết: nguồn đầu vào, cấu hình detector, cấu hình ROI, kế hoạch đèn và trạng thái gửi xuống MCU. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Yêu cầu chức năng}
+
+Các yêu cầu chức năng trong Bảng \ref{tab:functional-reqs} được viết theo hướng có thể đối chiếu với module trong repo. Mỗi yêu cầu có một phần nhúng hoặc phần host tương ứng, tránh tình trạng báo cáo chỉ mô tả ý tưởng tổng quát.
+
+\begin{table}[H]
+\centering
+\caption{Yêu cầu chức năng chính.}
+\label{tab:functional-reqs}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{\linewidth}{C{1.2cm}R{3.4cm}Y}
+\toprule
+\textbf{Mã} & \textbf{Nhóm} & \textbf{Nội dung yêu cầu} \\
+\midrule
+FR1 & Nhận dạng giao thông & Phát hiện phương tiện từ video hoặc camera cục bộ, ưu tiên mô hình chạy tại máy biên thay vì phụ thuộc hoàn toàn vào dịch vụ đám mây. \\
+FR2 & Cấu hình vùng đường & Chia phương tiện theo hướng bằng vùng quan tâm lưu trong JSON, cho phép thay đổi theo góc đặt camera mà không sửa mã nguồn. \\
+FR3 & Ước lượng mật độ & Đếm phương tiện theo lớp, tính mật độ thô, mật độ có trọng số PCE và tín hiệu mật độ đã làm mượt. \\
+FR4 & Lập kế hoạch & Chuyển mật độ hai hướng thành thời gian xanh, vàng và all-red trong miền an toàn đã cấu hình. \\
+FR5 & Ổn định runtime & Tách kế hoạch vừa tính toán khỏi kế hoạch đang thực thi để tránh đổi đèn theo nhiễu từng khung hình. \\
+FR6 & Giao tiếp host--MCU & Gửi kế hoạch xuống MCU qua UART theo định dạng xác định và nhận phản hồi ACK/NACK. \\
+FR7 & Điều khiển nhúng & ESP32 tự chạy máy trạng thái đèn giao thông, điều khiển GPIO và áp dụng kế hoạch mới tại biên chu kỳ an toàn. \\
+FR8 & Giám sát nhúng & MCU phát bản tin STATUS định kỳ gồm mã kế hoạch, trạng thái đèn, thời gian còn lại và tình trạng sức khỏe. \\
+FR9 & Dự phòng & Khi host im lặng quá ngưỡng, MCU chuyển sang kế hoạch mặc định an toàn và phản ánh trạng thái timeout trong STATUS. \\
+FR10 & Bằng chứng thí nghiệm & Hệ thống lưu log, biểu đồ runtime và dữ liệu kiểm thử để có thể viết báo cáo và kiểm tra lại kết quả. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Yêu cầu phi chức năng}
+
+Với hệ thống có cả AI và nhúng, yêu cầu phi chức năng quan trọng nhất là tính ổn định của tầng điều khiển. Detector có thể chạy chậm hoặc bỏ sót phương tiện, nhưng điều đó không được làm MCU treo, không được làm đèn đổi pha bất ngờ và không được làm bản tin UART bị trộn dòng.
+
+\begin{table}[H]
+\centering
+\caption{Yêu cầu phi chức năng.}
+\label{tab:nonfunctional-reqs}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{\linewidth}{C{1.2cm}R{3.6cm}Y}
+\toprule
+\textbf{Mã} & \textbf{Nhóm} & \textbf{Nội dung} \\
+\midrule
+NFR1 & Tính mô-đun & Detector, ROI, density, scheduler, UART và firmware phải tách module để thay đổi một phần không kéo theo sửa toàn bộ pipeline. \\
+NFR2 & Tính xác định & FSM trên MCU phải có thứ tự trạng thái xác định và thời lượng trạng thái lấy từ kế hoạch đang hoạt động. \\
+NFR3 & Khả năng quan sát & Runtime phải có STATUS, DIAG, log và hình evidence đủ để phát hiện sai lệch giữa kế hoạch thô và kế hoạch đang chạy. \\
+NFR4 & Khả năng kiểm thử & Có thể kiểm thử host bằng fake MCU trước khi nối phần cứng thật; có thể kiểm thử parser và scheduler bằng dữ liệu cố định. \\
+NFR5 & Khả năng tái lập & Cấu hình thí nghiệm cần ghi rõ model, ngưỡng tin cậy, kích thước ảnh, ROI, nguồn video và tham số timing. \\
+NFR6 & Giới hạn tài nguyên & Firmware không được xử lý logic dài trong callback UART hoặc callback timer; công việc dài phải chuyển về task FreeRTOS. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Phạm vi và giới hạn}
+
+Phạm vi hiện tại là nguyên mẫu phòng thí nghiệm: pipeline ảnh chạy trên PC hoặc định hướng Raspberry Pi, ESP32 điều khiển LED mô phỏng đèn giao thông, UART dùng để kiểm thử giao tiếp host--MCU. Các kết quả về FPS, mật độ và thời gian xanh là bằng chứng vận hành của prototype, chưa phải kết luận về mức giảm ùn tắc ngoài thực địa.
+
+Lớp bảo mật cũng được đặt đúng phạm vi. Hệ thống đã có module thí nghiệm cho HMAC-SHA256, chống phát lại và audit log chuỗi băm ở phía phần mềm. Tuy nhiên firmware UART hiện vẫn dùng bản tin PLAN dạng văn bản đơn giản; tích hợp xác thực mật mã đầy đủ xuống MCU là hướng phát triển tiếp theo, không được trình bày như tính năng đã hoàn thiện trên phần cứng.

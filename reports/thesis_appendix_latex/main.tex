@@ -1,0 +1,193 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage[vietnamese]{babel}
+\IfFontExistsTF{Times New Roman}
+  {\setmainfont{Times New Roman}}
+  {\setmainfont{TeX Gyre Termes}}
+
+\usepackage[a4paper,margin=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{ragged2e}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+
+\graphicspath{{figures/}}
+
+\renewcommand{\contentsname}{Mục lục}
+\renewcommand{\figurename}{Hình}
+\renewcommand{\tablename}{Bảng}
+
+\setlength{\parindent}{1.2cm}
+\setlength{\parskip}{0.25em}
+\emergencystretch=2em
+\setlist[itemize]{topsep=0.25em,itemsep=0.15em,leftmargin=1.2cm}
+\setlist[enumerate]{topsep=0.25em,itemsep=0.15em,leftmargin=1.2cm}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\newcolumntype{L}[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\newcolumntype{B}[1]{>{\bfseries\RaggedRight\arraybackslash}p{#1}}
+
+\lstdefinestyle{codeblock}{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible
+}
+\lstset{style=codeblock}
+
+\newcommand{\placeholderfigure}[3]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{#1}{%
+      \includegraphics[width=0.88\linewidth]{#1}%
+    }{%
+      \fbox{%
+        \begin{minipage}[c][3.6cm][c]{0.88\linewidth}
+          \centering
+          \textbf{Placeholder evidence figure}\\[0.4em]
+          File cần bổ sung: \texttt{\detokenize{#1}}\\[0.3em]
+          Chạy thí nghiệm phần cứng hoặc benchmark rồi lưu ảnh đúng tên này.
+        \end{minipage}%
+      }%
+    }%
+    \caption{#2}
+    \label{#3}
+  \end{figure}
+}
+
+\begin{document}
+
+\begin{center}
+{\LARGE \textbf{Phụ lục bằng chứng triển khai ATLC}}\\[0.6em]
+{\large Evidence Pack cho báo cáo chính}
+\end{center}
+
+\tableofcontents
+\clearpage
+
+\section{Mục đích của phụ lục}
+
+Báo cáo chính nên tập trung vào luận điểm thiết kế: vì sao hệ thống cần tách host và MCU, vì sao AI không điều khiển đèn trực tiếp, và vì sao FSM trên ESP32 là lớp thực thi an toàn. Phụ lục này được tách riêng để chứa bằng chứng vận hành: lệnh chạy, log, ảnh phần cứng, plot metrics và kết quả benchmark. Cách tách này giúp báo cáo chính không bị nặng ảnh, đồng thời vẫn giữ được trace kỹ thuật khi cần kiểm tra lại.
+
+\section{Lệnh chạy và kiểm thử}
+
+\subsection{Host pipeline}
+
+\begin{lstlisting}
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python3 -m pc_app.main
+\end{lstlisting}
+
+\subsection{Cấu hình runtime quan trọng}
+
+\begin{lstlisting}
+DETECTOR_BACKEND=yolo
+YOLO_MODEL_PATH=./pc_app/models/local/atlc_yolo26n_custom.pt
+YOLO_IMGSZ=640
+CONFIDENCE_THRESHOLD=0.25
+ROI_CONFIG_PATH=./pc_app/configs/roi_camera.json
+DENSITY_SMOOTHING_ALPHA=0.30
+ENABLE_UART=true
+UART_BAUD=115200
+DETECT_EVERY_N_FRAMES=1
+\end{lstlisting}
+
+\subsection{Firmware ESP32}
+
+\begin{lstlisting}
+cd firmware/esp32_freertos_traffic_light
+pio run
+pio run --target upload
+pio device monitor -b 115200
+\end{lstlisting}
+
+\subsection{Bản tin serial mẫu}
+
+\begin{lstlisting}
+PLAN,17,25,15,3,1
+ACK,17
+STATUS,17,A_GREEN,12,OK
+NACK,18,GREEN_A_OUT_OF_RANGE
+\end{lstlisting}
+
+\section{Ma trận thí nghiệm phần cứng}
+
+\begin{longtable}{B{3.0cm}L{10.4cm}}
+\caption{Checklist thí nghiệm khi nối phần cứng thật.}
+\label{tab:hardware-checklist}\\
+\toprule
+Nhóm & Nội dung cần ghi nhận \\
+\midrule
+\endfirsthead
+\toprule
+Nhóm & Nội dung cần ghi nhận \\
+\midrule
+\endhead
+Mạch LED & Sơ đồ nối dây, chân ESP32, điện trở, nguồn cấp, trạng thái từng LED khi vào từng pha. \\
+UART & Cổng serial, baud rate, PLAN gửi đi, ACK/NACK nhận về, timeout và số lần retry. \\
+FSM & Thứ tự pha, thời lượng thực tế, all-red, vàng, chuyển pha tại biên an toàn. \\
+Watchdog & Thời điểm dừng host, thời điểm MCU chuyển fallback plan, STATUS sau timeout. \\
+Runtime host & FPS, latency detector, logic time, UART latency, số frame bỏ qua nếu dùng frame skipping. \\
+Evidence & Ảnh phần cứng, ảnh serial monitor, plot runtime, file log thô và cấu hình tương ứng. \\
+\bottomrule
+\end{longtable}
+
+\section{Placeholder hình phần cứng}
+
+\placeholderfigure{figures/hardware_setup_overview.png}{Tổng quan phần cứng khi nối ESP32 với cụm LED đèn giao thông và host chạy pipeline.}{fig:hardware-setup}
+
+\placeholderfigure{figures/esp32_gpio_led_wiring.png}{Sơ đồ hoặc ảnh đấu nối GPIO ESP32 tới LED đỏ-vàng-xanh cho hai hướng.}{fig:gpio-led-wiring}
+
+\placeholderfigure{figures/serial_plan_ack_trace.png}{Trace serial thể hiện PLAN từ host, ACK/NACK từ MCU và STATUS định kỳ.}{fig:serial-plan-ack}
+
+\placeholderfigure{figures/watchdog_timeout_recovery.png}{Bằng chứng watchdog: host dừng gửi PLAN, MCU chuyển sang fallback plan và STATUS báo timeout.}{fig:watchdog-timeout}
+
+\section{Placeholder plot metrics}
+
+\placeholderfigure{figures/runtime_fps_hardware.png}{FPS runtime khi chạy với camera hoặc video thật trong cấu hình phần cứng.}{fig:runtime-fps-hardware}
+
+\placeholderfigure{figures/uart_latency_hardware.png}{Độ trễ UART từ lúc host gửi PLAN đến lúc nhận ACK từ MCU.}{fig:uart-latency-hardware}
+
+\placeholderfigure{figures/direction_counts_hardware.png}{Số lượng phương tiện theo hướng trong phiên chạy phần cứng.}{fig:direction-counts-hardware}
+
+\placeholderfigure{figures/green_times_hardware.png}{Thời gian xanh được scheduler sinh ra trong phiên chạy phần cứng.}{fig:green-times-hardware}
+
+\placeholderfigure{figures/fsm_phase_timeline_hardware.png}{Timeline pha đèn đo được từ STATUS hoặc log khi MCU chạy FSM thật.}{fig:fsm-timeline-hardware}
+
+\section{Bảng ghi kết quả}
+
+\begin{longtable}{B{4.0cm}L{9.4cm}}
+\caption{Mẫu bảng điền kết quả sau khi chạy phần cứng.}
+\label{tab:hardware-result-template}\\
+\toprule
+Chỉ số & Kết quả cần điền \\
+\midrule
+\endfirsthead
+\toprule
+Chỉ số & Kết quả cần điền \\
+\midrule
+\endhead
+Phần cứng host & PC/Raspberry Pi, CPU, RAM, camera, hệ điều hành. \\
+Model detector & Tên model, input size, confidence threshold, backend runtime. \\
+Video/camera input & Độ phân giải, FPS camera, thời lượng chạy, điều kiện ánh sáng. \\
+FPS trung bình & Điền sau khi chạy benchmark. \\
+Độ trễ UART trung bình & Điền sau khi log PLAN/ACK. \\
+Số timeout & Điền số lần host timeout hoặc ACK timeout. \\
+Số NACK & Điền số bản tin bị từ chối và lý do chính. \\
+Nhận xét & Diễn giải kết quả, không chỉ ghi số liệu. \\
+\bottomrule
+\end{longtable}
+
+\end{document}
+

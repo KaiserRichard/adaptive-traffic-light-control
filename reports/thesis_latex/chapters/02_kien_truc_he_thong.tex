@@ -1,0 +1,156 @@
+\section{Kiến trúc hệ thống với trọng tâm nhúng}
+
+\subsection{Tổng quan kiến trúc}
+
+Kiến trúc \projectname{} được chia thành hai tầng. Tầng host xử lý video, phát hiện phương tiện, ước lượng mật độ và tính kế hoạch thời gian. Tầng MCU nhận kế hoạch đã chuẩn hóa, kiểm tra miền giá trị và thực thi đèn giao thông bằng máy trạng thái hữu hạn. Cách chia này cố ý đặt phần điều khiển thời gian thực ở ESP32, còn AI chỉ đóng vai trò cảm nhận và đề xuất.
+
+Trong phạm vi môn Vi xử lý, Raspberry Pi/PC được xem là vi xử lý biên phụ trách tải tính toán cao, còn ESP32 là vi điều khiển phụ trách tín hiệu thời gian thực. Hai phần này cùng thuộc nguyên mẫu nhúng, nhưng có ranh giới trách nhiệm khác nhau: host quyết định kế hoạch, MCU bảo vệ và thực thi kế hoạch.
+
+\begin{figure}[H]
+  \centering
+  \safeincludegraphics[width=0.88\linewidth]{figures/atlc_block_diagram.png}
+  \caption{Sơ đồ khối tổng thể ATLC, thể hiện camera/video, pipeline AI, bộ lập kế hoạch, khối giám sát và bộ điều khiển nhúng.}
+  \label{fig:atlc-block}
+\end{figure}
+
+Điểm quan trọng của kiến trúc là host không bật tắt GPIO trực tiếp theo từng frame. Host chỉ gửi một kế hoạch thời gian mức cao. ESP32 mới là thành phần thực thi tín hiệu đèn. Nhờ vậy, khi YOLO suy luận chậm, giao diện hiển thị bị lag hoặc camera mất khung hình tạm thời, chu kỳ đèn trên MCU vẫn tiếp tục chạy theo kế hoạch đang hoạt động.
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+    every node/.style={transform shape},
+    panel/.style={
+      draw,
+      rounded corners=4pt,
+      minimum height=3.75cm,
+      text width=4.85cm,
+      align=left,
+      inner sep=7pt,
+      font=\footnotesize
+    },
+    host/.style={panel, fill=blue!5, draw=blue!55!black},
+    mcu/.style={panel, fill=orange!7, draw=orange!70!black},
+    link/.style={-{Latex[length=2.5mm]}, thick},
+    note/.style={
+      draw,
+      rounded corners=3pt,
+      fill=gray!6,
+      text width=10.6cm,
+      align=center,
+      inner sep=6pt,
+      font=\footnotesize
+    },
+    title/.style={font=\bfseries\large, align=center}
+  ]
+    \node[host] (host) at (-3.1,0) {
+      \centering\textbf{Host / Raspberry Pi / PC}\\[0.45em]
+      \raggedright
+      \(\bullet\) Video/camera\\
+      \(\bullet\) YOLO detector\\
+      \(\bullet\) ROI và counting\\
+      \(\bullet\) Density và scheduler\\
+      \(\bullet\) UART \texttt{PLAN}
+    };
+
+    \node[mcu] (mcu) at (3.1,0) {
+      \centering\textbf{ESP32 / MCU}\\[0.45em]
+      \raggedright
+      \(\bullet\) PLAN parser\\
+      \(\bullet\) Validate + ACK/NACK\\
+      \(\bullet\) Pending/active plan\\
+      \(\bullet\) Local traffic FSM\\
+      \(\bullet\) GPIO + \texttt{STATUS}
+    };
+
+    \draw[link] ($(host.east)+(0,1.35)$) -- node[above, font=\scriptsize, fill=white, inner sep=1pt] {\texttt{PLAN}} ($(mcu.west)+(0,1.35)$);
+    \draw[link] ($(mcu.west)+(0,-1.35)$) -- node[below, font=\scriptsize, fill=white, inner sep=1pt] {\texttt{ACK}/\texttt{STATUS}} ($(host.east)+(0,-1.35)$);
+    \node[font=\scriptsize, fill=white, inner sep=1pt] at (0,0) {UART};
+
+    \node[note] at (0,-2.65) {Host xử lý nhận thức và lập kế hoạch mức cao; MCU là điểm thực thi cuối cùng để chu kỳ đèn không phụ thuộc trực tiếp vào tốc độ suy luận AI.};
+  \end{tikzpicture}
+  \caption{Phân tầng host/Raspberry Pi xử lý thị giác máy tính và ESP32/MCU thực thi FSM điều khiển đèn.}
+  \label{fig:host-mcu}
+\end{figure}
+
+\subsection{Cấu hình khối chức năng kỹ thuật}
+
+Sơ đồ kiến trúc chỉ cho thấy quan hệ giữa các khối, nhưng chưa đủ để kiểm tra hệ thống có triển khai được hay không. Vì vậy, cấu hình kỹ thuật cần được diễn giải theo đầu vào, đầu ra và tham số vận hành của từng khối. Bảng \ref{tab:block-config} đóng vai trò như bản đặc tả rút gọn: nó liên kết ý tưởng kiến trúc với các điểm cấu hình thật trong runtime.
+
+\begin{table}[H]
+\centering
+\caption{Cấu hình khối chức năng kỹ thuật.}
+\label{tab:block-config}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{\linewidth}{C{1.2cm}Y}
+\toprule
+\textbf{Mã} & \textbf{Đặc tả kỹ thuật} \\
+\midrule
+TR1 & \textbf{Thu nhận hình ảnh.} Đọc video/camera bằng OpenCV, kiểm tra kích thước frame và cảnh báo khi ROI không khớp độ phân giải. Tham số chính gồm nguồn video/camera, chiều rộng, chiều cao và FPS yêu cầu. \\
+TR2 & \textbf{Detector YOLO.} Chạy model cục bộ qua Ultralytics, trả về bounding box, confidence và class name đã chuẩn hóa. Các tham số quan trọng là đường dẫn model, kích thước ảnh inference và ngưỡng confidence. \\
+TR3 & \textbf{ROI/counting.} Gán detection vào hướng A/B bằng tâm bounding box và polygon ROI; sau đó đếm phương tiện theo từng lớp. ROI được lưu trong JSON để thay đổi theo camera mà không sửa mã nguồn. \\
+TR4 & \textbf{Density.} Tính mật độ thô, PCE và EMA để giảm dao động từng frame. Trọng số PCE mặc định: motorbike 0.5, car 1.0, bus/truck 2.5; hệ số làm mượt \(\alpha=0.30\). \\
+TR5 & \textbf{Scheduler.} Chia ngân sách đèn xanh theo tỷ lệ mật độ, sau đó clamp vào miền an toàn. Cấu hình mặc định dùng xanh 10--45 s, vàng 3 s và all-red 1 s. \\
+TR6 & \textbf{Runtime controller.} Tách raw plan, pending plan và active plan; kế hoạch mới chỉ được áp dụng ở đầu chu kỳ để tránh đổi đèn theo nhiễu từng frame. \\
+TR7 & \textbf{UART sender.} Serialize kế hoạch thành dòng PLAN, gửi qua serial và chờ ACK/NACK. Baud rate mặc định là 115200, timeout ACK dùng để phát hiện lỗi giao tiếp. \\
+TR8 & \textbf{ESP32 parser.} Nhận dòng PLAN từ queue thô, parse trường dữ liệu, validate miền giá trị và chỉ đẩy kế hoạch hợp lệ sang queue kế hoạch. \\
+TR9 & \textbf{ESP32 FSM.} Chạy sáu trạng thái đèn, điều khiển GPIO và áp dụng kế hoạch mới tại biên an toàn. Default plan là 20/20/3/1 s. \\
+TR10 & \textbf{Giám sát.} Phát STATUS/DIAG, ghi runtime log và tạo biểu đồ evidence cho báo cáo. STATUS dùng chu kỳ 1 s, DIAG dùng chu kỳ 5 s. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Luồng dữ liệu}
+
+Luồng dữ liệu được tổ chức thành các bước tuần tự:
+
+\begin{enumerate}
+  \item Camera hoặc video cung cấp frame đầu vào.
+  \item Detector tạo danh sách phương tiện đã nhận dạng.
+  \item ROI tách phương tiện theo hướng đường.
+  \item Density chuyển số lượng xe thành tín hiệu có trọng số PCE và làm mượt.
+  \item Scheduler sinh kế hoạch thời gian xanh cho hai hướng.
+  \item Runtime controller lưu kế hoạch mới như kế hoạch chờ, chỉ áp dụng tại biên chu kỳ.
+  \item UART sender gửi kế hoạch đang hoạt động xuống ESP32.
+  \item ESP32 parser kiểm tra bản tin và FSM thực thi đèn.
+\end{enumerate}
+
+Điểm kiểm soát chính nằm ở bước 6 và bước 8. Bước 6 ngăn tầng AI làm đèn đổi liên tục theo từng frame. Bước 8 ngăn bản tin sai định dạng hoặc vượt giới hạn timing đi vào FSM.
+
+\subsection{Mapping yêu cầu sang khối triển khai}
+
+Một yêu cầu chức năng chỉ có giá trị kỹ thuật khi có thể chỉ ra module chịu trách nhiệm và bằng chứng triển khai tương ứng. Do đó bảng mapping dưới đây không nhằm liệt kê toàn bộ đường dẫn mã nguồn, mà nhằm chứng minh mỗi yêu cầu chính đã có một điểm hiện thực hóa rõ ràng trong hệ thống.
+
+\begin{table}[H]
+\centering
+\caption{Liên kết yêu cầu chức năng với module triển khai.}
+\label{tab:req-to-module}
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{1.16}
+\begin{tabularx}{\linewidth}{C{1.2cm}Y}
+\toprule
+\textbf{Yêu cầu} & \textbf{Mapping triển khai} \\
+\midrule
+FR1 & \textbf{Detector factory và YOLO backend.} Backend YOLO khởi tạo detector cục bộ; output detection được chuẩn hóa trước khi đi vào ROI và density. \\
+FR2 & \textbf{ROI module.} ROI đọc từ JSON; hàm kiểm tra biên phát hiện khi tọa độ ROI không khớp độ phân giải frame. \\
+FR3 & \textbf{Counting và density module.} Hệ thống có raw count, PCE-weighted density và EMA để giảm dao động frame-to-frame. \\
+FR4 & \textbf{Scheduler module.} Hàm lập kế hoạch tính tỷ lệ mật độ, phân bổ thời gian xanh và clamp vào miền timing an toàn. \\
+FR5 & \textbf{Runtime controller.} Active plan được tách khỏi pending plan, nên kế hoạch thô không làm đèn đổi ngay giữa chu kỳ. \\
+FR6 & \textbf{UART sender và firmware protocol.} PLAN, ACK và NACK dùng định dạng một dòng, đủ đơn giản để host và MCU cùng parse được. \\
+FR7 & \textbf{Traffic FSM task.} FSM sáu trạng thái điều khiển GPIO trên ESP32, không phụ thuộc vào việc host gửi lệnh liên tục. \\
+FR8 & \textbf{Status reporter service.} STATUS lấy snapshot trạng thái và được phát bằng task notification thay vì in trực tiếp trong timer callback. \\
+FR9 & \textbf{Traffic FSM watchdog.} Khi host timeout, FSM chuyển sang fallback plan và phản ánh trạng thái timeout trong STATUS. \\
+FR10 & \textbf{Runtime logger và benchmark scripts.} Log runtime và biểu đồ direction count, green time, FPS cung cấp bằng chứng để kiểm tra lại hành vi pipeline. \\
+\bottomrule
+\end{tabularx}
+\normalsize
+\end{table}
+
+\subsection{Lý do chọn kiến trúc hai tầng}
+
+Nếu host vừa chạy detector vừa điều khiển GPIO, thời gian đèn sẽ phụ thuộc vào tải suy luận, ghi video, hiển thị cửa sổ và độ ổn định camera. Đây là cách thiết kế yếu đối với bài toán nhúng vì nhiệm vụ điều khiển cần thời gian và trạng thái rõ ràng hơn nhiệm vụ nhận dạng ảnh. Trong kiến trúc hiện tại, host có thể chậm nhưng MCU vẫn chạy chu kỳ cũ; host có thể gửi bản tin sai nhưng parser sẽ NACK; host có thể im lặng nhưng watchdog sẽ chuyển sang kế hoạch dự phòng.
+
+Kiến trúc này cũng giúp kiểm thử thuận lợi. Pipeline host có thể chạy với fake MCU trước khi nối ESP32 thật. Firmware có thể được kiểm tra bằng Serial Monitor với các bản tin PLAN thủ công. Khi thay detector hoặc huấn luyện model mới, phần ROI, scheduler và firmware không cần thay đổi giao diện dữ liệu.
