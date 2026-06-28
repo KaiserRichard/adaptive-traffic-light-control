@@ -97,7 +97,7 @@ STM32F103C8T6 Controller PCB
 | ONNX validation | Completed | ONNX checker and ONNX Runtime session load passed |
 | ONNX image inference | Completed | Letterbox preprocessing and box restoration are implemented |
 | ONNX video inference | Completed | Basic video smoke test completed with CPUExecutionProvider |
-| PyTorch vs ONNX comparison | Completed | Deployment mismatch found and fixed with letterbox preprocessing |
+| PyTorch vs ONNX comparison | Completed | Direct-resize deployment bug found and fixed with letterbox preprocessing |
 | Quantization | Planned | Phase 16.5, not implemented yet |
 | Full benchmark report | Planned | Phase 16.6, not a current performance claim |
 | Raspberry Pi AI deployment | Planned | Future AI host path |
@@ -118,9 +118,25 @@ STM32F103C8T6 Controller PCB
 
 ### Letterbox Preprocessing Fix
 
-Phase 16.4 found an important deployment bug: direct resize preprocessing caused PyTorch and ONNX detections to diverge. The ONNX path now uses letterbox preprocessing and letterbox-aware bounding-box restoration.
+Phase 16.4 found an important deployment bug during the PyTorch vs ONNX comparison:
 
-TODO: Add letterbox preprocessing and bounding-box restoration diagram at `docs/edge_ai/figures/letterbox_box_restoration.png`.
+```text
+Bug:
+    The first ONNX Runtime path used direct resize preprocessing.
+
+Impact:
+    PyTorch / Ultralytics and ONNX Runtime produced different detections.
+    Several obvious motorbikes were missed in the ONNX result.
+
+Fix:
+    The ONNX path now uses Ultralytics-style letterbox preprocessing.
+    Bounding boxes are restored with ratio, pad_x, and pad_y.
+
+Result:
+    ONNX detections became visually close to the PyTorch reference path.
+```
+
+![Letterbox preprocessing and bounding-box restoration](docs/edge_ai/figures/letterbox_box_restoration.png)
 
 ### STM32 PCB Schematics
 
@@ -156,11 +172,29 @@ Implemented deployment workflows:
 Important engineering finding:
 
 ```text
-Initial ONNX path: direct resize preprocessing
-Observed issue: missed detections compared with PyTorch
-Fix: letterbox preprocessing plus letterbox-aware box restoration
-Result: PyTorch/ONNX visual alignment improved significantly
+Initial ONNX path:
+    Direct resize preprocessing
+
+Observed issue:
+    Missed detections compared with PyTorch / Ultralytics
+
+Root cause:
+    Ultralytics inference preserves aspect ratio with letterbox preprocessing,
+    while the initial ONNX path stretched the image directly to 640 x 640.
+
+Fix:
+    Letterbox preprocessing plus letterbox-aware box restoration:
+
+        x1 = (x1 - pad_x) / ratio
+        y1 = (y1 - pad_y) / ratio
+        x2 = (x2 - pad_x) / ratio
+        y2 = (y2 - pad_y) / ratio
+
+Result:
+    PyTorch and ONNX visual alignment improved significantly.
 ```
+
+This is an important deployment lesson: model export alone is not enough. The runtime preprocessing and postprocessing must match the training/reference inference path, otherwise a valid ONNX model can still produce poor real-world detections.
 
 Related docs:
 
