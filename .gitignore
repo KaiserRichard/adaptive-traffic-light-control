@@ -308,3 +308,14 @@ outputs/runtime_logs/
 *.pyc
 __pycache__/
 .DS_Store
+
+# Local archives and generated report/build artifacts
+*.zip
+*.xdv
+
+# Generated ONNX smoke-test media
+results/onnx_image_predictions/*.jpg
+results/onnx_video_predictions/*.mp4
+
+# Local hardware reference PDFs; keep source docs/images in Git instead
+docs/hardware/stm32_pcb/*.pdf
