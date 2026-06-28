@@ -1,813 +1,347 @@
-# Adaptive Traffic Light Control
+# Adaptive Traffic Light Control System
 
-Computer-vision-based adaptive traffic light control system.
+End-to-end Adaptive Traffic Light Control (ATLC) project combining computer vision, Edge AI deployment, embedded control, UART communication, and hardware integration planning.
 
-This project detects vehicles from a traffic video or camera input, assigns vehicles to road directions using ROI polygons, estimates traffic density, and computes adaptive traffic light timing.
-
-Current main direction:
+This repository is not only an AI notebook. It is structured as a full engineering system:
 
 ```text
-Local YOLO detector
-→ Raspberry Pi edge deployment
-→ UART communication
-→ ESP32/STM32 traffic light controller
+camera/video input -> YOLO vehicle detection -> traffic logic -> AI-to-MCU protocol -> embedded traffic light controller -> hardware output
 ```
 
-Roboflow is kept only as a legacy hosted inference baseline.
+## Project Overview
 
----
+The project builds an adaptive traffic light control system using:
 
-## 1. What This Project Does
+- camera-based vehicle detection
+- YOLO vehicle classification and bounding boxes
+- ROI counting and traffic density estimation
+- adaptive green-time planning
+- UART communication between an AI host and an MCU controller
+- FreeRTOS-based embedded controller execution
+- STM32F103C8T6 PCB integration planning
 
-The current pipeline is:
+The long-term deployment target is an AI host, such as a Raspberry Pi, connected over UART to a microcontroller-based traffic light controller.
+
+## Why This Project Matters
+
+Traffic-light control is a practical embedded AI problem: perception, timing logic, communication, firmware reliability, and hardware constraints all matter. This project demonstrates that workflow end to end:
+
+- train and validate a vehicle detector
+- export the model for deployment
+- verify ONNX Runtime inference on image and video inputs
+- compare PyTorch and ONNX behavior
+- send timing plans to a real-time embedded controller path
+- document the transition from ESP32 prototype to STM32 PCB hardware
+
+The project emphasizes traceable engineering decisions, reproducible commands, and honest status tracking.
+
+## System Architecture
 
 ```text
-Video / Camera Input
-→ Vehicle Detection
-→ ROI Split
-→ Vehicle Counting
-→ Density Estimation
-→ EMA Smoothing
-→ Adaptive Signal Timing
-→ Visualization / Benchmark Output
+Camera / Video
+      |
+      v
+YOLO Vehicle Detection
+      |
+      v
+ROI Counting / Traffic Density
+      |
+      v
+Adaptive Green-Time Planner
+      |
+      v
+UART PLAN Message
+      |
+      v
+ESP32 / STM32 Controller
+      |
+      v
+Traffic Light FSM
+      |
+      v
+LED / PCB Hardware Output
 ```
 
-Current supported detector backends:
+Planned hardware split:
 
 ```text
-yolo      = local Ultralytics YOLO detector
-roboflow  = legacy hosted Roboflow detector
+Raspberry Pi AI Host
+      <-> UART
+STM32F103C8T6 Controller PCB
 ```
 
-The main development path is now:
+## Key Features
+
+- YOLO-based vehicle detection
+- custom vehicle detection training workflow
+- ONNX export and ONNX Runtime validation
+- ONNX Runtime image and video inference
+- PyTorch vs ONNX comparison workflow
+- letterbox preprocessing correction for deployment consistency
+- ROI counting and traffic density pipeline
+- adaptive green-time planning
+- FreeRTOS-based embedded controller prototype
+- UART `PLAN` / `ACK` / `STATUS` protocol path
+- traffic light finite-state machine
+- ESP32 controller implementation path
+- STM32F103C8T6 PCB schematic integration planning
+- future Raspberry Pi AI host deployment path
+
+## Current Status
+
+| Area | Status | Notes |
+| --- | --- | --- |
+| YOLO training | Completed | Custom vehicle detection workflow exists under `yolo_research/` |
+| Local AI pipeline | Completed / prototype | Video input, YOLO detection, ROI counting, density estimation, adaptive timing |
+| ONNX export | Completed | YOLO `.pt` exported to `deployment/onnx/atlc_yolo26n_custom.onnx` |
+| ONNX validation | Completed | ONNX checker and ONNX Runtime session load passed |
+| ONNX image inference | Completed | Letterbox preprocessing and box restoration are implemented |
+| ONNX video inference | Completed | Basic video smoke test completed with CPUExecutionProvider |
+| PyTorch vs ONNX comparison | Completed | Deployment mismatch found and fixed with letterbox preprocessing |
+| Quantization | Planned | Phase 16.5, not implemented yet |
+| Full benchmark report | Planned | Phase 16.6, not a current performance claim |
+| Raspberry Pi AI deployment | Planned | Future AI host path |
+| FreeRTOS controller | Completed / prototype | ESP32 FreeRTOS controller path with tasks, queues, UART parser, FSM |
+| UART protocol | Completed / prototype | `PLAN`, `ACK` / `NACK`, status reporting, watchdog/fallback concepts |
+| STM32 PCB integration | Hardware received / documentation started | Schematic documentation and bring-up planning are being added |
+| Final STM32 hardware validation | Planned | Not claimed complete |
+
+## Demo / Visual Results
+
+### Vehicle Detection Result
+
+![Runtime annotated traffic frame](docs/security/figures/fig_phase14_runtime_annotated_video_frame.png)
+
+### Runtime Evidence
+
+![Runtime FPS evidence](docs/security/figures/runtime_fps.png)
+
+### Letterbox Preprocessing Fix
+
+Phase 16.4 found an important deployment bug: direct resize preprocessing caused PyTorch and ONNX detections to diverge. The ONNX path now uses letterbox preprocessing and letterbox-aware bounding-box restoration.
+
+TODO: Add letterbox preprocessing and bounding-box restoration diagram at `docs/edge_ai/figures/letterbox_box_restoration.png`.
+
+### STM32 PCB Schematics
+
+Status: schematic documentation and bring-up planning started. Final hardware validation is not claimed complete.
+
+![STM32F103C8T6 MCU core schematic](docs/hardware/stm32_pcb/03_stm32f103c8t6_mcu_core.jpg)
+
+![UART Raspberry Pi header schematic](docs/hardware/stm32_pcb/02_uart_pi_header.jpg)
+
+![Traffic light LED outputs schematic](docs/hardware/stm32_pcb/04_traffic_light_led_outputs.jpg)
+
+Additional schematic blocks:
+
+- [Power input and 3.3 V regulation](docs/hardware/stm32_pcb/01_power_usb_5v_3v3_regulator.jpg)
+- [Dual 7-segment display](docs/hardware/stm32_pcb/05_dual_7segment_display.jpg)
+- [Expansion headers](docs/hardware/stm32_pcb/06_expansion_headers.jpg)
+- [SWD programming header](docs/hardware/stm32_pcb/07_swd_programming_header.jpg)
+
+## Edge AI Deployment
+
+The trained YOLO model was exported from PyTorch / Ultralytics `.pt` format to ONNX and validated with ONNX Runtime.
+
+Generated model artifacts such as `.pt` and `.onnx` files are intentionally not committed to GitHub. The repository keeps the export, validation, inference, and comparison scripts so the deployment artifacts can be reproduced locally.
+
+Implemented deployment workflows:
+
+- `deployment/onnx/export_onnx.py` - YOLO `.pt` to ONNX export
+- `deployment/onnx/validate_onnx.py` - ONNX checker and ONNX Runtime load validation
+- `deployment/onnx/infer_onnx_image.py` - ONNX Runtime image inference
+- `deployment/onnx/infer_onnx_video.py` - ONNX Runtime video inference
+- `deployment/compare/compare_pytorch_onnx_image.py` - PyTorch vs ONNX image comparison
+
+Important engineering finding:
 
 ```text
-DETECTOR_BACKEND=yolo
+Initial ONNX path: direct resize preprocessing
+Observed issue: missed detections compared with PyTorch
+Fix: letterbox preprocessing plus letterbox-aware box restoration
+Result: PyTorch/ONNX visual alignment improved significantly
 ```
 
----
+Related docs:
 
-## 2. Repository Structure
+- [Phase 16.1 ONNX export](docs/edge_ai/phase_16_1_onnx_export.md)
+- [Phase 16.2 ONNX image inference](docs/edge_ai/phase_16_2_onnx_image_inference.md)
+- [Phase 16.3 ONNX video inference](docs/edge_ai/phase_16_3_onnx_video_inference.md)
+- [Phase 16.4 PyTorch vs ONNX comparison](docs/edge_ai/phase_16_4_pytorch_vs_onnx_comparison.md)
+
+## Embedded Controller
+
+The embedded controller receives timing commands from the AI host, validates them, executes a traffic light finite-state machine, and reports status/diagnostics.
+
+Implemented or documented controller concepts:
+
+- FreeRTOS tasks
+- queues for command ownership
+- UART receive task
+- validated signal plan queue
+- traffic light FSM task
+- software timer status reporting
+- ACK / NACK protocol
+- host timeout watchdog and safe fallback concept
+- mutex-protected serial logging
+- task notification cleanup
+
+Main embedded prototype:
 
 ```text
-adaptive-traffic-light-control/
-├── datasets/
-│   ├── sample_videos/
-│   ├── benchmark_videos/
-│   ├── roboflow_export/
-│   └── snapshots/
-│
+firmware/esp32_freertos_traffic_light/
+```
+
+Relevant docs:
+
+- [FreeRTOS queue warmup](docs/embedded/Phase_15_1_freertos_queue_warmup.md)
+- [Traffic FSM task](docs/embedded/phase_15_5_traffic_fsm_task.md)
+- [ACK / NACK protocol](docs/embedded/phase_15_6_ack_nack_protocol.md)
+- [Host timeout watchdog](docs/embedded/phase_15_9_host_timeout_watchdog.md)
+- [Runtime diagnostics](docs/embedded/phase_15_10_runtime_diagnostics.md)
+
+## STM32 PCB Hardware Integration
+
+The project is being extended from software simulation and ESP32/FreeRTOS prototyping toward an STM32F103C8T6-based controller PCB.
+
+Current status:
+
+```text
+Hardware received / schematic documentation started / integration planning in progress
+```
+
+Schematic blocks under documentation:
+
+- power input and 3.3 V regulation
+- STM32F103C8T6 MCU core
+- UART interface to Raspberry Pi
+- SWD programming header
+- traffic light LED outputs
+- dual 7-segment display
+- expansion headers
+
+Planned STM32 work:
+
+- pin mapping
+- firmware bring-up plan
+- UART protocol adaptation
+- traffic light output verification
+- end-to-end Raspberry Pi to STM32 demo
+
+## Repository Structure
+
+```text
+.
+├── deployment/
+│   ├── compare/
+│   └── onnx/
 ├── docs/
-│   ├── baselines/
-│   ├── benchmarks/
-│   └── deployment/
-│
+│   ├── edge_ai/
+│   ├── embedded/
+│   ├── hardware/
+│   │   └── stm32_pcb/
+│   └── security/
 ├── experiments/
-│   ├── test_yolo_detector.py
-│   ├── benchmark_detector.py
-│   ├── test_counter.py
-│   ├── test_density.py
-│   ├── test_detector.py
-│   ├── test_roi.py
-│   └── test_scheduler.py
-│
-├── outputs/
-│   ├── baselines/
-│   └── benchmarks/
-│
+├── firmware/
+│   ├── esp32_freertos_traffic_light/
+│   └── esp32_traffic_light/
 ├── pc_app/
-│   ├── configs/
-│   │   └── roi_example.json
 │   ├── control/
-│   │   └── scheduler.py
-│   ├── models/
-│   │   └── local/
-│   │       └── README.md
-│   ├── vision/
-│   │   ├── detector.py
-│   │   ├── detector_yolo.py
-│   │   ├── detector_factory.py
-│   │   ├── classes.py
-│   │   ├── counter.py
-│   │   ├── density.py
-│   │   ├── roi.py
-│   │   └── visualize.py
-│   ├── config.py
-│   └── main.py
-│
-├── requirements.txt
-├── requirements-roboflow.txt
-├── .env.example
-└── README.md
+│   ├── security/
+│   └── vision/
+├── results/
+│   ├── comparison/
+│   ├── onnx_image_predictions/
+│   └── onnx_video_predictions/
+└── yolo_research/
+    ├── configs/
+    ├── scripts/
+    └── src/
 ```
 
----
+## Technical Stack
 
-## 3. Quick Setup
+| Area | Tools / Technologies |
+| --- | --- |
+| Computer vision | OpenCV, Ultralytics YOLO |
+| Model training | Python, PyTorch, YOLO training scripts |
+| Edge AI deployment | ONNX, ONNX Runtime |
+| Comparison / validation | PyTorch vs ONNX image comparison, visual inspection, smoke tests |
+| Application logic | ROI counting, density estimation, adaptive green-time planning |
+| Embedded firmware | C++, FreeRTOS, PlatformIO |
+| MCU path | ESP32 prototype, STM32F103C8T6 controller PCB path |
+| Communication | UART, `PLAN` / `ACK` / `STATUS` protocol |
+| Target AI host | Raspberry Pi planned |
+| Repository workflow | Git, GitHub, phase-based documentation |
 
-### 3.1 Clone the repository
+## How To Run
 
-```bash
-git clone https://github.com/KaiserRichard/adaptive-traffic-light-control.git
-cd adaptive-traffic-light-control
-```
-
-### 3.2 Create virtual environment
-
-macOS / Linux:
+Install dependencies:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 ```
 
-Windows PowerShell:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-### 3.3 Install dependencies
+Inspect available Edge AI commands:
 
 ```bash
-pip install --upgrade pip
-pip install -r requirements.txt
+python deployment/onnx/infer_onnx_image.py --help
+python deployment/onnx/infer_onnx_video.py --help
+python deployment/compare/compare_pytorch_onnx_image.py --help
 ```
 
-### 3.4 Verify installation
-
-```bash
-python -c "import cv2, torch, numpy, ultralytics; print('imports ok'); print('torch:', torch.__version__); print('numpy:', numpy.__version__); print('ultralytics:', ultralytics.__version__)"
-```
-
-Expected main versions:
-
-```text
-torch: 2.2.2
-numpy: 1.26.4
-ultralytics: 8.4.22
-```
-
----
-
-## 4. Model Setup
-
-Model files are not committed to GitHub.
-
-Put local YOLO models here:
-
-```text
-pc_app/models/local/
-```
-
-Expected examples:
-
-```text
-pc_app/models/local/yolov8n.pt
-pc_app/models/local/yolo26n.pt
-```
-
-### 4.1 Create model folder
+Example ONNX image inference:
 
 ```bash
-mkdir -p pc_app/models/local
+python deployment/onnx/infer_onnx_image.py \
+  --model deployment/onnx/atlc_yolo26n_custom.onnx \
+  --image yolo_research/datasets/atlc_2000/images/test/09150440_jpg.rf.DvAoBPo7uxkzXD4hgu8H.jpg \
+  --output results/onnx_image_predictions/09150440_onnx.jpg \
+  --imgsz 640 \
+  --conf 0.25 \
+  --providers CPUExecutionProvider
 ```
 
-### 4.2 Download YOLOv8n
-
-```bash
-python -c "from ultralytics import YOLO; YOLO('yolov8n.pt')"
-mv yolov8n.pt pc_app/models/local/yolov8n.pt
-```
-
-### 4.3 Download YOLO26n
-
-```bash
-python -c "from ultralytics import YOLO; YOLO('yolo26n.pt')"
-mv yolo26n.pt pc_app/models/local/yolo26n.pt
-```
-
-### 4.4 Check model files
+Example PyTorch vs ONNX comparison:
 
 ```bash
-ls -lh pc_app/models/local/
+python deployment/compare/compare_pytorch_onnx_image.py \
+  --pt-model yolo_research/outputs/runs/atlc_yolo26n_custom/weights/best.pt \
+  --onnx-model deployment/onnx/atlc_yolo26n_custom.onnx \
+  --image yolo_research/datasets/atlc_2000/images/test/09150440_jpg.rf.DvAoBPo7uxkzXD4hgu8H.jpg \
+  --output /tmp/atlc_phase16_4_comparison_fixed.jpg \
+  --imgsz 640 \
+  --conf 0.25 \
+  --providers CPUExecutionProvider \
+  --runs 5
 ```
 
-Expected:
-
-```text
-README.md
-yolov8n.pt
-yolo26n.pt
-```
-
-If the model file is missing, the program will raise:
-
-```text
-FileNotFoundError: YOLO model file not found
-```
-
----
-
-## 5. Video Setup
-
-Video files are not committed to GitHub if they are large.
-
-Put test videos here:
-
-```text
-datasets/sample_videos/
-```
-
-Create the folder if needed:
-
-```bash
-mkdir -p datasets/sample_videos
-```
-
-Expected examples:
-
-```text
-datasets/sample_videos/test.mov
-datasets/sample_videos/test.mp4
-```
-
-If your video has another name, update `VIDEO_SOURCE` in `.env`.
-
----
-
-## 6. Environment Configuration
-
-Create `.env` from `.env.example`:
-
-```bash
-cp .env.example .env
-```
-
-Recommended `.env` for local YOLO testing:
-
-```env
-# Detector backend
-DETECTOR_BACKEND=yolo
-
-# Local YOLO model
-YOLO_MODEL_PATH=./pc_app/models/local/yolo26n.pt
-YOLO_IMGSZ=640
-YOLO_VERBOSE=false
-
-# Video input
-VIDEO_SOURCE=./datasets/sample_videos/test.mov
-
-# Detection threshold
-CONFIDENCE_THRESHOLD=0.3
-
-# Runtime mode
-SHOW_WINDOW=false
-SAVE_OUTPUT_VIDEO=false
-OUTPUT_VIDEO_PATH=./outputs/benchmarks/yolo26n_pt_pc/annotated_full_pipeline.mp4
-
-# Density and scheduler
-DENSITY_SMOOTHING_ALPHA=0.30
-BASE_GREEN_TIME=20
-MIN_GREEN_TIME=10
-MAX_GREEN_TIME=45
-YELLOW_TIME=3
-ALL_RED_TIME=1
-DENSITY_EPSILON=1e-6
-
-# Benchmark
-BENCHMARK_MAX_FRAMES=300
-```
-
-To test YOLOv8n instead:
-
-```env
-YOLO_MODEL_PATH=./pc_app/models/local/yolov8n.pt
-```
-
-To test YOLO26n:
-
-```env
-YOLO_MODEL_PATH=./pc_app/models/local/yolo26n.pt
-```
-
----
-
-## 7. Runtime Modes
-
-Choose mode by changing `.env`.
-
-### Benchmark mode
-
-Best for measuring FPS:
-
-```env
-SHOW_WINDOW=false
-SAVE_OUTPUT_VIDEO=false
-```
-
-### Evidence export mode
-
-Best for creating annotated output video:
-
-```env
-SHOW_WINDOW=false
-SAVE_OUTPUT_VIDEO=true
-```
-
-### Live demo mode
-
-Best for visual demo:
-
-```env
-SHOW_WINDOW=true
-SAVE_OUTPUT_VIDEO=false
-```
-
-### Debug mode
-
-Use only for short debugging:
-
-```env
-SHOW_WINDOW=true
-SAVE_OUTPUT_VIDEO=true
-```
-
-Debug mode is slowest because it both displays and writes video.
-
----
-
-## 8. Run Local YOLO Smoke Test
-
-This checks whether the model loads and detects objects on the first frame.
-
-```bash
-python -m experiments.test_yolo_detector
-```
-
-Expected output:
-
-```text
-Local YOLO detections:
-Total: ...
-{'bbox': [...], 'conf': ..., 'class_name': 'car'}
-```
-
-This verifies:
-
-- video file can be opened
-- YOLO model file exists
-- YOLO inference works
-- class normalization works
-- detector output format matches the rest of the pipeline
-
----
-
-## 9. Run Detector Benchmark
-
-This measures detector-only performance.
-
-```bash
-python -m experiments.benchmark_detector
-```
-
-The benchmark output is saved here:
-
-```text
-outputs/benchmarks/<model_name>_<model_format>_<device>/
-```
-
-Example for YOLO26n on PC:
-
-```text
-outputs/benchmarks/yolo26n_pt_pc/
-├── metrics.json
-└── run_notes.md
-```
-
-Example for YOLOv8n on PC:
-
-```text
-outputs/benchmarks/yolov8n_pt_pc/
-├── metrics.json
-└── run_notes.md
-```
-
-Check metrics:
-
-```bash
-cat outputs/benchmarks/yolo26n_pt_pc/metrics.json
-```
-
-Important:
-
-`metrics.json` is created only after the benchmark finishes.
-
-If the benchmark is interrupted with `Ctrl+C`, `metrics.json` may not be created.
-
-Use this in `.env` to limit runtime:
-
-```env
-BENCHMARK_MAX_FRAMES=300
-```
-
----
-
-## 10. Run Full Pipeline
-
-Run the full adaptive traffic light pipeline:
-
-```bash
-python -m pc_app.main
-```
-
-This includes:
-
-```text
-frame reading
-→ YOLO inference
-→ ROI split
-→ vehicle counting
-→ density estimation
-→ EMA smoothing
-→ adaptive signal timing
-→ visualization drawing
-→ optional video writing
-→ optional GUI display
-```
-
-The program prints profiling information every 30 frames, for example:
-
-```text
-detect_ms
-logic_ms
-draw_ms
-writer_ms
-display_ms
-total_ms
-full_loop_fps_est
-```
-
----
-
-## 11. Current Benchmark Reference
-
-Current local PC result using YOLO26n:
-
-```text
-Detector-only FPS: around 11–13 FPS
-Inference time: around 75–90 ms/frame
-```
-
-Full pipeline reference:
-
-```text
-Display OFF, video saving OFF: around 10–12 FPS
-Display OFF, video saving ON:  around 7–8.5 FPS
-Display ON, video saving ON:   around 3–5 FPS
-```
-
-Typical profiling:
-
-```text
-detect_ms:   ~75–100 ms
-logic_ms:    ~0.1 ms
-draw_ms:     ~1.5 ms
-writer_ms:   ~30–50 ms
-display_ms:  ~80–140 ms
-```
-
-Interpretation:
-
-```text
-The adaptive traffic-light logic is lightweight.
-The main bottleneck is YOLO inference.
-VideoWriter and GUI display add significant overhead.
-```
-
----
-
-## 12. Raspberry Pi Deployment
-
-The Raspberry Pi will be used as the edge-AI host.
-
-Target architecture:
-
-```text
-Camera / video input
-→ Raspberry Pi
-→ Local YOLO detector
-→ ROI split
-→ density estimation
-→ adaptive timing
-→ UART to ESP32/STM32
-```
-
-### 12.1 Install system packages on Raspberry Pi
-
-```bash
-sudo apt update
-sudo apt install -y python3-venv python3-pip git libgl1 libglib2.0-0
-```
-
-### 12.2 Clone repository
-
-```bash
-git clone https://github.com/KaiserRichard/adaptive-traffic-light-control.git
-cd adaptive-traffic-light-control
-```
-
-### 12.3 Create virtual environment
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-If PyTorch installation fails on Raspberry Pi, use a Raspberry Pi-specific requirements file later.
-
-### 12.4 Copy model file to Raspberry Pi
-
-From your PC/Mac:
-
-```bash
-scp pc_app/models/local/yolo26n.pt pi@<RASPI_IP>:~/adaptive-traffic-light-control/pc_app/models/local/
-```
-
-Optional YOLOv8n:
-
-```bash
-scp pc_app/models/local/yolov8n.pt pi@<RASPI_IP>:~/adaptive-traffic-light-control/pc_app/models/local/
-```
-
-### 12.5 Copy test video to Raspberry Pi
-
-From your PC/Mac:
-
-```bash
-scp datasets/sample_videos/test.mov pi@<RASPI_IP>:~/adaptive-traffic-light-control/datasets/sample_videos/
-```
-
-### 12.6 Create `.env` on Raspberry Pi
-
-Recommended Raspberry Pi `.env`:
-
-```env
-DETECTOR_BACKEND=yolo
-
-YOLO_MODEL_PATH=./pc_app/models/local/yolo26n.pt
-YOLO_IMGSZ=640
-YOLO_VERBOSE=false
-
-VIDEO_SOURCE=./datasets/sample_videos/test.mov
-CONFIDENCE_THRESHOLD=0.3
-
-SHOW_WINDOW=false
-SAVE_OUTPUT_VIDEO=false
-BENCHMARK_MAX_FRAMES=300
-
-DENSITY_SMOOTHING_ALPHA=0.30
-BASE_GREEN_TIME=20
-MIN_GREEN_TIME=10
-MAX_GREEN_TIME=45
-YELLOW_TIME=3
-ALL_RED_TIME=1
-DENSITY_EPSILON=1e-6
-```
-
-### 12.7 Run tests on Raspberry Pi
-
-Smoke test:
-
-```bash
-python -m experiments.test_yolo_detector
-```
-
-Detector benchmark:
-
-```bash
-python -m experiments.benchmark_detector
-```
-
-Full pipeline:
-
-```bash
-python -m pc_app.main
-```
-
-Expected benchmark folder on Raspberry Pi:
-
-```text
-outputs/benchmarks/yolo26n_pt_raspi/
-├── metrics.json
-└── run_notes.md
-```
-
----
-
-## 13. Roboflow Baseline
-
-Roboflow was used as an early hosted inference baseline.
-
-It is preserved for documentation and comparison only.
-
-Roboflow dependencies are separated in:
-
-```text
-requirements-roboflow.txt
-```
-
-Do not install `requirements-roboflow.txt` into the same environment as `requirements.txt` unless compatibility has been tested.
-
-Reason:
-
-```text
-Roboflow inference SDK may require NumPy 2.x.
-The main YOLO/PyTorch environment uses NumPy 1.26.4.
-```
-
----
-
-## 14. ONNX / NCNN Strategy
-
-Do not start with ONNX or NCNN immediately.
-
-First benchmark `.pt` on Raspberry Pi.
-
-Recommended order:
-
-```text
-1. YOLO26n.pt on PC
-2. YOLO26n.pt on Raspberry Pi
-3. Reduce YOLO_IMGSZ if needed
-4. Try frame skipping if needed
-5. Export ONNX if .pt is too slow
-6. Try NCNN if ONNX is still not good enough
-```
-
-Correct mental model:
-
-```text
-YOLO26n = model
-.pt / ONNX / NCNN = deployment formats
-```
-
-Choose the model first. Then benchmark deployment formats.
-
----
-
-## Detector Tuning Notes
-
-Current testing shows that pretrained YOLO detects cars, buses, and trucks better than motorbikes in high-angle dense traffic scenes.
-
-Increasing `YOLO_IMGSZ` from 640 to 960 improves small-object detection to some extent, but reduces FPS noticeably. Lowering `CONFIDENCE_THRESHOLD` from 0.3 to 0.2 has limited impact because detected motorbikes usually already have confidence above 0.3.
-
-This suggests that the main issue is domain mismatch rather than only threshold tuning.
-
-Detailed notes are stored in:
-
-```text
-docs/benchmarks/yolo_hyperparameter_tuning.md
-
-
-## 15. Common Issues
-
-### 15.1 NumPy conflict
-
-If you see:
-
-```text
-A module that was compiled using NumPy 1.x cannot be run in NumPy 2.x
-```
-
-Run:
-
-```bash
-pip uninstall -y numpy
-pip install numpy==1.26.4
-```
-
-Verify:
-
-```bash
-python -c "import torch, numpy; print(torch.__version__); print(numpy.__version__)"
-```
-
-### 15.2 Missing model file
-
-If you see:
-
-```text
-FileNotFoundError: YOLO model file not found
-```
-
-Check:
-
-```bash
-ls -lh pc_app/models/local/
-```
-
-Then download/copy the model or update:
-
-```env
-YOLO_MODEL_PATH=./pc_app/models/local/yolo26n.pt
-```
-
-### 15.3 Missing video file
-
-If the video cannot be opened, check:
-
-```bash
-ls -lh datasets/sample_videos/
-```
-
-Then copy the video or update:
-
-```env
-VIDEO_SOURCE=./datasets/sample_videos/test.mov
-```
-
-### 15.4 No `metrics.json`
-
-`metrics.json` is created only when the benchmark script finishes.
-
-Run:
-
-```bash
-python -m experiments.benchmark_detector
-```
-
-Then check:
-
-```bash
-find outputs/benchmarks -name "metrics.json"
-```
-
-Make sure `.env` contains:
-
-```env
-BENCHMARK_MAX_FRAMES=300
-```
-
----
-
-## 16. Git Policy
-
-Do not commit:
-
-```text
-*.pt
-*.onnx
-*_ncnn_model/
-*.mp4
-*.mov
-*.avi
-```
-
-Commit:
-
-```text
-source code
-README.md
-docs/
-.env.example
-run_notes.md
-metrics.json if useful for report evidence
-```
-
----
-
-## 17. Short Roadmap
-
-```text
-Phase 1 — Basic vehicle detection
-Phase 2 — ROI and direction-based counting
-Phase 3 — Density estimation
-Phase 4 — Adaptive signal timing
-Phase 5 — Requirements cleanup + Roboflow baseline preservation
-Phase 6 — Local YOLO + Raspberry Pi deployment testbed
-Phase 7 — UART communication with ESP32/STM32
-Phase 8 — Robustness: fake MCU, watchdog, 74HC595, fail-safe
-```
-
----
-
-## 18. Final Direction
-
-```text
-Roboflow hosted baseline
-→ Local YOLO detector
-→ Raspberry Pi edge deployment
-→ UART communication
-→ ESP32/STM32 traffic light controller
-```
-
-Final goal:
-
-```text
-A real adaptive traffic light testbed combining computer vision, edge AI, and embedded-system control.
-```
+For the full local adaptive traffic pipeline, see `pc_app/` and the deployment docs under `docs/deployment/`.
+
+## Development Roadmap
+
+| Phase | Status | Description |
+| --- | --- | --- |
+| Phase 16.5 | Planned | ONNX Quantization Experiment |
+| Phase 16.6 | Planned | Edge AI Benchmark Report |
+| Phase 16.7 | Planned | Raspberry Pi / TFLite Deployment Path |
+| Phase 16.9 | Planned | AI Host `PLAN` Generation Interface |
+| Phase 16.10 | Planned | AI-to-MCU Integration Preparation |
+| Phase 17.1 | Planned | STM32 PCB Documentation and Pin Mapping |
+| Phase 17.2 | Planned | STM32 PCB Bring-Up Firmware |
+| Phase 17.x | Planned | End-to-end Raspberry Pi to STM32 hardware demo |
+
+TensorRT / Jetson deployment is optional future work and is not the current target path.
+
+## Engineering Highlights
+
+- End-to-end system boundary from perception to embedded controller behavior
+- Deployment-grade model export and ONNX Runtime validation
+- Practical PyTorch vs ONNX comparison instead of assuming export correctness
+- Real preprocessing bug found and fixed through visual/runtime comparison
+- FreeRTOS task ownership, queues, UART parsing, FSM execution, status reporting, and watchdog concepts
+- Hardware integration moving toward an STM32F103C8T6 PCB with documented schematic blocks
+- Phase-based documentation for reproducibility and recruiter review
