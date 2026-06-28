@@ -8,4 +8,7 @@ pyserial==3.5
 ultralytics==8.4.22
 torch==2.2.2
 torchvision==0.17.2
+onnx==1.17.0
+onnxruntime==1.20.1
+onnxslim==0.1.71
 networkx==3.4.2
