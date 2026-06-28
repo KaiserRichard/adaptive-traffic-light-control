@@ -111,6 +111,59 @@ def load_image(image_path: Path) -> np.ndarray:
     return image_bgr
 
 
+def letterbox_geometry(original_width: int, original_height: int, imgsz: int) -> tuple[float, int, int, int, int]:
+    """
+    Compute Ultralytics-style letterbox resize ratio and padding.
+
+    Why:
+
+        Ultralytics preserves aspect ratio before inference and pads the image
+        to the requested square input size. ONNX must use the same geometry so
+        returned boxes can be restored to the original image coordinates.
+    """
+
+    ratio = min(imgsz / original_height, imgsz / original_width)
+    resized_width = int(round(original_width * ratio))
+    resized_height = int(round(original_height * ratio))
+
+    pad_width = imgsz - resized_width
+    pad_height = imgsz - resized_height
+    pad_x = int(round(pad_width / 2 - 0.1))
+    pad_y = int(round(pad_height / 2 - 0.1))
+
+    return ratio, pad_x, pad_y, resized_width, resized_height
+
+
+def letterbox_image(image_bgr: np.ndarray, imgsz: int) -> tuple[np.ndarray, float, int, int]:
+    """
+    Convert an OpenCV image into a letterboxed ONNX input tensor.
+
+    Why:
+
+        Ultralytics PyTorch inference uses letterbox preprocessing instead of a
+        direct resize. Matching that behavior keeps aspect ratio intact, reduces
+        box distortion, and makes ONNX output more comparable with PyTorch.
+
+        This function returns the tensor plus the resize ratio and top-left
+        padding so decoded boxes can be restored with:
+
+            x = (x - pad_x) / ratio
+            y = (y - pad_y) / ratio
+    """
+
+    original_height, original_width = image_bgr.shape[:2]
+    ratio, pad_x, pad_y, resized_width, resized_height = letterbox_geometry(original_width, original_height, imgsz)
+
+    resized_bgr = cv2.resize(image_bgr, (resized_width, resized_height), interpolation=cv2.INTER_LINEAR)
+    letterboxed_bgr = np.full((imgsz, imgsz, 3), 114, dtype=np.uint8)
+    letterboxed_bgr[pad_y : pad_y + resized_height, pad_x : pad_x + resized_width] = resized_bgr
+
+    letterboxed_rgb = cv2.cvtColor(letterboxed_bgr, cv2.COLOR_BGR2RGB)
+    normalized = letterboxed_rgb.astype(np.float32) / 255.0
+    chw = np.transpose(normalized, (2, 0, 1))
+    return np.expand_dims(chw, axis=0), ratio, pad_x, pad_y
+
+
 def preprocess_image(image_bgr: np.ndarray, imgsz: int) -> np.ndarray:
     """
     Convert an OpenCV image into an ONNX input tensor.
@@ -123,22 +176,20 @@ def preprocess_image(image_bgr: np.ndarray, imgsz: int) -> np.ndarray:
 
         Therefore this function:
 
-            - resizes the image to the fixed model input size
+            - letterboxes the image to the fixed model input size
+            - preserves aspect ratio and adds padding
             - converts OpenCV BGR pixels to RGB pixels
             - normalizes uint8 pixels from 0..255 to float32 0..1
             - converts HWC layout to CHW layout
             - adds the batch dimension
 
-        This phase uses a direct resize because it is a smoke-test inference
-        path. Letterbox preprocessing can be evaluated later if accuracy
-        comparison shows a mismatch with Ultralytics preprocessing.
+        Letterbox preprocessing is required for comparison with Ultralytics
+        PyTorch inference because direct resize distorts boxes on non-square
+        images.
     """
 
-    resized_bgr = cv2.resize(image_bgr, (imgsz, imgsz), interpolation=cv2.INTER_LINEAR)
-    resized_rgb = cv2.cvtColor(resized_bgr, cv2.COLOR_BGR2RGB)
-    normalized = resized_rgb.astype(np.float32) / 255.0
-    chw = np.transpose(normalized, (2, 0, 1))
-    return np.expand_dims(chw, axis=0)
+    input_tensor, _, _, _ = letterbox_image(image_bgr, imgsz)
+    return input_tensor
 
 
 def create_session(model_path: Path, providers: list[str]) -> ort.InferenceSession:
@@ -217,21 +268,20 @@ def run_inference(session: ort.InferenceSession, input_name: str, input_tensor: 
 
 def scale_box_to_original(box: np.ndarray, original_width: int, original_height: int, imgsz: int) -> tuple[int, int, int, int]:
     """
-    Scale one detection box from resized model coordinates back to the source image.
+    Restore one letterboxed detection box back to the source image.
 
     Why:
 
-        The image is resized to the model input size before inference. To draw
-        boxes on the original image, x coordinates must be scaled by the width
-        ratio and y coordinates must be scaled by the height ratio.
+        ONNX boxes are in the padded model input coordinate system. Because
+        preprocessing preserves aspect ratio and adds padding, box restoration
+        must remove the padding before dividing by the resize ratio.
     """
 
-    x_scale = original_width / imgsz
-    y_scale = original_height / imgsz
-    x1 = int(round(float(box[0]) * x_scale))
-    y1 = int(round(float(box[1]) * y_scale))
-    x2 = int(round(float(box[2]) * x_scale))
-    y2 = int(round(float(box[3]) * y_scale))
+    ratio, pad_x, pad_y, _, _ = letterbox_geometry(original_width, original_height, imgsz)
+    x1 = int(round((float(box[0]) - pad_x) / ratio))
+    y1 = int(round((float(box[1]) - pad_y) / ratio))
+    x2 = int(round((float(box[2]) - pad_x) / ratio))
+    y2 = int(round((float(box[3]) - pad_y) / ratio))
 
     x1 = max(0, min(original_width - 1, x1))
     y1 = max(0, min(original_height - 1, y1))

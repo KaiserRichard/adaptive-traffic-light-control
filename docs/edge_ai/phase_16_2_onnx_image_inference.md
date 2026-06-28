@@ -31,13 +31,14 @@ type: tensor(float)
 The inference script prepares the image by:
 
 - loading the image with OpenCV
-- resizing to `640 x 640` by default
+- resizing with Ultralytics-style letterbox preprocessing to `640 x 640` by default
+- preserving aspect ratio and padding with value `114`
 - converting BGR to RGB
 - normalizing pixels from `0..255` to `0..1`
 - converting `HWC` layout to `CHW`
 - adding the batch dimension
 
-Phase 16.2 uses direct resize for a simple smoke test. Letterbox preprocessing can be evaluated later if comparison against Ultralytics inference shows a meaningful mismatch.
+The original Phase 16.2 implementation used direct resize. Phase 16.4 replaced that with letterbox preprocessing because direct resize caused visible PyTorch/ONNX mismatch on non-square traffic images.
 
 ## ONNX Runtime
 
