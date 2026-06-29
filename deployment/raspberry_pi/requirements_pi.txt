@@ -1,0 +1,13 @@
+# Lightweight Raspberry Pi dependencies for the ATLC Edge AI host.
+# Use inside a Python virtual environment.
+
+numpy
+opencv-python
+onnxruntime
+
+# If OpenCV GUI/system dependencies are a problem on Raspberry Pi, replace
+# opencv-python with opencv-python-headless.
+
+# Optional after TFLite conversion exists and is validated:
+# tflite-runtime
+
