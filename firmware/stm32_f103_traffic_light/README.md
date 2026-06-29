@@ -16,6 +16,7 @@ No firmware has been built, flashed, or tested.
 No buildable STM32 firmware has been created yet.
 No flashable binary exists.
 Phase 17.2.3 proposes the future CMake scaffold.
+Phase 17.2.4 documents the portable FreeRTOS architecture and ESP32-to-STM32 porting plan.
 ```
 
 ## Target MCU
@@ -73,6 +74,8 @@ Detailed design notes:
 - [cmake_scaffold_proposal.md](cmake_scaffold_proposal.md) - future CMake scaffold proposal.
 - [firmware_architecture.md](firmware_architecture.md) - intended future module boundaries.
 - [minimal_build_checklist.md](minimal_build_checklist.md) - gates before the first real compile attempt.
+- [portable_freertos_architecture.md](portable_freertos_architecture.md) - future portable FreeRTOS architecture proposal based on the ESP32 reference implementation.
+- [esp32_to_stm32_porting_plan.md](esp32_to_stm32_porting_plan.md) - documentation-only plan for keeping ESP32 as a FreeRTOS testbed while preparing STM32 as the PCB target.
 
 ## GPIO Dependency on Pin Mapping
 
@@ -106,6 +109,10 @@ USART1 pins observed in schematic images:
 TX/RX crossing with Raspberry Pi is not validated yet.
 
 ## FreeRTOS Porting Plan
+
+The ESP32 FreeRTOS firmware remains the reference testbed for task ownership, queue flow, protocol parsing, safe FSM behavior, watchdog/fallback behavior, and STATUS/DIAG telemetry.
+
+The STM32 target should receive a board-specific implementation later. Portable application logic may eventually move into a reviewed `firmware/common/` structure, but no common migration, ESP32 refactor, or STM32 FreeRTOS implementation has been done yet.
 
 FreeRTOS should be added only after:
 
@@ -149,6 +156,8 @@ Real PCB required now? No
 - No UART firmware.
 - No LED GPIO driver.
 - No 7-segment driver.
+- No portable `firmware/common/` migration.
+- No ESP32 firmware refactor.
 - No FreeRTOS FSM port.
 - No end-to-end AI host demo.
 
@@ -164,6 +173,8 @@ This folder is complete for the current documentation-first STM32 preparation wo
 [ ] cmake_scaffold_proposal.md explains the future CMake scaffold.
 [ ] firmware_architecture.md explains the planned firmware modules.
 [ ] minimal_build_checklist.md defines the first compile gates.
+[ ] portable_freertos_architecture.md explains future common/ and board-layer boundaries.
+[ ] esp32_to_stm32_porting_plan.md explains the ESP32-to-STM32 migration path.
 [ ] bringup_plan.md documents firmware bring-up sequence.
 [ ] src/README.md and include/README.md clarify that source/header files are intentionally absent.
 [ ] No build artifacts or generated vendor files are committed.

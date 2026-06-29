@@ -49,6 +49,19 @@ Schematic block images currently exist as `.jpg` files in this folder. A `schema
 | Expansion headers | [06_expansion_headers.jpg](06_expansion_headers.jpg) | Documentation started |
 | SWD programming/debug header | [07_swd_programming_header.jpg](07_swd_programming_header.jpg) | Documentation started |
 
+## Hardware Block Explanation
+
+The detailed hardware explanation is in [stm32_hardware_blocks_explained.md](stm32_hardware_blocks_explained.md).
+
+That document supports:
+
+- Phase 17 hardware understanding.
+- PCB bring-up preparation.
+- microprocessor and analog/digital electronics explanation.
+- future STM32 firmware `board_config` planning.
+
+It is still schematic-level documentation. It does not claim power, SWD, UART, GPIO, LED, display, or full board validation.
+
 ## Raspberry Pi AI Host vs STM32 Controller Responsibilities
 
 | Area | Raspberry Pi AI host | STM32 PCB controller |
@@ -153,7 +166,8 @@ See [stm32_pcb_bringup_plan.md](stm32_pcb_bringup_plan.md).
 ## Next Steps
 
 1. Review [stm32f103c8t6_pin_mapping.md](stm32f103c8t6_pin_mapping.md) against the schematic source and PCB layout.
-2. Follow [stm32_pcb_review_notes.md](stm32_pcb_review_notes.md) before applying power.
-3. Use [stm32_pcb_bringup_plan.md](stm32_pcb_bringup_plan.md) for hardware bring-up.
-4. Use [stm32_uart_pi_validation_plan.md](stm32_uart_pi_validation_plan.md) before any AI host integration.
-5. Keep Phase 17 isolated from Phase 16 until a shared UART interface update is explicitly approved.
+2. Read [stm32_hardware_blocks_explained.md](stm32_hardware_blocks_explained.md) before board bring-up or firmware `board_config` planning.
+3. Follow [stm32_pcb_review_notes.md](stm32_pcb_review_notes.md) before applying power.
+4. Use [stm32_pcb_bringup_plan.md](stm32_pcb_bringup_plan.md) for hardware bring-up.
+5. Use [stm32_uart_pi_validation_plan.md](stm32_uart_pi_validation_plan.md) before any AI host integration.
+6. Keep Phase 17 isolated from Phase 16 until a shared UART interface update is explicitly approved.
