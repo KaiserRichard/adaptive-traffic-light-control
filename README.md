@@ -78,6 +78,7 @@ STM32F103C8T6 Controller PCB
 - ONNX Runtime image and video inference
 - PyTorch vs ONNX comparison workflow
 - letterbox preprocessing correction for deployment consistency
+- AI host PLAN generation interface for UART-ready control intent
 - ROI counting and traffic density pipeline
 - adaptive green-time planning
 - FreeRTOS-based embedded controller prototype
@@ -98,9 +99,10 @@ STM32F103C8T6 Controller PCB
 | ONNX image inference | Completed | Letterbox preprocessing and box restoration are implemented |
 | ONNX video inference | Completed | Basic video smoke test completed with CPUExecutionProvider |
 | PyTorch vs ONNX comparison | Completed | Deployment mismatch found and fixed with letterbox preprocessing |
-| Quantization | Planned | Phase 16.5, not implemented yet |
-| Full benchmark report | Planned | Phase 16.6, not a current performance claim |
-| Raspberry Pi AI deployment | Planned | Future AI host path |
+| Quantization | Completed / experiment | Phase 16.5 dynamic ONNX quantization reduced model size but was not faster on tested CPU |
+| Full benchmark report | Completed | Phase 16.6 compares FP32 ONNX Runtime and quantized ONNX Runtime across size, latency, FPS, and detections |
+| Raspberry Pi AI deployment | Prepared / hardware pending | Phase 16.7 adds setup notes, ONNX Runtime commands, benchmark command, requirements, and TFLite investigation notes |
+| AI host PLAN generation | Completed / interface | Phase 16.9 converts vehicle counts/density into UART-ready PLAN messages; UART sending remains pending |
 | FreeRTOS controller | Completed / prototype | ESP32 FreeRTOS controller path with tasks, queues, UART parser, FSM |
 | UART protocol | Completed / prototype | `PLAN`, `ACK` / `NACK`, status reporting, watchdog/fallback concepts |
 | STM32 PCB integration | Hardware received / documentation started | Schematic documentation and bring-up planning are being added |
@@ -325,11 +327,12 @@ For the full local adaptive traffic pipeline, see `pc_app/` and the deployment d
 
 | Phase | Status | Description |
 | --- | --- | --- |
-| Phase 16.5 | Planned | ONNX Quantization Experiment |
-| Phase 16.6 | Planned | Edge AI Benchmark Report |
-| Phase 16.7 | Planned | Raspberry Pi / TFLite Deployment Path |
-| Phase 16.9 | Planned | AI Host `PLAN` Generation Interface |
-| Phase 16.10 | Planned | AI-to-MCU Integration Preparation |
+| Phase 16.5 | Completed / experiment | ONNX Quantization Experiment |
+| Phase 16.6 | Completed | Edge AI Benchmark Report |
+| Phase 16.7 | Completed / hardware validation pending | Raspberry Pi / TFLite Deployment Path |
+| Phase 16.8 | Skipped / postponed | TensorRT / Jetson path is optional and no Jetson target is currently used |
+| Phase 16.9 | Completed / interface | AI Host `PLAN` Generation Interface; UART sending remains pending |
+| Phase 16.10 | Planned / not started | AI-to-MCU Integration Preparation |
 | Phase 17.1 | Planned | STM32 PCB Documentation and Pin Mapping |
 | Phase 17.2 | Planned | STM32 PCB Bring-Up Firmware |
 | Phase 17.x | Planned | End-to-end Raspberry Pi to STM32 hardware demo |
