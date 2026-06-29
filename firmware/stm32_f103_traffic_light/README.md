@@ -16,7 +16,7 @@ No firmware has been built, flashed, or tested.
 No buildable STM32 firmware has been created yet.
 No flashable binary exists.
 Phase 17.2.3 proposes the future CMake scaffold.
-Phase 17.2.4 documents the portable FreeRTOS architecture and ESP32-to-STM32 porting plan.
+Phase 17.2.4 closes the firmware planning phase and moves the recommended next step to Phase 17.3 hardware bring-up.
 ```
 
 ## Target MCU
@@ -70,12 +70,13 @@ This layout is not committed as source code yet because the build system and HAL
 
 Detailed design notes:
 
+- [phase_17_2_closure_decision.md](phase_17_2_closure_decision.md) - Phase 17.2 streamlining and closure decision.
 - [build_scaffold_design.md](build_scaffold_design.md) - future non-flashing build scaffold design.
 - [cmake_scaffold_proposal.md](cmake_scaffold_proposal.md) - future CMake scaffold proposal.
 - [firmware_architecture.md](firmware_architecture.md) - intended future module boundaries.
 - [minimal_build_checklist.md](minimal_build_checklist.md) - gates before the first real compile attempt.
-- [portable_freertos_architecture.md](portable_freertos_architecture.md) - future portable FreeRTOS architecture proposal based on the ESP32 reference implementation.
-- [esp32_to_stm32_porting_plan.md](esp32_to_stm32_porting_plan.md) - documentation-only plan for keeping ESP32 as a FreeRTOS testbed while preparing STM32 as the PCB target.
+- [portable_freertos_architecture.md](portable_freertos_architecture.md) - optional future portable FreeRTOS reference based on the ESP32 implementation.
+- [esp32_to_stm32_porting_plan.md](esp32_to_stm32_porting_plan.md) - optional future ESP32-to-STM32 migration reference.
 
 ## GPIO Dependency on Pin Mapping
 
@@ -113,6 +114,8 @@ TX/RX crossing with Raspberry Pi is not validated yet.
 The ESP32 FreeRTOS firmware remains the reference testbed for task ownership, queue flow, protocol parsing, safe FSM behavior, watchdog/fallback behavior, and STATUS/DIAG telemetry.
 
 The STM32 target should receive a board-specific implementation later. Portable application logic may eventually move into a reviewed `firmware/common/` structure, but no common migration, ESP32 refactor, or STM32 FreeRTOS implementation has been done yet.
+
+Phase 17.2 is now closed as a documentation/planning phase. The next real track is Phase 17.3 hardware bring-up, beginning with pre-power inspection and measurement. `firmware/common/` migration is future optional work, not a blocker for Phase 17.3.
 
 FreeRTOS should be added only after:
 
@@ -167,6 +170,7 @@ This folder is complete for the current documentation-first STM32 preparation wo
 
 ```text
 [ ] README documents purpose and status.
+[ ] phase_17_2_closure_decision.md records the closure decision and next step.
 [ ] toolchain_plan.md describes command-line options.
 [ ] toolchain_inspection.md records installed/missing tools.
 [ ] build_scaffold_design.md explains the future build scaffold.

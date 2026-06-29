@@ -21,7 +21,7 @@ main
 | Phase 17.2.1 - Command-Line STM32 Toolchain Inspection and README Synchronization | Completed as offline inspection/documentation | No tools installed; no firmware project created |
 | Phase 17.2.2 - Minimal Non-Flashing STM32 Build Scaffold Design Review | Completed as documentation-only scaffold design | No CMake/build/source files generated |
 | Phase 17.2.3 - Draft Non-Buildable CMake Scaffold Proposal | Completed as documentation-only CMake proposal | No CMake project, startup/linker files, or source files generated |
-| Phase 17.2.4 - Portable FreeRTOS Architecture and STM32 Hardware Block Documentation | Completed as documentation-only architecture review | No ESP32 refactor, common/ migration, STM32 port, or hardware validation |
+| Phase 17.2.4 - Phase 17.2 Streamlining and Closure Decision | Completed as cleanup/decision review | Phase 17.2 closed; no extra planning subphase required before Phase 17.3 |
 | Phase 17.3 - STM32 PCB Bring-Up Procedure | Completed as planned procedure | No bring-up step executed |
 | Phase 17.4 - UART Link Validation Plan | Completed as planned procedure | UART not tested |
 
@@ -66,6 +66,7 @@ main
 
 ### Phase 17.2.4
 
+- `firmware/stm32_f103_traffic_light/phase_17_2_closure_decision.md`
 - `firmware/stm32_f103_traffic_light/portable_freertos_architecture.md`
 - `firmware/stm32_f103_traffic_light/esp32_to_stm32_porting_plan.md`
 - `docs/hardware/stm32_pcb/stm32_hardware_blocks_explained.md`
@@ -261,85 +262,50 @@ This should decide the CMake + Make path, CMSIS/HAL/LL strategy, startup/linker 
 
 ## Phase 17.2.4 Notes
 
-What was reviewed from ESP32:
+What was audited:
 
-- `firmware/esp32_freertos_traffic_light/README.md`
-- `firmware/esp32_freertos_traffic_light/platformio.ini`
-- application configuration, message, protocol, queue, FSM, UART RX, logging, diagnostics, status reporter, and task headers.
-- corresponding ESP32 source files for startup, queues, FSM, UART receive, protocol parser, logging, diagnostics, status reporting, UART receive task, plan parser task, and traffic FSM task.
+- STM32 firmware README, toolchain plan, toolchain inspection, build scaffold design, firmware architecture note, minimal build checklist, CMake scaffold proposal, and Phase 17.2.3 result note.
+- STM32 hardware README, pin mapping, PCB review notes, bring-up plan, and UART validation plan.
+- Existing optional reference documents from local commit `6d39017`: portable FreeRTOS architecture, ESP32-to-STM32 porting plan, and hardware block explanation.
 
-Portable logic candidates:
+Redundancy found:
 
-- `RawMessage`, `ParsedPlanFields`, `SignalPlan`, `TrafficState`, and `ControllerStatus` concepts.
-- canonical `PLAN` parse/validate behavior.
-- `ACK`, `NACK`, `STATUS`, and `DIAG` message concepts.
-- default signal plan and bounded timing validation.
-- FSM state sequence and state-duration calculation.
-- pending-plan application at a safe cycle boundary.
-- host timeout and fallback behavior.
-- queue ownership model: UART receive task -> parser task -> FSM task.
+- `build_scaffold_design.md`, `minimal_build_checklist.md`, and `cmake_scaffold_proposal.md` overlap on future build prerequisites.
+- `toolchain_plan.md`, `toolchain_inspection.md`, and `cmake_scaffold_proposal.md` overlap on CMake/Make and `arm-none-eabi-gcc` direction.
+- `firmware_architecture.md`, `portable_freertos_architecture.md`, and `esp32_to_stm32_porting_plan.md` overlap on future module boundaries and ESP32 reference behavior.
+- README and ledger repeated some next-step guidance.
 
-ESP32-specific logic identified:
+What was cleaned:
 
-- PlatformIO / Arduino project structure.
-- `Serial` transport and `Serial.onReceive` callback.
-- ESP32 GPIO pin numbers, `pinMode`, and `digitalWrite`.
-- ESP32/Arduino startup through `setup()` and `loop()`.
-- ESP32 critical section behavior using `portMUX_TYPE`.
-- current diagnostics implementation using ESP32/FreeRTOS heap and task stack APIs.
-- current task stack sizes and priorities until remeasured for STM32.
+- `firmware/stm32_f103_traffic_light/README.md` now points to the closure decision and states that Phase 17.2 is closed.
+- `docs/embedded/phase_17_ledger.md` now treats Phase 17.2.4 as the closure/streamlining decision.
+- Next recommended step changed from more Phase 17.2 planning to Phase 17.3.1 pre-power inspection execution.
 
-What was proposed for `common/`:
+What was decided:
 
-```text
-firmware/
-├── common/
-│   ├── protocol/
-│   ├── core/
-│   ├── messages/
-│   ├── services/
-│   └── tasks/
-├── esp32_freertos_traffic_light/
-└── stm32_f103_traffic_light/
-```
+- Phase 17.2 has enough documentation for now.
+- Do not create more firmware-planning subphases before hardware bring-up.
+- Keep the existing portable FreeRTOS and hardware block documents as optional references, not blockers.
+- Do not create `firmware/common/` before hardware bring-up unless explicitly approved later.
+- Do not migrate ESP32 files, refactor ESP32 firmware, or implement STM32 firmware in this closure phase.
 
-No `firmware/common/` directory was created in this phase.
+Why Phase 17.2 can close:
 
-What was proposed for the STM32 board layer:
-
-- USART transport abstraction.
-- GPIO output abstraction.
-- seven-segment display abstraction.
-- STM32-specific board configuration after pin validation.
-- future FreeRTOS integration only after build, power, SWD, GPIO, and UART bring-up are safe.
-
-What was added to hardware block documentation:
-
-- power block explanation: USB 5 V input, SS34, AMS1117-3.3, rails, decoupling, regulator heat/dropout.
-- MCU block explanation: STM32F103C8T6, VDD/GND, BOOT0, NRST, SWD, UART, GPIO, decoupling.
-- UART-to-Pi block explanation: 3.3 V signaling, TX/RX crossing, shared GND, baud/framing risks.
-- traffic LED block explanation: GPIO current limits, resistor-limited LEDs, active polarity and lane/color verification.
-- seven-segment block explanation: common anode/cathode, multiplexing, current budget, ghosting, refresh timing.
-- SWD / NRST block explanation: debug access, target voltage reference, reset recovery, attach failure symptoms.
-
-What was intentionally not implemented:
-
-- no ESP32 source changes.
-- no ESP32 refactor.
-- no `firmware/common/` migration.
-- no STM32 firmware source files.
-- no buildable STM32 project.
-- no startup/linker/vendor files.
-- no UART/GPIO/FreeRTOS implementation.
-- no hardware validation.
+- Toolchain direction is documented.
+- CMake + Make remains proposal-only.
+- startup/linker requirements are documented.
+- firmware module boundaries are documented.
+- hardware pin mapping and bring-up risks are documented.
+- UART validation plan is documented.
+- remaining risks are hardware evidence risks, not missing planning documents.
 
 Next recommended Phase 17 step:
 
 ```text
-Phase 17.2.5 - Review and approve portable firmware/common migration plan
+Phase 17.3.1 - STM32 PCB pre-power inspection execution
 ```
 
-This is safer than starting STM32 FreeRTOS implementation because the project still needs to approve shared-code boundaries, C/C++ strategy, board abstraction interfaces, STM32 toolchain install, pin validation, and test strategy.
+This should collect hardware evidence and should not build, flash, or port firmware.
 
 ## Files Intentionally Not Created
 
@@ -447,13 +413,7 @@ Do not claim:
 Recommended safe next step:
 
 ```text
-Phase 17.2.5 - Review and approve portable firmware/common migration plan
-```
-
-Alternative if hardware is available:
-
-```text
-Phase 17.3.1 - pre-power visual inspection and measurement worksheet
+Phase 17.3.1 - STM32 PCB pre-power inspection execution
 ```
 
 Do not start Phase 17.5 until the user approves the portable firmware boundary, pin ownership, STM32 build system direction, and board validation evidence requirements.
@@ -463,13 +423,13 @@ Do not start Phase 17.5 until the user approves the portable firmware boundary, 
 Preferred next safe prompt:
 
 ```text
-Continue Phase 17 with Phase 17.2.5 - Review and approve portable firmware/common migration plan.
+Continue Phase 17 with Phase 17.3.1 - STM32 PCB pre-power inspection execution.
 
 Do not flash hardware.
 Do not require STM32CubeIDE.
-Inspect the Phase 17 ledger, STM32 pin mapping, STM32 firmware architecture docs, portable FreeRTOS architecture proposal, ESP32-to-STM32 porting plan, and ESP32 FreeRTOS firmware.
-Decide whether firmware/common/ should eventually exist, which ESP32 logic is eligible for common/, which code must remain board-specific, what board support interfaces are required, and what tests are needed before any source movement.
-Do not move ESP32 files, do not create firmware/common/, do not install tools, do not create a buildable CMake project, do not add startup/linker files, and do not implement the STM32 FreeRTOS FSM yet.
+Inspect the Phase 17 ledger, STM32 PCB README, pin mapping, PCB review notes, bring-up plan, UART validation plan, and schematic images.
+Execute only the pre-power inspection workflow: visual inspection, connector orientation review, regulator/diode/capacitor orientation review, resistance checks between rails and ground, and evidence logging.
+Do not connect Raspberry Pi UART, do not connect ST-LINK until power/header orientation is reviewed, do not build firmware, do not flash firmware, and do not implement the STM32 FreeRTOS FSM.
 Keep the work on branch phase17-stm32-pcb-integration.
 ```
 
@@ -494,8 +454,7 @@ Identify the exact modules that would need to be ported, unresolved pin/toolchai
 [ ] Confirm UART header orientation before wiring Pi.
 [ ] Decide command-line STM32 toolchain direction.
 [ ] Decide whether to use HAL, LL, or CMSIS-only code.
-[ ] Review whether `firmware/common/` is appropriate before any source migration.
-[ ] Decide whether shared code should be C, C++, or a strict C-compatible subset.
+[ ] Treat `firmware/common/` migration as future optional work, not a Phase 17.3 blocker.
 [ ] Keep Phase 16 and Phase 17 branches separate.
 ```
 
@@ -533,7 +492,7 @@ Branch:
     phase17-stm32-pcb-integration
 
 Completed:
-    Phase 17.1, Phase 17.2, Phase 17.2.1, Phase 17.2.2, Phase 17.2.3, Phase 17.2.4, Phase 17.3, and Phase 17.4 as offline documentation/planning work.
+    Phase 17.1, Phase 17.2, Phase 17.2.1, Phase 17.2.2, Phase 17.2.3, Phase 17.2.4 streamlining/closure, Phase 17.3 planning, and Phase 17.4 planning as offline documentation work.
 
 Created files:
     docs/hardware/stm32_pcb/README.md
@@ -545,6 +504,7 @@ Created files:
     firmware/stm32_f103_traffic_light/bringup_plan.md
     firmware/stm32_f103_traffic_light/toolchain_plan.md
     firmware/stm32_f103_traffic_light/toolchain_inspection.md
+    firmware/stm32_f103_traffic_light/phase_17_2_closure_decision.md
     firmware/stm32_f103_traffic_light/build_scaffold_design.md
     firmware/stm32_f103_traffic_light/cmake_scaffold_proposal.md
     firmware/stm32_f103_traffic_light/docs/phase_17_2_3_cmake_scaffold_proposal.md
@@ -564,7 +524,7 @@ Hardware status:
     Schematic documentation, hardware block explanation, and bring-up planning started. Final hardware validation pending.
 
 Firmware status:
-    Documentation-first STM32 firmware skeleton, build scaffold design, CMake scaffold proposal, portable FreeRTOS architecture proposal, and ESP32-to-STM32 porting plan only. No source files, common/ migration, CMake build system, startup file, linker script, generated project files, or binary artifacts.
+    Phase 17.2 is closed as a documentation/planning phase. STM32 firmware remains documentation-first only. No source files, common/ migration, CMake build system, startup file, linker script, generated project files, or binary artifacts.
 
 UART status:
     Validation plan written. UART not tested. UART firmware not implemented.
@@ -576,5 +536,5 @@ Do not overclaim:
     No power validation, SWD validation, blink, UART test, LED test, 7-segment test, FSM port, or AI-to-STM32 demo has been completed.
 
 Next recommended step:
-    Phase 17.2.5 review and approve portable firmware/common migration plan, or Phase 17.3.1 pre-power inspection worksheet if hardware is available.
+    Phase 17.3.1 STM32 PCB pre-power inspection execution.
 ```
