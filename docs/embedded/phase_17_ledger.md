@@ -19,6 +19,7 @@ main
 | Phase 17.1 - STM32 PCB Documentation and Pin Mapping | Completed as offline documentation | Hardware validation pending |
 | Phase 17.2 - STM32 Firmware Skeleton and Command-Line Build Plan | Completed as documentation-first skeleton | No source or build system implemented |
 | Phase 17.2.1 - Command-Line STM32 Toolchain Inspection and README Synchronization | Completed as offline inspection/documentation | No tools installed; no firmware project created |
+| Phase 17.2.2 - Minimal Non-Flashing STM32 Build Scaffold Design Review | Completed as documentation-only scaffold design | No CMake/build/source files generated |
 | Phase 17.3 - STM32 PCB Bring-Up Procedure | Completed as planned procedure | No bring-up step executed |
 | Phase 17.4 - UART Link Validation Plan | Completed as planned procedure | UART not tested |
 
@@ -44,6 +45,14 @@ main
 
 - `firmware/stm32_f103_traffic_light/toolchain_inspection.md`
 - `README.md`
+- `docs/embedded/phase_17_ledger.md`
+
+### Phase 17.2.2
+
+- `firmware/stm32_f103_traffic_light/build_scaffold_design.md`
+- `firmware/stm32_f103_traffic_light/firmware_architecture.md`
+- `firmware/stm32_f103_traffic_light/minimal_build_checklist.md`
+- `firmware/stm32_f103_traffic_light/README.md`
 - `docs/embedded/phase_17_ledger.md`
 
 ### Phase 17.3
@@ -124,6 +133,68 @@ Next recommended Phase 17 step:
 Phase 17.2.2 - Minimal non-flashing STM32 build scaffold design review
 ```
 
+## Phase 17.2.2 Notes
+
+What was created:
+
+- `firmware/stm32_f103_traffic_light/build_scaffold_design.md`
+- `firmware/stm32_f103_traffic_light/firmware_architecture.md`
+- `firmware/stm32_f103_traffic_light/minimal_build_checklist.md`
+
+Existing file updates:
+
+- `firmware/stm32_f103_traffic_light/README.md` now links the scaffold, architecture, checklist, toolchain plan, and toolchain inspection docs.
+- `docs/embedded/phase_17_ledger.md` now records Phase 17.2.2 status and next-step guidance.
+
+Why no build files were generated yet:
+
+- `arm-none-eabi-gcc` is not installed.
+- Startup file source is not selected.
+- Linker script source is not selected.
+- CMSIS/HAL/LL strategy is not selected.
+- Pin mapping is not hardware-validated.
+- Generated vendor-file policy is not decided.
+- The current phase is a design review, not a compile or flash phase.
+
+Recommended future build path:
+
+```text
+CMake + Make first
+```
+
+Reason:
+
+- CMake is installed.
+- GNU Make is installed.
+- Ninja is missing.
+- `arm-none-eabi-gcc` is missing.
+- A Make-compatible CMake workflow is the lowest-friction next build path for this MacBook.
+
+What must be installed later:
+
+- `arm-none-eabi-gcc` and binutils before any real STM32 compile.
+- `arm-none-eabi-gdb` only when source-level debug is needed.
+- Ninja only if the project later chooses Ninja over Make.
+- OpenOCD or STM32CubeProgrammer CLI only when flashing/debugging is approved.
+
+What must be reviewed before first compile:
+
+- startup file source and license.
+- linker script source and STM32F103C8T6 flash/RAM layout.
+- CMSIS/HAL/LL strategy.
+- generated files policy.
+- `board_config.h` policy and pin mapping status.
+- artifact output paths and ignore policy.
+- compile-only scope with no flashing.
+
+Next recommended Phase 17 step:
+
+```text
+Phase 17.2.3 - Draft non-buildable CMake scaffold proposal
+```
+
+This is safer than installing tools immediately because the repository can still review exact future CMake files, compiler flags, source file names, and vendor-file policy without creating a buildable project or requiring ARM GCC.
+
 ## Files Intentionally Not Created
 
 - STM32CubeIDE project files.
@@ -132,7 +203,9 @@ Phase 17.2.2 - Minimal non-flashing STM32 build scaffold design review
 - Startup files.
 - Linker script.
 - CMakeLists.txt or Makefile.
+- CMake toolchain file.
 - STM32 firmware source files.
+- STM32 firmware header files beyond README placeholders.
 - `.elf`, `.bin`, or `.hex` build artifacts.
 - Flashing scripts.
 - Phase 17.5 FreeRTOS FSM port files.
@@ -227,7 +300,7 @@ Do not claim:
 Recommended safe next step:
 
 ```text
-Phase 17.2.2 - Minimal non-flashing STM32 build scaffold design review
+Phase 17.2.3 - Draft non-buildable CMake scaffold proposal
 ```
 
 Alternative if hardware is available:
@@ -243,13 +316,13 @@ Do not start Phase 17.5 until the user approves the firmware architecture, pin o
 Preferred next safe prompt:
 
 ```text
-Continue Phase 17 with an offline-safe Phase 17.2.1 toolchain decision review.
+Continue Phase 17 with an offline-safe Phase 17.2.3 non-buildable CMake scaffold proposal.
 
 Do not flash hardware.
 Do not require STM32CubeIDE.
-Inspect the Phase 17 ledger, STM32 pin mapping, firmware toolchain plan, and existing ESP32 FreeRTOS firmware.
-Recommend one command-line STM32 build approach for MacBook.
-If and only if justified, create a minimal non-flashing build scaffold, but do not add generated HAL/CubeMX files and do not implement the traffic FSM yet.
+Inspect the Phase 17 ledger, STM32 pin mapping, firmware toolchain plan, toolchain inspection, build scaffold design, firmware architecture note, and minimal build checklist.
+Draft the exact future CMake scaffold proposal as documentation only.
+Do not install tools, do not create a buildable CMake project, do not add startup/linker files, do not add generated HAL/CubeMX files, and do not implement the traffic FSM yet.
 Keep the work on branch phase17-stm32-pcb-integration.
 ```
 
@@ -309,7 +382,7 @@ Branch:
     phase17-stm32-pcb-integration
 
 Completed:
-    Phase 17.1, Phase 17.2, Phase 17.2.1, Phase 17.3, and Phase 17.4 as offline documentation/planning work.
+    Phase 17.1, Phase 17.2, Phase 17.2.1, Phase 17.2.2, Phase 17.3, and Phase 17.4 as offline documentation/planning work.
 
 Created files:
     docs/hardware/stm32_pcb/README.md
@@ -321,6 +394,9 @@ Created files:
     firmware/stm32_f103_traffic_light/bringup_plan.md
     firmware/stm32_f103_traffic_light/toolchain_plan.md
     firmware/stm32_f103_traffic_light/toolchain_inspection.md
+    firmware/stm32_f103_traffic_light/build_scaffold_design.md
+    firmware/stm32_f103_traffic_light/firmware_architecture.md
+    firmware/stm32_f103_traffic_light/minimal_build_checklist.md
     firmware/stm32_f103_traffic_light/src/README.md
     firmware/stm32_f103_traffic_light/include/README.md
     docs/hardware/stm32_pcb/stm32_pcb_bringup_plan.md
@@ -332,17 +408,17 @@ Hardware status:
     Schematic documentation and bring-up planning started. Final hardware validation pending.
 
 Firmware status:
-    Documentation-first STM32 firmware skeleton only. No source files, build system, or generated project files.
+    Documentation-first STM32 firmware skeleton and build scaffold design only. No source files, CMake build system, startup file, linker script, generated project files, or binary artifacts.
 
 UART status:
     Validation plan written. UART not tested. UART firmware not implemented.
 
 Toolchain status:
-    Host inspected. Homebrew, CMake, Make, and Python are installed. Ninja, arm-none-eabi-gcc/gdb, OpenOCD, STM32CubeProgrammer CLI, and PlatformIO are missing. Recommended next direction is arm-none-eabi-gcc + CMake/Make after approval.
+    Host inspected. Homebrew, CMake, Make, and Python are installed. Ninja, arm-none-eabi-gcc/gdb, OpenOCD, STM32CubeProgrammer CLI, and PlatformIO are missing. Recommended future build path is CMake + Make with arm-none-eabi-gcc after approval.
 
 Do not overclaim:
     No power validation, SWD validation, blink, UART test, LED test, 7-segment test, FSM port, or AI-to-STM32 demo has been completed.
 
 Next recommended step:
-    Phase 17.2.2 minimal non-flashing STM32 build scaffold design review, or Phase 17.3.1 pre-power inspection worksheet if hardware is available.
+    Phase 17.2.3 draft non-buildable CMake scaffold proposal, or Phase 17.3.1 pre-power inspection worksheet if hardware is available.
 ```

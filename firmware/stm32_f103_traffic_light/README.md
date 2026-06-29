@@ -13,6 +13,8 @@ Documentation skeleton created.
 Target MCU identified.
 Build/flash toolchain not selected.
 No firmware has been built, flashed, or tested.
+No buildable STM32 firmware has been created yet.
+No flashable binary exists.
 ```
 
 ## Target MCU
@@ -64,6 +66,12 @@ include/
 
 This layout is not committed as source code yet because the build system and HAL/LL/CMSIS choice are still pending.
 
+Detailed design notes:
+
+- [build_scaffold_design.md](build_scaffold_design.md) - future non-flashing build scaffold design.
+- [firmware_architecture.md](firmware_architecture.md) - intended future module boundaries.
+- [minimal_build_checklist.md](minimal_build_checklist.md) - gates before the first real compile attempt.
+
 ## GPIO Dependency on Pin Mapping
 
 Firmware must not hard-code final LED or 7-segment ownership until [../../docs/hardware/stm32_pcb/stm32f103c8t6_pin_mapping.md](../../docs/hardware/stm32_pcb/stm32f103c8t6_pin_mapping.md) is reviewed.
@@ -111,6 +119,10 @@ Do not start the FreeRTOS traffic light FSM port in this phase.
 
 Candidate command-line tool options are documented in [toolchain_plan.md](toolchain_plan.md).
 
+The current MacBook toolchain state is documented in [toolchain_inspection.md](toolchain_inspection.md).
+
+Build-scaffold planning is documented in [build_scaffold_design.md](build_scaffold_design.md).
+
 Current phase requirements:
 
 ```text
@@ -124,6 +136,7 @@ Real PCB required now? No
 - No STM32CubeIDE project.
 - No CubeMX `.ioc` file.
 - No generated HAL project.
+- No buildable CMake project.
 - No startup files.
 - No linker script.
 - No `.elf`, `.bin`, or `.hex` artifacts.
@@ -136,11 +149,15 @@ Real PCB required now? No
 
 ## Verification for This Phase
 
-This folder is complete for Phase 17.2 if:
+This folder is complete for the current documentation-first STM32 preparation work if:
 
 ```text
 [ ] README documents purpose and status.
 [ ] toolchain_plan.md describes command-line options.
+[ ] toolchain_inspection.md records installed/missing tools.
+[ ] build_scaffold_design.md explains the future build scaffold.
+[ ] firmware_architecture.md explains the planned firmware modules.
+[ ] minimal_build_checklist.md defines the first compile gates.
 [ ] bringup_plan.md documents firmware bring-up sequence.
 [ ] src/README.md and include/README.md clarify that source/header files are intentionally absent.
 [ ] No build artifacts or generated vendor files are committed.
