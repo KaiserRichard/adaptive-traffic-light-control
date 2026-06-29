@@ -103,6 +103,7 @@ STM32F103C8T6 Controller PCB
 | Full benchmark report | Completed | Phase 16.6 compares FP32 ONNX Runtime and quantized ONNX Runtime across size, latency, FPS, and detections |
 | Raspberry Pi AI deployment | Prepared / hardware pending | Phase 16.7 adds setup notes, ONNX Runtime commands, benchmark command, requirements, and TFLite investigation notes |
 | AI host PLAN generation | Completed / interface | Phase 16.9 converts vehicle counts/density into UART-ready PLAN messages; UART sending remains pending |
+| AI-to-MCU UART preparation | Completed / dry run | Phase 16.10 prepares newline-terminated PLAN framing and dry-run validation; real hardware UART remains pending |
 | FreeRTOS controller | Completed / prototype | ESP32 FreeRTOS controller path with tasks, queues, UART parser, FSM |
 | UART protocol | Completed / prototype | `PLAN`, `ACK` / `NACK`, status reporting, watchdog/fallback concepts |
 | STM32 PCB integration | Hardware received / documentation started | Schematic documentation and bring-up planning are being added |
@@ -332,7 +333,7 @@ For the full local adaptive traffic pipeline, see `pc_app/` and the deployment d
 | Phase 16.7 | Completed / hardware validation pending | Raspberry Pi / TFLite Deployment Path |
 | Phase 16.8 | Skipped / postponed | TensorRT / Jetson path is optional and no Jetson target is currently used |
 | Phase 16.9 | Completed / interface | AI Host `PLAN` Generation Interface; UART sending remains pending |
-| Phase 16.10 | Planned / not started | AI-to-MCU Integration Preparation |
+| Phase 16.10 | Completed / dry run | AI-to-MCU UART Integration Preparation; real serial transport remains pending |
 | Phase 17.1 | Planned | STM32 PCB Documentation and Pin Mapping |
 | Phase 17.2 | Planned | STM32 PCB Bring-Up Firmware |
 | Phase 17.x | Planned | End-to-end Raspberry Pi to STM32 hardware demo |

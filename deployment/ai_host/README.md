@@ -2,14 +2,15 @@
 
 ## Purpose
 
-This folder contains the Phase 16.9 AI-host planning interface for the Adaptive Traffic Light Control project.
+This folder contains the Phase 16.9 and Phase 16.10 AI-host integration boundary for the Adaptive Traffic Light Control project.
 
-It converts vehicle counts or density estimates into a structured traffic-light PLAN message that a future UART integration layer can send to an MCU.
+It converts vehicle counts or density estimates into a structured traffic-light PLAN message, then prepares that message as newline-terminated UART bytes for dry-run validation.
 
 ## Current Status
 
 ```text
 PLAN generation interface prepared.
+UART dry-run framing prepared.
 No UART hardware communication yet.
 No MCU firmware integration yet.
 No end-to-end hardware demo yet.
@@ -54,7 +55,7 @@ Phase 16.9:
     Generate and validate PLAN message.
 
 Phase 16.10:
-    Prepare UART sending / integration scripts.
+    Prepare UART framing and dry-run host-side handoff.
 
 Phase 17:
     STM32 / ESP32 receives, validates, acknowledges, and executes PLAN.
@@ -81,8 +82,19 @@ Older ESP32 Phase 15 materials used a positional format such as `PLAN,17,25,15,3
 
 ## Demo Command
 
+PLAN generation:
+
 ```bash
 .venv/bin/python deployment/ai_host/demo_plan_generation.py \
+  --ns-count 12 \
+  --ew-count 5 \
+  --seq 1
+```
+
+UART dry-run framing:
+
+```bash
+.venv/bin/python deployment/ai_host/demo_uart_dry_run.py \
   --ns-count 12 \
   --ew-count 5 \
   --seq 1
@@ -92,6 +104,7 @@ Expected output includes:
 
 ```text
 PLAN,seq=1,mode=adaptive,ns_green=28,ew_green=17,yellow=3,all_red=1
+b'PLAN,seq=1,mode=adaptive,ns_green=28,ew_green=17,yellow=3,all_red=1\n'
 Validation:        OK
 ```
 
@@ -105,4 +118,4 @@ Validation:        OK
 
 ## Next Step
 
-Phase 16.10 should prepare AI-to-MCU UART integration without modifying firmware behavior prematurely.
+After Phase 16.10, the next step is real transport planning: serial port selection, baud rate, ACK/NACK timeout behavior, and MCU parser compatibility.
