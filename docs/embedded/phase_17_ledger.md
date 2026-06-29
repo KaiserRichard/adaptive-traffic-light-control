@@ -20,6 +20,7 @@ main
 | Phase 17.2 - STM32 Firmware Skeleton and Command-Line Build Plan | Completed as documentation-first skeleton | No source or build system implemented |
 | Phase 17.2.1 - Command-Line STM32 Toolchain Inspection and README Synchronization | Completed as offline inspection/documentation | No tools installed; no firmware project created |
 | Phase 17.2.2 - Minimal Non-Flashing STM32 Build Scaffold Design Review | Completed as documentation-only scaffold design | No CMake/build/source files generated |
+| Phase 17.2.3 - Draft Non-Buildable CMake Scaffold Proposal | Completed as documentation-only CMake proposal | No CMake project, startup/linker files, or source files generated |
 | Phase 17.3 - STM32 PCB Bring-Up Procedure | Completed as planned procedure | No bring-up step executed |
 | Phase 17.4 - UART Link Validation Plan | Completed as planned procedure | UART not tested |
 
@@ -52,6 +53,13 @@ main
 - `firmware/stm32_f103_traffic_light/build_scaffold_design.md`
 - `firmware/stm32_f103_traffic_light/firmware_architecture.md`
 - `firmware/stm32_f103_traffic_light/minimal_build_checklist.md`
+- `firmware/stm32_f103_traffic_light/README.md`
+- `docs/embedded/phase_17_ledger.md`
+
+### Phase 17.2.3
+
+- `firmware/stm32_f103_traffic_light/cmake_scaffold_proposal.md`
+- `firmware/stm32_f103_traffic_light/docs/phase_17_2_3_cmake_scaffold_proposal.md`
 - `firmware/stm32_f103_traffic_light/README.md`
 - `docs/embedded/phase_17_ledger.md`
 
@@ -195,6 +203,52 @@ Phase 17.2.3 - Draft non-buildable CMake scaffold proposal
 
 This is safer than installing tools immediately because the repository can still review exact future CMake files, compiler flags, source file names, and vendor-file policy without creating a buildable project or requiring ARM GCC.
 
+## Phase 17.2.3 Notes
+
+What was created:
+
+- `firmware/stm32_f103_traffic_light/cmake_scaffold_proposal.md`
+- `firmware/stm32_f103_traffic_light/docs/phase_17_2_3_cmake_scaffold_proposal.md`
+
+Existing file updates:
+
+- `firmware/stm32_f103_traffic_light/README.md` now links the CMake scaffold proposal.
+- `docs/embedded/phase_17_ledger.md` now records Phase 17.2.3 status and next-step guidance.
+
+What was proposed:
+
+- future CMake + Unix Makefiles + `arm-none-eabi-gcc` scaffold.
+- future `cmake/toolchain-arm-none-eabi.cmake` responsibilities.
+- future `CMakeLists.txt` responsibilities.
+- startup file and linker script policies.
+- CMSIS-only, STM32 HAL, and STM32 LL tradeoffs.
+- generated-files, source/header, build artifact, and no-flashing policies.
+
+What was intentionally not created:
+
+- no `CMakeLists.txt`.
+- no CMake toolchain file.
+- no startup file.
+- no linker script.
+- no CMSIS/HAL/LL vendor files.
+- no `.c` or `.h` implementation files.
+- no build artifacts.
+
+Build artifact policy notes:
+
+- root `.gitignore` already ignores `build/`, `firmware/**/*.bin`, and `firmware/**/*.elf`.
+- `firmware/**/*.hex` appears to need future cleanup because the current line is `firmware/**/*.hex.vscode/`.
+- `.map`, `.o`, `.a`, `CMakeFiles/`, and `CMakeCache.txt` should be reviewed in a future `.gitignore` update before the first real build.
+- `.gitignore` was not modified in Phase 17.2.3.
+
+Next recommended Phase 17 step:
+
+```text
+Phase 17.2.4 - Approve STM32 build strategy and artifact policy
+```
+
+This should decide the CMake + Make path, CMSIS/HAL/LL strategy, startup/linker source, `.gitignore` artifact policy, and whether tool installation is approved.
+
 ## Files Intentionally Not Created
 
 - STM32CubeIDE project files.
@@ -300,7 +354,7 @@ Do not claim:
 Recommended safe next step:
 
 ```text
-Phase 17.2.3 - Draft non-buildable CMake scaffold proposal
+Phase 17.2.4 - Approve STM32 build strategy and artifact policy
 ```
 
 Alternative if hardware is available:
@@ -316,12 +370,12 @@ Do not start Phase 17.5 until the user approves the firmware architecture, pin o
 Preferred next safe prompt:
 
 ```text
-Continue Phase 17 with an offline-safe Phase 17.2.3 non-buildable CMake scaffold proposal.
+Continue Phase 17 with Phase 17.2.4 - Approve STM32 build strategy and artifact policy.
 
 Do not flash hardware.
 Do not require STM32CubeIDE.
-Inspect the Phase 17 ledger, STM32 pin mapping, firmware toolchain plan, toolchain inspection, build scaffold design, firmware architecture note, and minimal build checklist.
-Draft the exact future CMake scaffold proposal as documentation only.
+Inspect the Phase 17 ledger, STM32 pin mapping, toolchain inspection, build scaffold design, CMake scaffold proposal, firmware architecture note, minimal build checklist, and root .gitignore.
+Decide whether CMake + Make is approved, whether CMSIS-only/HAL/LL should be used, what startup/linker source should be used later, and whether .gitignore should be updated.
 Do not install tools, do not create a buildable CMake project, do not add startup/linker files, do not add generated HAL/CubeMX files, and do not implement the traffic FSM yet.
 Keep the work on branch phase17-stm32-pcb-integration.
 ```
@@ -382,7 +436,7 @@ Branch:
     phase17-stm32-pcb-integration
 
 Completed:
-    Phase 17.1, Phase 17.2, Phase 17.2.1, Phase 17.2.2, Phase 17.3, and Phase 17.4 as offline documentation/planning work.
+    Phase 17.1, Phase 17.2, Phase 17.2.1, Phase 17.2.2, Phase 17.2.3, Phase 17.3, and Phase 17.4 as offline documentation/planning work.
 
 Created files:
     docs/hardware/stm32_pcb/README.md
@@ -395,6 +449,8 @@ Created files:
     firmware/stm32_f103_traffic_light/toolchain_plan.md
     firmware/stm32_f103_traffic_light/toolchain_inspection.md
     firmware/stm32_f103_traffic_light/build_scaffold_design.md
+    firmware/stm32_f103_traffic_light/cmake_scaffold_proposal.md
+    firmware/stm32_f103_traffic_light/docs/phase_17_2_3_cmake_scaffold_proposal.md
     firmware/stm32_f103_traffic_light/firmware_architecture.md
     firmware/stm32_f103_traffic_light/minimal_build_checklist.md
     firmware/stm32_f103_traffic_light/src/README.md
@@ -408,7 +464,7 @@ Hardware status:
     Schematic documentation and bring-up planning started. Final hardware validation pending.
 
 Firmware status:
-    Documentation-first STM32 firmware skeleton and build scaffold design only. No source files, CMake build system, startup file, linker script, generated project files, or binary artifacts.
+    Documentation-first STM32 firmware skeleton, build scaffold design, and CMake scaffold proposal only. No source files, CMake build system, startup file, linker script, generated project files, or binary artifacts.
 
 UART status:
     Validation plan written. UART not tested. UART firmware not implemented.
@@ -420,5 +476,5 @@ Do not overclaim:
     No power validation, SWD validation, blink, UART test, LED test, 7-segment test, FSM port, or AI-to-STM32 demo has been completed.
 
 Next recommended step:
-    Phase 17.2.3 draft non-buildable CMake scaffold proposal, or Phase 17.3.1 pre-power inspection worksheet if hardware is available.
+    Phase 17.2.4 approve STM32 build strategy and artifact policy, or Phase 17.3.1 pre-power inspection worksheet if hardware is available.
 ```

@@ -15,6 +15,7 @@ Build/flash toolchain not selected.
 No firmware has been built, flashed, or tested.
 No buildable STM32 firmware has been created yet.
 No flashable binary exists.
+Phase 17.2.3 proposes the future CMake scaffold.
 ```
 
 ## Target MCU
@@ -69,6 +70,7 @@ This layout is not committed as source code yet because the build system and HAL
 Detailed design notes:
 
 - [build_scaffold_design.md](build_scaffold_design.md) - future non-flashing build scaffold design.
+- [cmake_scaffold_proposal.md](cmake_scaffold_proposal.md) - future CMake scaffold proposal.
 - [firmware_architecture.md](firmware_architecture.md) - intended future module boundaries.
 - [minimal_build_checklist.md](minimal_build_checklist.md) - gates before the first real compile attempt.
 
@@ -123,6 +125,8 @@ The current MacBook toolchain state is documented in [toolchain_inspection.md](t
 
 Build-scaffold planning is documented in [build_scaffold_design.md](build_scaffold_design.md).
 
+CMake scaffold planning is documented in [cmake_scaffold_proposal.md](cmake_scaffold_proposal.md).
+
 Current phase requirements:
 
 ```text
@@ -137,6 +141,7 @@ Real PCB required now? No
 - No CubeMX `.ioc` file.
 - No generated HAL project.
 - No buildable CMake project.
+- No CMake toolchain file.
 - No startup files.
 - No linker script.
 - No `.elf`, `.bin`, or `.hex` artifacts.
@@ -156,6 +161,7 @@ This folder is complete for the current documentation-first STM32 preparation wo
 [ ] toolchain_plan.md describes command-line options.
 [ ] toolchain_inspection.md records installed/missing tools.
 [ ] build_scaffold_design.md explains the future build scaffold.
+[ ] cmake_scaffold_proposal.md explains the future CMake scaffold.
 [ ] firmware_architecture.md explains the planned firmware modules.
 [ ] minimal_build_checklist.md defines the first compile gates.
 [ ] bringup_plan.md documents firmware bring-up sequence.
