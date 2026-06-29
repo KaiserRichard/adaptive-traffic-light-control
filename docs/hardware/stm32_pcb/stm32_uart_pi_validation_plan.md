@@ -210,12 +210,14 @@ Failure symptoms:
 
 ## Failure Symptoms
 
-- No received bytes: likely wrong serial device, disabled Pi UART, missing ground, TX/RX not crossed, or STM32 USART pin configuration error.
-- Garbled bytes: likely wrong baud rate, unstable ground, voltage mismatch, or signal integrity issue.
-- STM32 resets during traffic: possible power rail issue, firmware fault, watchdog reset, or accidental back-powering.
-- Pi logs nothing from STM32: possible PA9/TX1 wiring issue, Pi RX configuration issue, or console/device conflict.
-- STM32 receives nothing from Pi: possible PA10/RX1 wiring issue, Pi TX configuration issue, or missing newline framing.
-- ACK appears but physical outputs do not change immediately: may be expected if a future FSM applies plans only at a safe cycle boundary.
+- No serial data received: likely wrong serial device, disabled Pi UART, STM32 not powered, STM32 not running UART firmware, missing ground, or TX/RX not crossed.
+- Garbled output: likely wrong baud rate, unstable ground reference, voltage mismatch, or signal integrity issue.
+- TX/RX swapped: STM32 TX1 must connect to Raspberry Pi RXD, and STM32 RX1 must connect to Raspberry Pi TXD.
+- Missing shared ground: UART logic thresholds are unreliable without `Raspberry Pi GND <-> STM32 PCB GND`.
+- Wrong baud rate: both sides should use 115200 baud, 8N1 unless a later firmware decision changes this.
+- 5 V UART accidentally connected: Raspberry Pi and STM32 UART pins must remain at 3.3 V logic levels.
+- Raspberry Pi UART disabled or occupied by console: the selected Pi UART may need OS configuration before testing.
+- ACK appears but physical outputs do not change immediately: this may be expected later if the FSM applies plans only at a safe cycle boundary.
 
 ## Debug Checklist
 
