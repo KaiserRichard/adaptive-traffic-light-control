@@ -18,6 +18,7 @@ main
 | --- | --- | --- |
 | Phase 17.1 - STM32 PCB Documentation and Pin Mapping | Completed as offline documentation | Hardware validation pending |
 | Phase 17.2 - STM32 Firmware Skeleton and Command-Line Build Plan | Completed as documentation-first skeleton | No source or build system implemented |
+| Phase 17.2.1 - Command-Line STM32 Toolchain Inspection and README Synchronization | Completed as offline inspection/documentation | No tools installed; no firmware project created |
 | Phase 17.3 - STM32 PCB Bring-Up Procedure | Completed as planned procedure | No bring-up step executed |
 | Phase 17.4 - UART Link Validation Plan | Completed as planned procedure | UART not tested |
 
@@ -39,6 +40,12 @@ main
 - `firmware/stm32_f103_traffic_light/src/README.md`
 - `firmware/stm32_f103_traffic_light/include/README.md`
 
+### Phase 17.2.1
+
+- `firmware/stm32_f103_traffic_light/toolchain_inspection.md`
+- `README.md`
+- `docs/embedded/phase_17_ledger.md`
+
 ### Phase 17.3
 
 - `docs/hardware/stm32_pcb/stm32_pcb_bringup_plan.md`
@@ -51,6 +58,71 @@ main
 ### Ledger
 
 - `docs/embedded/phase_17_ledger.md`
+
+## Phase 17.2.1 Notes
+
+Dirty-tree resolution summary:
+
+- Two Phase 17 documentation files contained unresolved conflict markers.
+- `docs/hardware/stm32_pcb/stm32_uart_pi_validation_plan.md` was cleaned to keep one conservative `Failure Symptoms` section.
+- `docs/hardware/stm32_pcb/stm32f103c8t6_pin_mapping.md` was cleaned to keep conservative `NRST` and 7-segment decimal point rows.
+- Cleanup was committed separately as `docs: resolve Phase 17 STM32 documentation conflicts`.
+
+What was inspected:
+
+- `brew --version`
+- `cmake --version`
+- `ninja --version`
+- `make --version`
+- `arm-none-eabi-gcc --version`
+- `arm-none-eabi-gdb --version`
+- `openocd --version`
+- `STM32_Programmer_CLI --version`
+- `pio --version`
+- `python3 --version`
+- macOS version and architecture
+
+Tools found:
+
+- Homebrew 6.0.2.
+- CMake 4.2.3.
+- GNU Make 3.81.
+- Python 3.11.0rc2.
+
+Tools missing:
+
+- Ninja.
+- `arm-none-eabi-gcc`.
+- `arm-none-eabi-gdb`.
+- OpenOCD.
+- STM32CubeProgrammer CLI.
+- PlatformIO.
+
+Recommended toolchain path:
+
+```text
+Use a command-line-friendly workflow first.
+Prefer arm-none-eabi-gcc + CMake/Make for the next minimal non-flashing build scaffold review.
+Do not require STM32CubeIDE yet.
+Install embedded Arm/debug tools only after explicit approval.
+```
+
+README update summary:
+
+- Root README now distinguishes Phase 16 Edge AI/Raspberry Pi progress from Phase 17 STM32 PCB integration progress.
+- README now documents that ONNX export, ONNX Runtime image/video inference, PyTorch vs ONNX comparison, quantization experiment, benchmark strategy/reporting path, and Raspberry Pi deployment guide are complete or prepared.
+- README now documents that STM32 PCB docs, pin mapping, bring-up planning, firmware skeleton docs, UART validation planning, and toolchain inspection are prepared.
+- README explicitly avoids claiming Raspberry Pi benchmark completion, STM32 hardware validation, UART testing, firmware flashing, TFLite implementation, or final hardware demo completion.
+
+What not to install yet:
+
+- Do not install `arm-none-eabi-gcc`, GDB, Ninja, OpenOCD, STM32CubeProgrammer, STM32CubeCLT, STM32CubeIDE, or PlatformIO without user approval.
+
+Next recommended Phase 17 step:
+
+```text
+Phase 17.2.2 - Minimal non-flashing STM32 build scaffold design review
+```
 
 ## Files Intentionally Not Created
 
@@ -119,7 +191,7 @@ Confirmed only from repository files and visible schematic images:
 - Confirm AMS1117 thermal margin.
 - Confirm NRST accessibility.
 - Confirm SWD header orientation.
-- Confirm selected STM32 command-line toolchain.
+- Confirm selected STM32 command-line toolchain after reviewing Phase 17.2.1 inspection results.
 - Confirm whether HAL, LL, or CMSIS-only firmware style will be used.
 
 ## Risks
@@ -131,6 +203,7 @@ Confirmed only from repository files and visible schematic images:
 - Insufficient regulator thermal margin.
 - 7-segment current exceeding safe GPIO limits.
 - Adding generated STM32 vendor files before choosing a maintainable build path.
+- Installing embedded toolchains before the build/debug path is approved.
 - Mixing Phase 16 Edge AI deployment changes into the Phase 17 PCB branch.
 
 ## What Not to Overclaim
@@ -154,7 +227,7 @@ Do not claim:
 Recommended safe next step:
 
 ```text
-Phase 17.2.1 - STM32 command-line toolchain decision and minimal non-flashing build scaffold review
+Phase 17.2.2 - Minimal non-flashing STM32 build scaffold design review
 ```
 
 Alternative if hardware is available:
@@ -236,7 +309,7 @@ Branch:
     phase17-stm32-pcb-integration
 
 Completed:
-    Phase 17.1, Phase 17.2, Phase 17.3, and Phase 17.4 as offline documentation/planning work.
+    Phase 17.1, Phase 17.2, Phase 17.2.1, Phase 17.3, and Phase 17.4 as offline documentation/planning work.
 
 Created files:
     docs/hardware/stm32_pcb/README.md
@@ -247,6 +320,7 @@ Created files:
     firmware/stm32_f103_traffic_light/README.md
     firmware/stm32_f103_traffic_light/bringup_plan.md
     firmware/stm32_f103_traffic_light/toolchain_plan.md
+    firmware/stm32_f103_traffic_light/toolchain_inspection.md
     firmware/stm32_f103_traffic_light/src/README.md
     firmware/stm32_f103_traffic_light/include/README.md
     docs/hardware/stm32_pcb/stm32_pcb_bringup_plan.md
@@ -264,11 +338,11 @@ UART status:
     Validation plan written. UART not tested. UART firmware not implemented.
 
 Toolchain status:
-    Options documented. No toolchain selected or required yet.
+    Host inspected. Homebrew, CMake, Make, and Python are installed. Ninja, arm-none-eabi-gcc/gdb, OpenOCD, STM32CubeProgrammer CLI, and PlatformIO are missing. Recommended next direction is arm-none-eabi-gcc + CMake/Make after approval.
 
 Do not overclaim:
     No power validation, SWD validation, blink, UART test, LED test, 7-segment test, FSM port, or AI-to-STM32 demo has been completed.
 
 Next recommended step:
-    Phase 17.2.1 command-line toolchain decision and minimal non-flashing build scaffold review, or Phase 17.3.1 pre-power inspection worksheet if hardware is available.
+    Phase 17.2.2 minimal non-flashing STM32 build scaffold design review, or Phase 17.3.1 pre-power inspection worksheet if hardware is available.
 ```

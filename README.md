@@ -22,6 +22,14 @@ The project builds an adaptive traffic light control system using:
 
 The long-term deployment target is an AI host, such as a Raspberry Pi, connected over UART to a microcontroller-based traffic light controller.
 
+Current high-level status:
+
+```text
+The project currently has a validated ONNX Runtime deployment path and a prepared Raspberry Pi deployment guide.
+The STM32 PCB integration track has started with documentation, pin mapping, bring-up planning, UART validation planning, and command-line toolchain inspection.
+Real Raspberry Pi benchmark validation and STM32 hardware validation remain pending.
+```
+
 ## Why This Project Matters
 
 Traffic-light control is a practical embedded AI problem: perception, timing logic, communication, firmware reliability, and hardware constraints all matter. This project demonstrates that workflow end to end:
@@ -98,12 +106,13 @@ STM32F103C8T6 Controller PCB
 | ONNX image inference | Completed | Letterbox preprocessing and box restoration are implemented |
 | ONNX video inference | Completed | Basic video smoke test completed with CPUExecutionProvider |
 | PyTorch vs ONNX comparison | Completed | Direct-resize deployment bug found and fixed with letterbox preprocessing |
-| Quantization | Planned | Phase 16.5, not implemented yet |
-| Full benchmark report | Planned | Phase 16.6, not a current performance claim |
-| Raspberry Pi AI deployment | Planned | Future AI host path |
+| ONNX quantization experiment | Completed / experiment | Phase 16.5 dynamic ONNX quantization smoke test exists; not a final deployment decision |
+| Edge AI benchmark report | Prepared | Benchmark strategy/reporting path exists; Raspberry Pi benchmark remains pending |
+| Raspberry Pi AI deployment | Prepared | Deployment guide exists; real Raspberry Pi validation remains pending |
 | FreeRTOS controller | Completed / prototype | ESP32 FreeRTOS controller path with tasks, queues, UART parser, FSM |
 | UART protocol | Completed / prototype | `PLAN`, `ACK` / `NACK`, status reporting, watchdog/fallback concepts |
-| STM32 PCB integration | Hardware received / documentation started | Schematic documentation and bring-up planning are being added |
+| STM32 PCB integration | Documentation prepared | Pin mapping, bring-up plan, firmware skeleton docs, UART validation plan, and toolchain inspection are prepared |
+| STM32 command-line toolchain | Inspected | STM32CubeIDE is not required at this stage; embedded Arm tools are not installed yet |
 | Final STM32 hardware validation | Planned | Not claimed complete |
 
 ## Demo / Visual Results
@@ -202,6 +211,29 @@ Related docs:
 - [Phase 16.2 ONNX image inference](docs/edge_ai/phase_16_2_onnx_image_inference.md)
 - [Phase 16.3 ONNX video inference](docs/edge_ai/phase_16_3_onnx_video_inference.md)
 - [Phase 16.4 PyTorch vs ONNX comparison](docs/edge_ai/phase_16_4_pytorch_vs_onnx_comparison.md)
+- [Phase 16.5 ONNX quantization](docs/edge_ai/phase_16_5_onnx_quantization.md)
+- [Phase 16.5 quantization results](docs/edge_ai/phase_16_5_quantization_results.md)
+- [Raspberry Pi YOLO deployment plan](docs/deployment/raspberry_pi_yolo.md)
+
+## Raspberry Pi Deployment Path
+
+The Raspberry Pi track prepares the AI host side of the final system:
+
+```text
+Raspberry Pi camera/video input
+    -> local YOLO inference
+    -> ROI counting and density estimation
+    -> adaptive timing plan
+    -> UART PLAN message to ESP32/STM32 controller
+```
+
+Status:
+
+- ONNX Runtime image/video inference has been validated on the development machine.
+- PyTorch vs ONNX comparison found and fixed a preprocessing mismatch.
+- ONNX dynamic quantization has been tested as an experiment, not adopted as a final deployment decision.
+- Raspberry Pi deployment steps are documented.
+- Raspberry Pi hardware benchmark and TFLite deployment are not claimed complete.
 
 ## Embedded Controller
 
@@ -241,7 +273,7 @@ The project is being extended from software simulation and ESP32/FreeRTOS protot
 Current status:
 
 ```text
-Hardware received / schematic documentation started / integration planning in progress
+Hardware received / schematic documentation prepared / integration planning in progress
 ```
 
 Schematic blocks under documentation:
@@ -256,11 +288,28 @@ Schematic blocks under documentation:
 
 Planned STM32 work:
 
-- pin mapping
-- firmware bring-up plan
+- command-line build scaffold review
+- minimal non-flashing build verification
+- future pin-safe blink firmware
 - UART protocol adaptation
 - traffic light output verification
-- end-to-end Raspberry Pi to STM32 demo
+- end-to-end Raspberry Pi to STM32 demo after hardware validation
+
+Prepared STM32 documentation:
+
+- [STM32 PCB overview](docs/hardware/stm32_pcb/README.md)
+- [STM32F103C8T6 pin mapping](docs/hardware/stm32_pcb/stm32f103c8t6_pin_mapping.md)
+- [STM32 PCB bring-up plan](docs/hardware/stm32_pcb/stm32_pcb_bringup_plan.md)
+- [STM32 UART to Raspberry Pi validation plan](docs/hardware/stm32_pcb/stm32_uart_pi_validation_plan.md)
+- [STM32 firmware skeleton](firmware/stm32_f103_traffic_light/README.md)
+- [STM32 toolchain inspection](firmware/stm32_f103_traffic_light/toolchain_inspection.md)
+
+Important status limits:
+
+- STM32CubeIDE is not required at this stage.
+- STM32 firmware has not been flashed.
+- STM32 UART has not been tested.
+- STM32 PCB hardware validation is pending.
 
 ## Repository Structure
 
@@ -278,6 +327,7 @@ Planned STM32 work:
 ├── experiments/
 ├── firmware/
 │   ├── esp32_freertos_traffic_light/
+│   ├── stm32_f103_traffic_light/
 │   └── esp32_traffic_light/
 ├── pc_app/
 │   ├── control/
@@ -302,10 +352,10 @@ Planned STM32 work:
 | Edge AI deployment | ONNX, ONNX Runtime |
 | Comparison / validation | PyTorch vs ONNX image comparison, visual inspection, smoke tests |
 | Application logic | ROI counting, density estimation, adaptive green-time planning |
-| Embedded firmware | C++, FreeRTOS, PlatformIO |
+| Embedded firmware | C++, FreeRTOS concepts, PlatformIO for ESP32 prototype, planned STM32 command-line toolchain |
 | MCU path | ESP32 prototype, STM32F103C8T6 controller PCB path |
 | Communication | UART, `PLAN` / `ACK` / `STATUS` protocol |
-| Target AI host | Raspberry Pi planned |
+| Target AI host | Raspberry Pi deployment path prepared; hardware benchmark pending |
 | Repository workflow | Git, GitHub, phase-based documentation |
 
 ## How To Run
@@ -359,13 +409,16 @@ For the full local adaptive traffic pipeline, see `pc_app/` and the deployment d
 
 | Phase | Status | Description |
 | --- | --- | --- |
-| Phase 16.5 | Planned | ONNX Quantization Experiment |
-| Phase 16.6 | Planned | Edge AI Benchmark Report |
-| Phase 16.7 | Planned | Raspberry Pi / TFLite Deployment Path |
+| Phase 16.5 | Completed / experiment | ONNX Quantization Experiment |
+| Phase 16.6 | Prepared | Edge AI Benchmark Report / benchmark strategy; Raspberry Pi benchmark pending |
+| Phase 16.7 | Prepared | Raspberry Pi Deployment Path; TFLite not implemented |
 | Phase 16.9 | Planned | AI Host `PLAN` Generation Interface |
 | Phase 16.10 | Planned | AI-to-MCU Integration Preparation |
-| Phase 17.1 | Planned | STM32 PCB Documentation and Pin Mapping |
-| Phase 17.2 | Planned | STM32 PCB Bring-Up Firmware |
+| Phase 17.1 | Completed / documentation | STM32 PCB Documentation and Pin Mapping |
+| Phase 17.2 | Completed / documentation skeleton | STM32 firmware skeleton and command-line build plan |
+| Phase 17.2.1 | Completed / inspection | Command-line STM32 toolchain inspection and README synchronization |
+| Phase 17.3 | Completed / plan | STM32 PCB Bring-Up Procedure |
+| Phase 17.4 | Completed / plan | UART Link Validation Plan |
 | Phase 17.x | Planned | End-to-end Raspberry Pi to STM32 hardware demo |
 
 TensorRT / Jetson deployment is optional future work and is not the current target path.
@@ -377,5 +430,5 @@ TensorRT / Jetson deployment is optional future work and is not the current targ
 - Practical PyTorch vs ONNX comparison instead of assuming export correctness
 - Real preprocessing bug found and fixed through visual/runtime comparison
 - FreeRTOS task ownership, queues, UART parsing, FSM execution, status reporting, and watchdog concepts
-- Hardware integration moving toward an STM32F103C8T6 PCB with documented schematic blocks
+- Hardware integration moving toward an STM32F103C8T6 PCB with documented schematic blocks, pin mapping, bring-up planning, UART validation planning, and command-line toolchain inspection
 - Phase-based documentation for reproducibility and recruiter review
