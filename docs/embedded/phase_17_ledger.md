@@ -23,6 +23,7 @@ main
 | Phase 17.2.3 - Draft Non-Buildable CMake Scaffold Proposal | Completed as documentation-only CMake proposal | No CMake project, startup/linker files, or source files generated |
 | Phase 17.2.4 - Phase 17.2 Streamlining and Closure Decision | Completed as cleanup/decision review | Phase 17.2 closed; no extra planning subphase required before Phase 17.3 |
 | Phase 17.3 - STM32 PCB Bring-Up Procedure | Completed as planned procedure | No bring-up step executed |
+| Phase 17.3.1 - STM32 PCB Pre-Power Inspection and ST-LINK Non-Detection Triage | Completed as checklist/triage document | Hardware team reported ST-LINK non-detection; root cause not confirmed |
 | Phase 17.4 - UART Link Validation Plan | Completed as planned procedure | UART not tested |
 
 ## Files Created by Subphase
@@ -77,6 +78,12 @@ main
 ### Phase 17.3
 
 - `docs/hardware/stm32_pcb/stm32_pcb_bringup_plan.md`
+
+### Phase 17.3.1
+
+- `docs/hardware/stm32_pcb/phase_17_3_1_pre_power_inspection.md`
+- `docs/hardware/stm32_pcb/README.md`
+- `docs/embedded/phase_17_ledger.md`
 
 ### Phase 17.4
 
@@ -307,6 +314,56 @@ Phase 17.3.1 - STM32 PCB pre-power inspection execution
 
 This should collect hardware evidence and should not build, flash, or port firmware.
 
+## Phase 17.3.1 Notes
+
+What was created:
+
+- `docs/hardware/stm32_pcb/phase_17_3_1_pre_power_inspection.md`
+
+Why this phase is power-off first:
+
+- ST-LINK non-detection can be caused by power, ground, SWD wiring, reset, boot mode, soldering, or connector orientation issues.
+- Applying power or reconnecting ST-LINK before checking rails/header orientation can make a hardware fault worse.
+- UART, FreeRTOS, PLAN protocol, LEDs, and 7-segment display are downstream of basic power/SWD health.
+
+Current ST-LINK symptom:
+
+```text
+Hardware team reported that ST-LINK does not detect the STM32 chip.
+Root cause not confirmed yet.
+```
+
+What must be measured by the hardware team:
+
+- VCC3V3 to GND resistance before power.
+- VCC5V to GND resistance before power.
+- SWD header GND to board GND continuity.
+- SWD header VCC3V3 reference to board VCC3V3 continuity.
+- SWDIO header to STM32 PA13 continuity.
+- SWCLK header to STM32 PA14 continuity.
+- absence of shorts on SWDIO/SWCLK lines.
+- NRST exposure and later powered idle level.
+- BOOT0 pull-down and later powered idle level.
+
+What is not tested yet:
+
+- 3.3 V rail voltage.
+- controlled power-up.
+- ST-LINK attach/read-ID.
+- firmware build or flash.
+- UART/Raspberry Pi connection.
+- GPIO, LED, or 7-segment behavior.
+
+Next recommended step:
+
+```text
+If power-off inspection passes:
+    Phase 17.3.2 - Controlled Power Rail Validation
+
+If power-off inspection fails:
+    Fix PCB/soldering/header issue before applying power or connecting ST-LINK.
+```
+
 ## Files Intentionally Not Created
 
 - STM32CubeIDE project files.
@@ -514,6 +571,7 @@ Created files:
     firmware/stm32_f103_traffic_light/minimal_build_checklist.md
     firmware/stm32_f103_traffic_light/src/README.md
     firmware/stm32_f103_traffic_light/include/README.md
+    docs/hardware/stm32_pcb/phase_17_3_1_pre_power_inspection.md
     docs/hardware/stm32_pcb/stm32_pcb_bringup_plan.md
     docs/hardware/stm32_pcb/stm32_uart_pi_validation_plan.md
     docs/hardware/stm32_pcb/stm32_hardware_blocks_explained.md
@@ -521,7 +579,7 @@ Created files:
     docs/embedded/phase_17_ledger.md
 
 Hardware status:
-    Schematic documentation, hardware block explanation, and bring-up planning started. Final hardware validation pending.
+    Schematic documentation, hardware block explanation, bring-up planning, and Phase 17.3.1 pre-power inspection checklist created. Final hardware validation pending. ST-LINK non-detection has been reported, but root cause is not confirmed.
 
 Firmware status:
     Phase 17.2 is closed as a documentation/planning phase. STM32 firmware remains documentation-first only. No source files, common/ migration, CMake build system, startup file, linker script, generated project files, or binary artifacts.
@@ -536,5 +594,5 @@ Do not overclaim:
     No power validation, SWD validation, blink, UART test, LED test, 7-segment test, FSM port, or AI-to-STM32 demo has been completed.
 
 Next recommended step:
-    Phase 17.3.1 STM32 PCB pre-power inspection execution.
+    If power-off inspection passes, Phase 17.3.2 Controlled Power Rail Validation. If inspection fails, fix PCB/soldering/header issue before applying power or connecting ST-LINK.
 ```

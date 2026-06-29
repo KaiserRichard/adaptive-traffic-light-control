@@ -154,6 +154,10 @@ Recommended order:
 
 See [stm32_pcb_bringup_plan.md](stm32_pcb_bringup_plan.md).
 
+Phase 17.3.1 inspection and ST-LINK non-detection triage is documented in [phase_17_3_1_pre_power_inspection.md](phase_17_3_1_pre_power_inspection.md).
+
+Phase 17.3.1 is an inspection and evidence-collection document only. It does not validate power, SWD, UART, firmware, GPIO, LEDs, or the 7-segment display.
+
 ## Known Risks
 
 - Pin mapping is only partially confirmed from schematic images.
@@ -166,8 +170,9 @@ See [stm32_pcb_bringup_plan.md](stm32_pcb_bringup_plan.md).
 ## Next Steps
 
 1. Review [stm32f103c8t6_pin_mapping.md](stm32f103c8t6_pin_mapping.md) against the schematic source and PCB layout.
-2. Read [stm32_hardware_blocks_explained.md](stm32_hardware_blocks_explained.md) before board bring-up or firmware `board_config` planning.
-3. Follow [stm32_pcb_review_notes.md](stm32_pcb_review_notes.md) before applying power.
-4. Use [stm32_pcb_bringup_plan.md](stm32_pcb_bringup_plan.md) for hardware bring-up.
-5. Use [stm32_uart_pi_validation_plan.md](stm32_uart_pi_validation_plan.md) before any AI host integration.
-6. Keep Phase 17 isolated from Phase 16 until a shared UART interface update is explicitly approved.
+2. Use [phase_17_3_1_pre_power_inspection.md](phase_17_3_1_pre_power_inspection.md) for the current ST-LINK non-detection triage and pre-power inspection.
+3. Read [stm32_hardware_blocks_explained.md](stm32_hardware_blocks_explained.md) before board bring-up or firmware `board_config` planning.
+4. Follow [stm32_pcb_review_notes.md](stm32_pcb_review_notes.md) before applying power.
+5. Use [stm32_pcb_bringup_plan.md](stm32_pcb_bringup_plan.md) for hardware bring-up.
+6. Use [stm32_uart_pi_validation_plan.md](stm32_uart_pi_validation_plan.md) before any AI host integration.
+7. Keep Phase 17 isolated from Phase 16 until a shared UART interface update is explicitly approved.
