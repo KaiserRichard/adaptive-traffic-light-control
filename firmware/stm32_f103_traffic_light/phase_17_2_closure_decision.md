@@ -191,11 +191,13 @@ Before executing Phase 17.3.1:
 
 ## Phase 17.3 Entry Plan
 
-Minimum safe Phase 17.3.1:
+Minimum safe Phase 17.3.1 at the time of Phase 17.2 closure:
 
 ```text
 Phase 17.3.1 - STM32 PCB pre-power inspection execution
 ```
+
+This step has since been documented in `docs/hardware/stm32_pcb/phase_17_3_1_pre_power_inspection.md`.
 
 Scope:
 
@@ -228,7 +230,7 @@ Do not claim:
 Recommended next Phase 17 step:
 
 ```text
-Phase 17.3.1 - STM32 PCB pre-power inspection execution
+Phase 17.3.2 - Controlled Power Rail Validation
 ```
 
-This should be treated as hardware bring-up evidence collection, not firmware implementation.
+Phase 17.3.1 is already documented. The next step should collect real power-rail evidence and should not build, flash, or port firmware.

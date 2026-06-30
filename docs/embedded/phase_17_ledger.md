@@ -24,7 +24,10 @@ main
 | Phase 17.2.4 - Phase 17.2 Streamlining and Closure Decision | Completed as cleanup/decision review | Phase 17.2 closed; no extra planning subphase required before Phase 17.3 |
 | Phase 17.3 - STM32 PCB Bring-Up Procedure | Completed as planned procedure | No bring-up step executed |
 | Phase 17.3.1 - STM32 PCB Pre-Power Inspection and ST-LINK Non-Detection Triage | Completed as checklist/triage document | Hardware team reported ST-LINK non-detection; root cause not confirmed |
+| Phase 17.3.2 - Controlled Power Rail Validation | Procedure prepared; execution pending hardware | No powered measurement performed |
+| Phase 17.3.3 - ST-LINK Attach / Read-ID Validation | Procedure prepared; execution pending hardware | No ST-LINK attach or read-ID performed |
 | Phase 17.4 - UART Link Validation Plan | Completed as planned procedure | UART not tested |
+| Phase 17 Hardware-Gated Completion Review | Completed as offline status review | Branch is not full hardware-complete |
 
 ## Files Created by Subphase
 
@@ -85,10 +88,29 @@ main
 - `docs/hardware/stm32_pcb/README.md`
 - `docs/embedded/phase_17_ledger.md`
 
+### Phase 17.3.2
+
+- `docs/hardware/stm32_pcb/phase_17_3_2_controlled_power_rail_validation.md`
+- `docs/hardware/stm32_pcb/README.md`
+- `docs/embedded/phase_17_ledger.md`
+
+### Phase 17.3.3
+
+- `docs/hardware/stm32_pcb/phase_17_3_3_stlink_read_id_validation.md`
+- `docs/hardware/stm32_pcb/README.md`
+- `docs/embedded/phase_17_ledger.md`
+
 ### Phase 17.4
 
 - `docs/hardware/stm32_pcb/stm32_uart_pi_validation_plan.md`
 - `docs/embedded/phase_17_4_uart_validation_plan.md`
+
+### Hardware-Gated Completion Review
+
+- `docs/embedded/phase_17_hardware_gated_completion_review.md`
+- `README.md`
+- `docs/hardware/stm32_pcb/README.md`
+- `docs/embedded/phase_17_ledger.md`
 
 ### Ledger
 
@@ -286,7 +308,8 @@ What was cleaned:
 
 - `firmware/stm32_f103_traffic_light/README.md` now points to the closure decision and states that Phase 17.2 is closed.
 - `docs/embedded/phase_17_ledger.md` now treats Phase 17.2.4 as the closure/streamlining decision.
-- Next recommended step changed from more Phase 17.2 planning to Phase 17.3.1 pre-power inspection execution.
+- Next recommended step changed from more Phase 17.2 planning to Phase 17.3.1 pre-power inspection execution at the time of that closure.
+- Current next-step guidance is now Phase 17.3.2 controlled power rail validation because Phase 17.3.1 has been documented.
 
 What was decided:
 
@@ -306,13 +329,13 @@ Why Phase 17.2 can close:
 - UART validation plan is documented.
 - remaining risks are hardware evidence risks, not missing planning documents.
 
-Next recommended Phase 17 step:
+Next recommended Phase 17 step at the time:
 
 ```text
 Phase 17.3.1 - STM32 PCB pre-power inspection execution
 ```
 
-This should collect hardware evidence and should not build, flash, or port firmware.
+This has since been superseded by the Phase 17.3.1 checklist. Current next step is Phase 17.3.2 controlled power rail validation on real hardware.
 
 ## Phase 17.3.1 Notes
 
@@ -362,6 +385,92 @@ If power-off inspection passes:
 
 If power-off inspection fails:
     Fix PCB/soldering/header issue before applying power or connecting ST-LINK.
+```
+
+## Phase 17.3.2 Notes
+
+What was created:
+
+- `docs/hardware/stm32_pcb/phase_17_3_2_controlled_power_rail_validation.md`
+
+Current status:
+
+```text
+Procedure documented.
+No powered measurement has been performed in this repository.
+Power rail validation is pending hardware-team execution.
+```
+
+Purpose:
+
+- Validate `VCC5V`, `VCC3V3`, board current draw, AMS1117 behavior, and safe ground reference before ST-LINK or firmware work.
+
+Why it remains hardware-gated:
+
+- Real voltage, current, and thermal measurements require the physical PCB, power source, multimeter, and reviewer evidence.
+- Documentation can define the procedure and result table, but cannot prove the rail is valid.
+
+Next decision:
+
+```text
+If Phase 17.3.2 passes:
+    Continue to Phase 17.3.3 - ST-LINK Attach / Read-ID Validation.
+
+If Phase 17.3.2 fails:
+    Repair the power path before connecting ST-LINK, UART, or firmware tools.
+```
+
+## Phase 17.3.3 Notes
+
+What was created:
+
+- `docs/hardware/stm32_pcb/phase_17_3_3_stlink_read_id_validation.md`
+
+Current status:
+
+```text
+Procedure documented.
+ST-LINK attach has not been performed in this repository.
+Read-ID validation is pending real hardware and approved tools.
+```
+
+Purpose:
+
+- Perform the first non-flashing SWD validation after safe power is proven.
+- Confirm target voltage, SWD wiring, tool connection, and read-ID evidence without erasing or flashing the chip.
+
+Why it remains hardware-gated:
+
+- It requires validated board power, a real ST-LINK/SWD probe, correct cabling, and approved software tools.
+- No command output exists yet, so ST-LINK detection is not claimed.
+
+Next decision:
+
+```text
+If Phase 17.3.3 passes:
+    Review readiness for Phase 17.3.4 - Minimal Blink Firmware.
+
+If Phase 17.3.3 fails:
+    Return to power, SWD wiring, NRST, BOOT0, soldering, and header-orientation triage.
+```
+
+## Hardware-Gated Completion Review Notes
+
+What was created:
+
+- `docs/embedded/phase_17_hardware_gated_completion_review.md`
+
+Decision:
+
+- The branch is offline-complete for STM32 documentation, bring-up preparation, and validation worksheets currently possible without hardware.
+- The branch is not a fully validated STM32 hardware integration.
+- Phase 17.5, Phase 17.6, and final hardware closure remain blocked by Phase 17.3.2, Phase 17.3.3, later firmware bring-up, and UART hardware validation.
+
+Merge-readiness interpretation:
+
+```text
+Merge-ready only if main should receive honest hardware-gated planning and validation documentation.
+Not merge-ready if main requires validated STM32 power, SWD, firmware, UART, FreeRTOS port, or AI-to-STM32 demo evidence.
 ```
 
 ## Files Intentionally Not Created
@@ -470,23 +579,23 @@ Do not claim:
 Recommended safe next step:
 
 ```text
-Phase 17.3.1 - STM32 PCB pre-power inspection execution
+Execute Phase 17.3.2 - Controlled Power Rail Validation on real hardware.
 ```
 
-Do not start Phase 17.5 until the user approves the portable firmware boundary, pin ownership, STM32 build system direction, and board validation evidence requirements.
+Do not start Phase 17.3.3 until Phase 17.3.2 passes. Do not start Phase 17.5 until power, SWD, blink/GPIO basics, UART validation, pin ownership, STM32 build system direction, and board validation evidence are available.
 
 ## Exact Suggested Prompt for Phase 17.5 or Next Safe Step
 
 Preferred next safe prompt:
 
 ```text
-Continue Phase 17 with Phase 17.3.1 - STM32 PCB pre-power inspection execution.
+Continue Phase 17 with Phase 17.3.2 - Controlled Power Rail Validation.
 
 Do not flash hardware.
 Do not require STM32CubeIDE.
-Inspect the Phase 17 ledger, STM32 PCB README, pin mapping, PCB review notes, bring-up plan, UART validation plan, and schematic images.
-Execute only the pre-power inspection workflow: visual inspection, connector orientation review, regulator/diode/capacitor orientation review, resistance checks between rails and ground, and evidence logging.
-Do not connect Raspberry Pi UART, do not connect ST-LINK until power/header orientation is reviewed, do not build firmware, do not flash firmware, and do not implement the STM32 FreeRTOS FSM.
+Inspect the Phase 17 ledger, STM32 PCB README, Phase 17.3.1 pre-power inspection checklist, Phase 17.3.2 controlled power rail validation worksheet, pin mapping, PCB review notes, bring-up plan, and schematic images.
+Execute only the controlled power validation workflow on real hardware: current-limited input, VCC5V/VCC3V3 measurement, current draw, regulator heating observation, and evidence logging.
+Do not connect Raspberry Pi UART, do not flash firmware, do not implement STM32 code, and do not continue to ST-LINK attach until power validation passes.
 Keep the work on branch phase17-stm32-pcb-integration.
 ```
 
@@ -572,14 +681,17 @@ Created files:
     firmware/stm32_f103_traffic_light/src/README.md
     firmware/stm32_f103_traffic_light/include/README.md
     docs/hardware/stm32_pcb/phase_17_3_1_pre_power_inspection.md
+    docs/hardware/stm32_pcb/phase_17_3_2_controlled_power_rail_validation.md
+    docs/hardware/stm32_pcb/phase_17_3_3_stlink_read_id_validation.md
     docs/hardware/stm32_pcb/stm32_pcb_bringup_plan.md
     docs/hardware/stm32_pcb/stm32_uart_pi_validation_plan.md
     docs/hardware/stm32_pcb/stm32_hardware_blocks_explained.md
     docs/embedded/phase_17_4_uart_validation_plan.md
+    docs/embedded/phase_17_hardware_gated_completion_review.md
     docs/embedded/phase_17_ledger.md
 
 Hardware status:
-    Schematic documentation, hardware block explanation, bring-up planning, and Phase 17.3.1 pre-power inspection checklist created. Final hardware validation pending. ST-LINK non-detection has been reported, but root cause is not confirmed.
+    Schematic documentation, hardware block explanation, bring-up planning, Phase 17.3.1 pre-power inspection checklist, Phase 17.3.2 controlled power rail worksheet, and Phase 17.3.3 ST-LINK read-ID worksheet created. Final hardware validation pending. ST-LINK non-detection has been reported, but root cause is not confirmed.
 
 Firmware status:
     Phase 17.2 is closed as a documentation/planning phase. STM32 firmware remains documentation-first only. No source files, common/ migration, CMake build system, startup file, linker script, generated project files, or binary artifacts.
@@ -594,5 +706,5 @@ Do not overclaim:
     No power validation, SWD validation, blink, UART test, LED test, 7-segment test, FSM port, or AI-to-STM32 demo has been completed.
 
 Next recommended step:
-    If power-off inspection passes, Phase 17.3.2 Controlled Power Rail Validation. If inspection fails, fix PCB/soldering/header issue before applying power or connecting ST-LINK.
+    Execute Phase 17.3.2 Controlled Power Rail Validation on real hardware. Continue to Phase 17.3.3 only if power validation passes.
 ```

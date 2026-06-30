@@ -360,7 +360,7 @@ Before creating `firmware/common/` or moving source:
 Recommended next Phase 17 step:
 
 ```text
-Phase 17.2.5 - Review and approve portable firmware/common migration plan
+Execute Phase 17.3.2 - Controlled Power Rail Validation before any firmware/common migration.
 ```
 
-That step should remain a review step unless the user explicitly approves source movement and a verification plan for both ESP32 and STM32 targets.
+The portable `firmware/common/` idea should remain future optional work unless the user explicitly approves source movement and a verification plan for both ESP32 and STM32 targets.
