@@ -10,12 +10,14 @@ This file describes future modules and ownership boundaries. It does not impleme
 
 ```text
 Architecture documented.
-No STM32 .c or .h implementation files created.
+Hardware-independent STM32 scaffold .c/.h files created later.
 No buildable firmware created.
 No FreeRTOS port started.
 No UART firmware implemented.
 No hardware validation completed.
 ```
+
+The scaffold files are host-safe stubs only. They do not configure STM32 peripherals or prove hardware behavior.
 
 ## Future Firmware Layers
 

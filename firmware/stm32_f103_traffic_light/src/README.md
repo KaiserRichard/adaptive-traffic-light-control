@@ -3,25 +3,23 @@
 ## Status
 
 ```text
-Intentionally empty except for this README.
-No STM32 source files are implemented in Phase 17.2.
+Hardware-independent scaffold source files added.
+No STM32 HAL/CMSIS/LL source is used.
+No hardware-validated STM32 implementation exists yet.
 ```
 
-This directory is reserved for future STM32 firmware source after the command-line toolchain and hardware pin map are reviewed.
+This directory now contains host-safe STM32 board-layer stubs. They define future responsibilities but do not configure clocks, GPIO, UART, FreeRTOS, interrupts, or hardware registers.
 
-## Future Source Files
+## Current Source Files
 
-Possible future files:
+Current scaffold files:
 
 ```text
-main.c or main.cpp
-board_pins.c
-gpio_outputs.c
-uart_link.c
-protocol.c
-traffic_fsm.c
-status_reporter.c
-watchdog_fallback.c
+main.c
+board_gpio.c
+board_uart.c
+app_tasks.c
+stm32_port_status.c
 ```
 
 Do not add generated HAL source, startup files, linker scripts, or FreeRTOS kernel files without documenting their source and licensing.

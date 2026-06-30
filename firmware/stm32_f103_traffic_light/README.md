@@ -4,7 +4,7 @@
 
 This folder is the planned firmware location for the STM32F103C8T6 traffic light controller PCB.
 
-It is intentionally documentation-first for Phase 17. No STM32 firmware source, generated HAL files, CubeMX `.ioc`, binary artifacts, or flashing scripts are included yet.
+It now contains hardware-independent board-layer scaffolding only. No generated HAL files, CubeMX `.ioc`, startup file, linker script, binary artifacts, or flashing scripts are included.
 
 ## Status
 
@@ -15,6 +15,8 @@ Build/flash toolchain not selected.
 No firmware has been built, flashed, or tested.
 No buildable STM32 firmware has been created yet.
 No flashable binary exists.
+Hardware-independent STM32 scaffold stubs have been added.
+Portable common protocol/FSM/status logic exists under firmware/common/.
 Phase 17.2.3 proposes the future CMake scaffold.
 Phase 17.2.4 closes the firmware planning phase and moves the recommended next step to Phase 17.3 hardware bring-up.
 ```
@@ -41,35 +43,33 @@ USART1 receive
     -> ACK / NACK / STATUS responses
 ```
 
-## Expected Modules
+## Current Scaffold Modules
 
-Potential module layout for a later implementation:
+Current hardware-independent scaffold layout:
 
 ```text
 src/
-    main.c or main.cpp
-    board_pins.c
-    gpio_outputs.c
-    uart_link.c
-    protocol.c
-    traffic_fsm.c
-    status_reporter.c
-    watchdog_fallback.c
+    main.c
+    board_gpio.c
+    board_uart.c
+    app_tasks.c
+    stm32_port_status.c
 
 include/
-    board_pins.h
-    gpio_outputs.h
-    uart_link.h
-    protocol.h
-    traffic_fsm.h
-    status_reporter.h
-    watchdog_fallback.h
+    board_config.h
+    board_gpio.h
+    board_uart.h
+    app_tasks.h
+    stm32_port_status.h
 ```
 
-This layout is not committed as source code yet because the build system and HAL/LL/CMSIS choice are still pending.
+These files are not a real STM32 hardware implementation. They intentionally avoid STM32 HAL, CMSIS, LL, startup code, linker scripts, and FreeRTOS includes. Hardware-dependent functions return pending/not-implemented status.
+
+The portable hardware-independent application logic is in [../common/README.md](../common/README.md).
 
 Detailed design notes:
 
+- [hardware_independent_completion_plan.md](hardware_independent_completion_plan.md) - what was completed before hardware and what remains gated.
 - [phase_17_2_closure_decision.md](phase_17_2_closure_decision.md) - Phase 17.2 streamlining and closure decision.
 - [build_scaffold_design.md](build_scaffold_design.md) - future non-flashing build scaffold design.
 - [cmake_scaffold_proposal.md](cmake_scaffold_proposal.md) - future CMake scaffold proposal.
@@ -113,7 +113,9 @@ TX/RX crossing with Raspberry Pi is not validated yet.
 
 The ESP32 FreeRTOS firmware remains the reference testbed for task ownership, queue flow, protocol parsing, safe FSM behavior, watchdog/fallback behavior, and STATUS/DIAG telemetry.
 
-The STM32 target should receive a board-specific implementation later. Portable application logic may eventually move into a reviewed `firmware/common/` structure, but no common migration, ESP32 refactor, or STM32 FreeRTOS implementation has been done yet.
+The STM32 target should receive a board-specific implementation later. A small hardware-independent `firmware/common/` layer now exists for protocol parsing, plan validation, FSM state progression, and status formatting.
+
+No ESP32 refactor or STM32 FreeRTOS implementation has been done yet.
 
 Phase 17.2 is now closed as a documentation/planning phase. The next real track is Phase 17.3 hardware bring-up, beginning with pre-power inspection and measurement. `firmware/common/` migration is future optional work, not a blocker for Phase 17.3.
 
@@ -156,10 +158,10 @@ Real PCB required now? No
 - No linker script.
 - No `.elf`, `.bin`, or `.hex` artifacts.
 - No flashing scripts.
-- No UART firmware.
-- No LED GPIO driver.
-- No 7-segment driver.
-- No portable `firmware/common/` migration.
+- No real STM32 UART firmware.
+- No real STM32 LED GPIO driver.
+- No real STM32 7-segment driver.
+- No ESP32-to-common source migration.
 - No ESP32 firmware refactor.
 - No FreeRTOS FSM port.
 - No end-to-end AI host demo.
@@ -180,6 +182,7 @@ This folder is complete for the current documentation-first STM32 preparation wo
 [ ] portable_freertos_architecture.md explains future common/ and board-layer boundaries.
 [ ] esp32_to_stm32_porting_plan.md explains the ESP32-to-STM32 migration path.
 [ ] bringup_plan.md documents firmware bring-up sequence.
-[ ] src/README.md and include/README.md clarify that source/header files are intentionally absent.
+[ ] hardware_independent_completion_plan.md separates offline-complete work from hardware-gated work.
+[ ] src/README.md and include/README.md clarify that source/header files are scaffolds only.
 [ ] No build artifacts or generated vendor files are committed.
 ```

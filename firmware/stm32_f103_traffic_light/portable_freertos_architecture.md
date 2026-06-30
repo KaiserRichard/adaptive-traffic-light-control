@@ -12,7 +12,8 @@ This document identifies reusable application concepts, board-specific code, and
 Documentation-only architecture proposal.
 ESP32 firmware was reviewed as the reference implementation.
 No ESP32 source files were moved or refactored.
-No firmware/common/ tree was created.
+An initial firmware/common/ layer was added later as hardware-independent C.
+No ESP32-to-common source migration has happened.
 No STM32 FreeRTOS port was implemented.
 No buildable STM32 firmware was created.
 No hardware validation was performed.
@@ -75,23 +76,21 @@ STM32 board output layer
 
 ## Recommended Future firmware/common Structure
 
-Proposed future structure:
+Initial common layer now exists as:
 
 ```text
 firmware/
 ├── common/
-│   ├── protocol/
-│   ├── core/
-│   ├── messages/
-│   ├── services/
-│   └── tasks/
+│   ├── include/
+│   ├── src/
+│   └── tests/
 ├── esp32_freertos_traffic_light/
 │   └── ESP32 board-specific implementation
 └── stm32_f103_traffic_light/
     └── STM32 PCB board-specific implementation
 ```
 
-This is a proposal only. No `firmware/common/` migration happens in Phase 17.2.4.
+No ESP32 source migration has happened. A larger folder split under `common/` should wait until the shared-code boundary is proven useful.
 
 ## What Should Go Into common/
 

@@ -91,7 +91,7 @@ USART receive
     -> ACK / NACK / STATUS telemetry
 ```
 
-This direction is documented enough for now. No STM32 source implementation exists yet.
+This direction was documented enough to close Phase 17.2. A later hardware-independent preparation step added STM32 scaffold stubs, but no real hardware implementation exists yet.
 
 ## Final Build-System Direction
 

@@ -3,25 +3,26 @@
 ## Status
 
 ```text
-Intentionally empty except for this README.
-No STM32 header files are implemented in Phase 17.2.
+Hardware-independent scaffold headers added.
+No STM32 HAL/CMSIS/LL headers are used.
+No hardware-validated STM32 implementation exists yet.
 ```
 
-This directory is reserved for future STM32 firmware public/internal headers after the build system and module boundaries are reviewed.
+This directory now defines board-layer scaffold APIs and compile-time status for future STM32 firmware work.
 
-## Future Header Files
+## Current Header Files
 
-Possible future files:
+Current scaffold files:
 
 ```text
-board_pins.h
-gpio_outputs.h
-uart_link.h
-protocol.h
-traffic_fsm.h
-status_reporter.h
-watchdog_fallback.h
+board_config.h
+board_gpio.h
+board_uart.h
+app_tasks.h
+stm32_port_status.h
 ```
+
+These headers are not final board support APIs. They exist to define the future ownership boundary while power, SWD, GPIO, UART, and display validation remain pending.
 
 ## Header Design Rules
 
