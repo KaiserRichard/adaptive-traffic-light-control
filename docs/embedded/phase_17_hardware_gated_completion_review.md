@@ -18,6 +18,8 @@ Phase 17.2: firmware planning closed.
 Phase 17.3.1: pre-power inspection checklist complete.
 Phase 17.3.2: controlled power rail validation procedure complete; execution pending.
 Phase 17.3.3: ST-LINK attach/read-ID procedure complete; execution pending.
+Hardware-independent common firmware layer: complete.
+STM32 board-layer scaffold stubs: complete.
 ```
 
 ## Sequential Gate Review
@@ -44,6 +46,9 @@ Phase 17.3.3: ST-LINK attach/read-ID procedure complete; execution pending.
 - Controlled power rail validation procedure exists.
 - ST-LINK read-ID validation procedure exists.
 - STM32 firmware folder is documented as documentation-first.
+- Hardware-independent common protocol, plan, FSM, and status code exists.
+- Host-side common tests exist.
+- STM32 board-layer scaffold stubs exist.
 - Command-line toolchain inspection is documented.
 - CMake + Make future build direction is proposed only.
 - ESP32 remains the FreeRTOS behavior reference.
@@ -72,12 +77,13 @@ No CMake project exists.
 No startup file exists.
 No linker script exists.
 No CMSIS/HAL/LL vendor files are committed.
-No STM32 source implementation exists.
-No firmware/common/ migration has happened.
+STM32 board-layer scaffold stubs exist, but no hardware implementation exists.
+firmware/common/ exists as a host-tested portable C layer.
+No ESP32-to-common source migration has happened.
 No ESP32 firmware refactor has happened.
 ```
 
-This is intentional. The repository should not create STM32 firmware until power and SWD evidence exists and the toolchain/vendor-file policy is approved.
+This is intentional. The repository should not create a real STM32 hardware firmware build until power and SWD evidence exists and the toolchain/vendor-file policy is approved.
 
 ## Protocol Status
 
@@ -106,11 +112,11 @@ Keep:
 
 Do not create now:
 
-- `firmware/common/`.
 - buildable STM32 firmware.
 - more Phase 17.2 planning subphases.
 - duplicate protocol documents.
 - fake hardware results.
+- ESP32-to-common migration without a separate review.
 
 ## Merge Readiness Decision
 

@@ -26,7 +26,7 @@ Current high-level status:
 
 ```text
 The project currently has a validated ONNX Runtime deployment path and a prepared Raspberry Pi deployment guide.
-The STM32 PCB integration track has documentation, pin mapping, bring-up planning, UART validation planning, command-line toolchain inspection, pre-power inspection triage, and hardware-gated power/SWD validation worksheets.
+The STM32 PCB integration track has documentation, pin mapping, bring-up planning, UART validation planning, command-line toolchain inspection, pre-power inspection triage, hardware-gated power/SWD validation worksheets, a host-tested common firmware layer, and STM32 board-layer scaffold stubs.
 Real Raspberry Pi benchmark validation and STM32 hardware validation remain pending.
 ```
 
@@ -111,7 +111,9 @@ STM32F103C8T6 Controller PCB
 | Raspberry Pi AI deployment | Prepared | Deployment guide exists; real Raspberry Pi validation remains pending |
 | FreeRTOS controller | Completed / prototype | ESP32 FreeRTOS controller path with tasks, queues, UART parser, FSM |
 | UART protocol | Completed / prototype | `PLAN`, `ACK` / `NACK`, status reporting, watchdog/fallback concepts |
+| Hardware-independent common firmware | Completed / host-tested | Plain-C PLAN parser, validator, FSM model, STATUS formatter, and tests under `firmware/common/` |
 | STM32 PCB integration | Documentation prepared / hardware-gated | Pin mapping, bring-up plan, firmware skeleton docs, UART validation plan, toolchain inspection, pre-power triage, power-rail worksheet, and ST-LINK read-ID worksheet are prepared |
+| STM32 firmware scaffold | Prepared / not hardware-validated | Board GPIO, UART, task, and status stubs exist; no HAL/CMSIS/LL hardware implementation |
 | STM32 command-line toolchain | Inspected | STM32CubeIDE is not required at this stage; embedded Arm tools are not installed yet |
 | Final STM32 hardware validation | Pending | ST-LINK non-detection has been reported by the hardware team; root cause is not confirmed |
 
@@ -258,6 +260,14 @@ Main embedded prototype:
 firmware/esp32_freertos_traffic_light/
 ```
 
+Hardware-independent portable controller logic:
+
+```text
+firmware/common/
+```
+
+The common layer is plain C and host-tested. It covers the canonical `PLAN` parser, plan validation, FSM state sequence, pending-plan boundary behavior, and `ACK` / `NACK` / `STATUS` formatting. It does not depend on Arduino, ESP-IDF, STM32 HAL, CMSIS, LL, or FreeRTOS.
+
 Relevant docs:
 
 - [FreeRTOS queue warmup](docs/embedded/Phase_15_1_freertos_queue_warmup.md)
@@ -275,6 +285,7 @@ Current status:
 ```text
 Hardware received / schematic documentation prepared / hardware-gated bring-up procedures prepared
 Physical power, SWD, UART, firmware, and GPIO validation remain pending
+Hardware-independent common firmware tests pass on the host
 ```
 
 Schematic blocks under documentation:
@@ -306,7 +317,9 @@ Prepared STM32 documentation:
 - [STM32 controlled power rail validation worksheet](docs/hardware/stm32_pcb/phase_17_3_2_controlled_power_rail_validation.md)
 - [STM32 ST-LINK read-ID validation worksheet](docs/hardware/stm32_pcb/phase_17_3_3_stlink_read_id_validation.md)
 - [STM32 UART to Raspberry Pi validation plan](docs/hardware/stm32_pcb/stm32_uart_pi_validation_plan.md)
+- [ATLC common firmware layer](firmware/common/README.md)
 - [STM32 firmware skeleton](firmware/stm32_f103_traffic_light/README.md)
+- [STM32 hardware-independent completion plan](firmware/stm32_f103_traffic_light/hardware_independent_completion_plan.md)
 - [STM32 toolchain inspection](firmware/stm32_f103_traffic_light/toolchain_inspection.md)
 - [Phase 17 hardware-gated completion review](docs/embedded/phase_17_hardware_gated_completion_review.md)
 
@@ -315,6 +328,7 @@ Important status limits:
 - STM32CubeIDE is not required at this stage.
 - STM32 power rail validation has not been executed.
 - ST-LINK read-ID validation has not been executed.
+- STM32 board-layer source files are scaffold stubs only.
 - STM32 firmware has not been flashed.
 - STM32 UART has not been tested.
 - STM32 PCB hardware validation is pending.
@@ -429,6 +443,7 @@ For the full local adaptive traffic pipeline, see `pc_app/` and the deployment d
 | Phase 17.3.1 | Completed / checklist | STM32 pre-power inspection and ST-LINK non-detection triage |
 | Phase 17.3.2 | Procedure prepared / pending hardware | Controlled power rail validation |
 | Phase 17.3.3 | Procedure prepared / pending hardware | ST-LINK attach / read-ID validation |
+| Phase 17 hardware-independent firmware/software prep | Completed / host-tested | Portable common layer, STM32 scaffold stubs, and host protocol tests |
 | Phase 17.4 | Completed / plan | UART Link Validation Plan |
 | Phase 17.x | Planned | End-to-end Raspberry Pi to STM32 hardware demo |
 

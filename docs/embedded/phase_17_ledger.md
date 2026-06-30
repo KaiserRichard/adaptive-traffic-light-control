@@ -28,6 +28,7 @@ main
 | Phase 17.3.3 - ST-LINK Attach / Read-ID Validation | Procedure prepared; execution pending hardware | No ST-LINK attach or read-ID performed |
 | Phase 17.4 - UART Link Validation Plan | Completed as planned procedure | UART not tested |
 | Phase 17 Hardware-Gated Completion Review | Completed as offline status review | Branch is not full hardware-complete |
+| Phase 17 Hardware-Independent Firmware/Software Preparation | Completed as host-testable software work | Common C layer and STM32 stubs added; no hardware validation claimed |
 
 ## Files Created by Subphase
 
@@ -111,6 +112,39 @@ main
 - `README.md`
 - `docs/hardware/stm32_pcb/README.md`
 - `docs/embedded/phase_17_ledger.md`
+
+### Hardware-Independent Firmware/Software Preparation
+
+- `firmware/common/README.md`
+- `firmware/common/include/atlc_protocol.h`
+- `firmware/common/include/atlc_plan.h`
+- `firmware/common/include/atlc_fsm.h`
+- `firmware/common/include/atlc_status.h`
+- `firmware/common/src/atlc_protocol.c`
+- `firmware/common/src/atlc_plan.c`
+- `firmware/common/src/atlc_fsm.c`
+- `firmware/common/src/atlc_status.c`
+- `firmware/common/tests/test_protocol_parser.py`
+- `firmware/common/tests/test_plan_validator.py`
+- `firmware/common/tests/test_fsm_sequence.py`
+- `firmware/stm32_f103_traffic_light/hardware_independent_completion_plan.md`
+- `firmware/stm32_f103_traffic_light/include/board_config.h`
+- `firmware/stm32_f103_traffic_light/include/board_gpio.h`
+- `firmware/stm32_f103_traffic_light/include/board_uart.h`
+- `firmware/stm32_f103_traffic_light/include/app_tasks.h`
+- `firmware/stm32_f103_traffic_light/include/stm32_port_status.h`
+- `firmware/stm32_f103_traffic_light/src/main.c`
+- `firmware/stm32_f103_traffic_light/src/board_gpio.c`
+- `firmware/stm32_f103_traffic_light/src/board_uart.c`
+- `firmware/stm32_f103_traffic_light/src/app_tasks.c`
+- `firmware/stm32_f103_traffic_light/src/stm32_port_status.c`
+- `pc_app/tests/test_plan_protocol_format.py`
+- `README.md`
+- `docs/embedded/phase_17_ledger.md`
+- `docs/embedded/phase_17_hardware_gated_completion_review.md`
+- `firmware/stm32_f103_traffic_light/README.md`
+- `firmware/stm32_f103_traffic_light/include/README.md`
+- `firmware/stm32_f103_traffic_light/src/README.md`
 
 ### Ledger
 
@@ -473,6 +507,46 @@ Merge-ready only if main should receive honest hardware-gated planning and valid
 Not merge-ready if main requires validated STM32 power, SWD, firmware, UART, FreeRTOS port, or AI-to-STM32 demo evidence.
 ```
 
+## Hardware-Independent Firmware/Software Preparation Notes
+
+What was created:
+
+- portable common C layer under `firmware/common/`.
+- host-side common tests for parser, validator, and FSM behavior.
+- host-side PC app PLAN format regression test.
+- STM32 board-layer scaffold stubs under `firmware/stm32_f103_traffic_light/include/` and `src/`.
+- `firmware/stm32_f103_traffic_light/hardware_independent_completion_plan.md`.
+
+What the common layer supports:
+
+- canonical `PLAN,<plan_id>,<green_a>,<green_b>,<yellow>,<all_red>` parsing.
+- rejection of malformed messages.
+- rejection of deprecated `PLAN,seq=...`, `ns_green=...`, and `ew_green=...` styles.
+- ESP32-aligned timing validation: green 10..45 s, yellow exactly 3 s, all-red exactly 1 s.
+- `ACK`, `NACK`, and `STATUS` formatting.
+- FSM state order and safe pending-plan application at the `A_GREEN` boundary.
+
+What remains intentionally pending:
+
+- ESP32 source migration into common code.
+- real STM32 HAL/CMSIS/LL board implementation.
+- STM32 build system.
+- startup file and linker script.
+- firmware flashing.
+- hardware UART/GPIO/seven-segment validation.
+- FreeRTOS runtime validation on STM32.
+
+Checks run:
+
+```text
+python3 firmware/common/tests/test_protocol_parser.py
+python3 firmware/common/tests/test_plan_validator.py
+python3 firmware/common/tests/test_fsm_sequence.py
+python3 pc_app/tests/test_plan_protocol_format.py
+```
+
+All listed tests passed on the host. These tests do not validate STM32 hardware.
+
 ## Files Intentionally Not Created
 
 - STM32CubeIDE project files.
@@ -482,9 +556,8 @@ Not merge-ready if main requires validated STM32 power, SWD, firmware, UART, Fre
 - Linker script.
 - CMakeLists.txt or Makefile.
 - CMake toolchain file.
-- STM32 firmware source files.
-- STM32 firmware header files beyond README placeholders.
-- `firmware/common/` shared source tree.
+- real STM32 hardware firmware implementation.
+- ESP32-to-common source migration.
 - `.elf`, `.bin`, or `.hex` build artifacts.
 - Flashing scripts.
 - Phase 17.5 FreeRTOS FSM port files.
@@ -694,13 +767,16 @@ Hardware status:
     Schematic documentation, hardware block explanation, bring-up planning, Phase 17.3.1 pre-power inspection checklist, Phase 17.3.2 controlled power rail worksheet, and Phase 17.3.3 ST-LINK read-ID worksheet created. Final hardware validation pending. ST-LINK non-detection has been reported, but root cause is not confirmed.
 
 Firmware status:
-    Phase 17.2 is closed as a documentation/planning phase. STM32 firmware remains documentation-first only. No source files, common/ migration, CMake build system, startup file, linker script, generated project files, or binary artifacts.
+    Phase 17.2 is closed as a documentation/planning phase. Hardware-independent common C logic and STM32 scaffold stubs now exist. No real STM32 hardware implementation, ESP32-to-common migration, CMake build system, startup file, linker script, generated project files, or binary artifacts.
 
 UART status:
     Validation plan written. UART not tested. UART firmware not implemented.
 
 Toolchain status:
     Host inspected. Homebrew, CMake, Make, and Python are installed. Ninja, arm-none-eabi-gcc/gdb, OpenOCD, STM32CubeProgrammer CLI, and PlatformIO are missing. Recommended future build path is CMake + Make with arm-none-eabi-gcc after approval.
+
+Host-test status:
+    Common parser/validator/FSM tests and PC app PLAN format test pass locally with Python and the host C compiler.
 
 Do not overclaim:
     No power validation, SWD validation, blink, UART test, LED test, 7-segment test, FSM port, or AI-to-STM32 demo has been completed.
